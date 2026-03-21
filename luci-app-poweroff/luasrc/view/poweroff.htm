@@ -1,0 +1,55 @@
+<%#
+Copyright 2024 DongyangHu, hudongyang123@gmail.com
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+  http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+-%>
+
+<%+header%>
+
+    <h2 name="content">
+        <%:Power Off Device%>
+    </h2>
+    <%- local c = require("luci.model.uci").cursor():changes(); if c and next(c) then -%>
+	<p class="alert-message warning"><%:Warning: There are unsaved changes that will get lost on poweroff!%></p>
+    <%- end -%>
+
+    <hr />
+
+    <p class="alert-message warning">
+        <%:WARNING: May cause a reboot on a device that does not support power off.%>
+    </p>
+
+    <%- if nixio.fs.access("/sbin/poweroff") then -%>
+    <div class="cbi-page-actions left">
+        <p class="alert-message" style="display:none" id="showMessage">
+            <img src="<%=resource%>/icons/loading.gif" alt="<%:Loading%>" style="vertical-align:middle" />
+            <span><%:Device is shuting down ...%></span>
+        </p>
+        <input class="cbi-button cbi-button-reset important" type="button" value="<%:Proceed%>" onclick="poweroff(this)" />
+    </div>
+    <%- else -%>
+      <p class="alert-message warning"><%:Warning: This device does not support powering off!%></p>
+    <%- end -%> 
+
+<script type="text/javascript">
+    //<![CDATA[
+    function poweroff(btn) {
+        btn.style.display = 'none';
+        document.getElementById('showMessage').style.display = '';
+        (new XHR()).post("<%=REQUEST_URI%>/submit", { token: '<%=token%>' }, () => window.setInterval(() => window.location.href = window.location.origin + "<%=controller%>admin", 10000));
+    }
+    //]]>
+</script>
+
+
+<%+footer%>
