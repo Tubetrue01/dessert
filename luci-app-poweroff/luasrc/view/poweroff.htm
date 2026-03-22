@@ -32,7 +32,7 @@ limitations under the License.
     <%- if nixio.fs.access("/sbin/poweroff") then -%>
     <div class="cbi-page-actions left">
         <p class="alert-message" style="display:none" id="showMessage">
-            <img src="<%=resource%>/icons/loading.gif" alt="<%:Loading%>" style="vertical-align:middle" />
+            <img src="<%=resource%>/icons/loading.svg" alt="<%:Loading%>" style="vertical-align:middle" />
             <span><%:Device is shuting down ...%></span>
         </p>
         <input class="cbi-button cbi-button-reset important" type="button" value="<%:Proceed%>" onclick="poweroff(this)" />
