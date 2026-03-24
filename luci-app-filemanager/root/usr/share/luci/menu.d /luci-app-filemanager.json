@@ -1,0 +1,35 @@
+{
+  "luci-app-filemanager": {
+    "description": "Grant access to file management",
+    "read": {
+      "file": {
+        "/tmp": [
+          "list",
+          "read"
+        ]
+      },
+      "ubus": {
+        "file": [
+          "list",
+          "read",
+          "stat"
+        ]
+      }
+    },
+    "write": {
+      "file": {
+        "/tmp": [
+          "write",
+          "remove"
+        ]
+      },
+      "ubus": {
+        "file": [
+          "write",
+          "remove",
+          "exec"
+        ]
+      }
+    }
+  }
+}

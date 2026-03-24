@@ -1,0 +1,12 @@
+{
+  "admin/system/filemanager": {
+    "title": "FileManager",
+    "action": {
+      "type": "view",
+      "path": "filemanager"
+    },
+    "depends": {
+      "acl": [ "luci-app-filemanager" ]
+    }
+  }
+}
