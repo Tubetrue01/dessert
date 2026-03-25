@@ -10,6 +10,9 @@ msgstr "文件名称"
 msgid "FileSize"
 msgstr "文件大小"
 
+msgid "FileAttrs"
+msgstr "文件属性"
+
 msgid "Operate"
 msgstr "操作"
 

@@ -1,12 +1,22 @@
 {
-  "admin/system/filemanager": {
-    "title": "FileManager",
-    "action": {
-      "type": "view",
-      "path": "filemanager"
+  "luci-app-filemanager": {
+    "description": "FileManager minimal ACL",
+    "read": {
+      "file": {
+        "/tmp/upload/*": ["list", "read"]
+      },
+      "ubus": {
+        "file": ["list", "read", "stat"]
+      }
     },
-    "depends": {
-      "acl": [ "luci-app-filemanager" ]
+    "write": {
+      "file": {
+        "/tmp/upload/*": ["write", "remove"]
+      },
+      "ubus": {
+        "file": ["write", "remove"],
+        "luci.filemanager": ["install", "rename", "mkdirUpload"]
+      }
     }
   }
 }

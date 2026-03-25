@@ -1,35 +1,12 @@
 {
-  "luci-app-filemanager": {
-    "description": "Grant access to file management",
-    "read": {
-      "file": {
-        "/tmp": [
-          "list",
-          "read"
-        ]
-      },
-      "ubus": {
-        "file": [
-          "list",
-          "read",
-          "stat"
-        ]
-      }
+  "admin/system/filemanager": {
+    "title": "FileManager",
+    "action": {
+      "type": "view",
+      "path": "filemanager"
     },
-    "write": {
-      "file": {
-        "/tmp": [
-          "write",
-          "remove"
-        ]
-      },
-      "ubus": {
-        "file": [
-          "write",
-          "remove",
-          "exec"
-        ]
-      }
+    "depends": {
+      "acl": [ "luci-app-filemanager" ]
     }
   }
 }
