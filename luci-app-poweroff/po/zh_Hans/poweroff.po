@@ -3,11 +3,11 @@ msgstr "Content-Type: text/plain; charset=UTF-8"
 
 #: ../../luasrc/view/poweroff.htm:20
 msgid "Device is shuting down ..."
-msgstr "关机中，一切都来不及了..."
+msgstr "正在关机，说啥也不好使了..."
 
 #: ../../luasrc/view/poweroff.htm:19
 msgid "Loading"
-msgstr "加载中"
+msgstr "设备有点懵，要等一下..."
 
 #: ../../luasrc/view/poweroff.htm:4
 msgid "Power Off Device"
@@ -28,7 +28,7 @@ msgstr "吹灯拔蜡，关机回家"
 
 #: ../../luasrc/view/poweroff.htm:7
 msgid "Warning: There are unsaved changes that will get lost on poweroff!"
-msgstr "警告：还有数据没保存，别着急关机！"
+msgstr "警告：没保存的改动在关机的时候都会丢失！别惊讶，要么保存，要么放弃"
 
 #: ../../luasrc/view/poweroff.htm:25
 msgid "Warning: This device does not support powering off!"

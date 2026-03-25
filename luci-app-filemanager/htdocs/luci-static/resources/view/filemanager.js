@@ -44,32 +44,62 @@ return L.view.extend({
 
         return fs.list(upload_path).then(function(files) {
             var body = E('div', { 'class': 'cbi-map' }, [
-                E('h2', _('Filer')),
-                E('div', { 'class': 'cbi-map-descr' }, _('Support uploading and installation of files in the /tmp directory'))
+                E('h2', _('Upload'))
             ]);
 
             var uploadSection = E('div', { 'class': 'cbi-section' }, [
-                E('h3', _('Upload')),
-                E('div', { 'class': 'cbi-section-node' }, [
-                    E('button', {
-                        'class': 'btn cbi-button-confirm',
-                        'click': function(ev) {
-                            return ui.uploadFile(`${upload_path}/${tmp_file}`, ev.target).then(function(res) {
-                                return L.resolveDefault(callRename(`${upload_path}/${tmp_file}`, `${upload_path}/${res.name}`), {}).then(function(ret) {
-                                    if (ret.code === 0)
-                                        return _this.refresh();
-                                    else {
-                                        ui.addNotification(null, E('p', _('Failed to upload file: %s.').format(res.name)));
-                                        return L.resolveDefault(fs.remove(file), {});
-                                    }
-                                });
-                            }).catch(function(e) {
-                                if (e.message !== 'Canceled'){
-                                   ui.addNotification(null, E('p', e.message)); 
+                E('div', { 'class': 'cbi-section-descr' }, _('Support uploading and installation of files in the /tmp directory')),
+
+                E('div', 
+                    { 'class': 'cbi-section-node',
+                        'style': 'flex-direction: row'
+                    }, 
+                 [
+                    E('label', {
+                     'class': 'cbi-value',
+                     'style': 'display:inline-block; width: 130px',
+                     }, '请选择文件：'),
+                   
+                   E('input', {
+                            'type': 'file',
+                            'class': 'cbi-input-file',
+                            'style': 'width: 400px',
+                            'change': function (ev) {
+                                var file = ev.target.files[0];
+                                if (file) {
+                                    console.log('选中的文件:', file.name);
                                 }
-                            });
-                        }
-                    }, _('Upload'))
+                            }
+                    }),
+
+                   E('input', {
+                            'type': 'submit',
+                            'class': 'cbi-button cbi-input-apply',
+                            'click': function (ev) {
+                                    console.log('选中的文件:', JSON.stringify(ev));
+                            }
+                    }),
+
+
+                    // E('button', {
+                    //     'class': 'btn cbi-button-confirm',
+                    //     'click': function(ev) {
+                    //         return ui.uploadFile(`${upload_path}/${tmp_file}`, ev.target).then(function(res) {
+                    //             return L.resolveDefault(callRename(`${upload_path}/${tmp_file}`, `${upload_path}/${res.name}`), {}).then(function(ret) {
+                    //                 if (ret.code === 0)
+                    //                     return _this.refresh();
+                    //                 else {
+                    //                     ui.addNotification(null, E('p', _('Failed to upload file: %s.').format(res.name)));
+                    //                     return L.resolveDefault(fs.remove(file), {});
+                    //                 }
+                    //             });
+                    //         }).catch(function(e) {
+                    //             if (e.message !== 'Canceled'){
+                    //                ui.addNotification(null, E('p', e.message)); 
+                    //             }
+                    //         });
+                    //     }
+                    // }, _('Upload'))
                 ])
             ]);
 
