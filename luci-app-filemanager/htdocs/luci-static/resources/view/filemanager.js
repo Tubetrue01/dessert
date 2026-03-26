@@ -4,7 +4,7 @@
 'require fs';
 'require rpc';
 'require request';
-
+'require view';
 
 const callInstall = rpc.declare({
     object: 'luci.filemanager',
@@ -103,7 +103,7 @@ return L.view.extend({
                 E('label', {
                  'class': 'cbi-value',
                  'style': 'display:inline-block; width: 130px; padding-bottom: 1rem',
-                 }, _('Please select a file: ')),
+                 }, _('Select a file:')),
                
                E('input', {
                         'type': 'file',
@@ -157,7 +157,7 @@ return L.view.extend({
                 E('label', {
                  'class': 'cbi-value',
                  'style': 'display:inline-block; width: 130px; padding-bottom: 1rem',
-                 }, _('Router root directory: ')),
+                 }, _('Root directory:')),
 
 
                 E('input',{

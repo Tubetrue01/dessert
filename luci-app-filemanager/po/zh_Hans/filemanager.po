@@ -7,7 +7,7 @@ msgstr "上传"
 msgid "Support uploading and installation of files in the /tmp directory"
 msgstr "支持 /tmp 目录文件的上传与安装"
 
-msgid "Please select a file: "
+msgid "Select a file:"
 msgstr "请选择文件："
 
 msgid "Failed to upload file."
@@ -19,7 +19,7 @@ msgstr "下载"
 msgid "Download File"
 msgstr "下载文件"
 
-msgid "Router root directory: "
+msgid "Root directory:"
 msgstr "路由根路径："
 
 msgid "Failed to download: "
