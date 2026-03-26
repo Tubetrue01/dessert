@@ -11,9 +11,10 @@ PKG_MIRROR_HASH:=skip
 
 PKG_LICENSE:=Apache-2.0
 PKG_LICENSE_FILES:=LICENSE
+PKG_MAINTAINER:=fatedier
 
 GO_PKG:=github.com/fatedier/frp
-GO_PKG_LDFLAGS:=-s -w
+GO_PKG_BUILD_PKG:=github.com/fatedier/frp/cmd/frpc
 
 include $(INCLUDE_DIR)/package.mk
 include $(TOPDIR)/feeds/packages/lang/golang/golang-package.mk
@@ -32,12 +33,16 @@ define Package/frpc/description
 endef
 
 define Build/Compile
-	$(call GoPackage/Build/Compile/Default, \
-		GO_PKG_VARS="CGO_ENABLED=0" \
-		GO_PKG_LDFLAGS="$(GO_PKG_LDFLAGS)" \
-		GO_PKG_TAGS="frpc,noweb" \
-		GO_PKG_BUILD_PKG="$(GO_PKG)/cmd/frpc" \
-		GO_PKG_OUTPUT_NAME="frpc" \
+	( \
+		cd $(PKG_BUILD_DIR); \
+		GO111MODULE=on \
+		CGO_ENABLED=0 \
+		GOPROXY=https://goproxy.cn,direct \
+		go build -v -trimpath \
+			-ldflags "-s -w" \
+			-tags "frpc,noweb" \
+			-o $(GO_PKG_BUILD_BIN_DIR)/frpc \
+			./cmd/frpc \
 	)
 endef
 
