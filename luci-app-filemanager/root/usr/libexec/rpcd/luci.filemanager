@@ -32,9 +32,6 @@ case "$1" in
     json_add_object "mkdirUpload"
         json_add_string "uploadPath" "uploadPath"
     json_close_object
-    json_add_object "remove"
-        json_add_string "filename" "filename"
-    json_close_object
     json_dump
     json_cleanup
     ;; 
