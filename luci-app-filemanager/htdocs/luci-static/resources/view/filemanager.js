@@ -133,7 +133,7 @@ return L.view.extend({
                                 if (ret.code === 0) {
                                     fetchTableFiles();
                                 } else {
-                                    ui.addNotification(null, E('p', _('Failed to upload file.')));
+                                    ui.addNotification(null, E('p', _('Failed to upload file')));
                                 }
                             });
                         }).catch(function(err) {
@@ -174,6 +174,10 @@ return L.view.extend({
                         'class': 'cbi-button cbi-input-apply',
                         'value': _('Download'),
                         'click': function (ev) {
+                            if (!fileInput){
+                                return;
+                            }
+
                             rpc.call("file", "read", { path: fileInput }).then(function(content){
                                 const blob = new Blob([content], { type: "application/octet-stream" });
                                 const url = URL.createObjectURL(blob);
@@ -186,7 +190,7 @@ return L.view.extend({
 
                                 URL.revokeObjectURL(url);
                             }).catch(function(err){
-                                ui.addNotification(null, E('p', _('Failed to download: ') + err.message));
+                                ui.addNotification(null, E('p', _('Failed to download, please check if the file exists')));
                             });
 
                         }
@@ -212,7 +216,6 @@ return L.view.extend({
             E('h3', _('FileList')),
             table
         ]);
-
 
         const fetchTableFiles = () => fs.list(upload_path).then(function(files){
             tableBody.innerHTML = ''; 

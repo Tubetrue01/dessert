@@ -10,7 +10,7 @@ msgstr "支持 /tmp 目录文件的上传与安装"
 msgid "Select a file:"
 msgstr "请选择文件："
 
-msgid "Failed to upload file."
+msgid "Failed to upload file"
 msgstr "上传文件失败"
 
 msgid "Download"
@@ -22,8 +22,8 @@ msgstr "下载文件"
 msgid "Root directory:"
 msgstr "路由根路径："
 
-msgid "Failed to download: "
-msgstr "下载失败"
+msgid "Failed to download, please check if the file exists"
+msgstr "下载失败，请检查文件是否存在"
 
 msgid "Filer"
 msgstr "文件管理器"
