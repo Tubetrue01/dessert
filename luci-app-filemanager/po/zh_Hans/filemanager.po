@@ -22,6 +22,9 @@ msgstr "下载文件"
 msgid "Root directory:"
 msgstr "路由根路径："
 
+msgid "File is empty or cannot be read"
+msgstr "文件内容为空或无法读取"
+
 msgid "Failed to download, please check if the file exists"
 msgstr "下载失败，请检查文件是否存在"
 

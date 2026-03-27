@@ -78,13 +78,12 @@ return L.view.extend({
         ]);
     },
 
-    render: function(modules) {
+    render: function(data) {
         const _this = this;
 
         _this.handleSaveApply = null;
         _this.handleSave = null;
         _this.handleReset = null;
-
 
         const body = E('div', { 'class': 'cbi-map' }, []);
 
@@ -105,7 +104,7 @@ return L.view.extend({
                  'style': 'display:inline-block; width: 130px; padding-bottom: 1rem',
                  }, _('Select a file:')),
                
-               E('input', {
+                E('input', {
                         'type': 'file',
                         'class': 'cbi-input-file',
                         'style': 'width: 400px',
@@ -120,6 +119,7 @@ return L.view.extend({
                         if (!fileInput) {
                             return;
                         }
+
                         const data = new FormData();
                         const targetPath = `${upload_path}/${tmp_file}`;  
                         data.append('sessionid', rpc.getSessionID());
@@ -131,6 +131,7 @@ return L.view.extend({
                         }).then(function(res) {
                             return L.resolveDefault(callRename(`${upload_path}/${tmp_file}`, `${upload_path}/${fileInput.name}`), {}).then(function(ret) {
                                 if (ret.code === 0) {
+                                    ui.addNotification(null, E('p', _('Upload Success')));
                                     fetchTableFiles();
                                 } else {
                                     ui.addNotification(null, E('p', _('Failed to upload file')));
@@ -178,25 +179,36 @@ return L.view.extend({
                                 return;
                             }
 
-                            rpc.call("file", "read", { path: fileInput }).then(function(content){
-                                const blob = new Blob([content], { type: "application/octet-stream" });
-                                const url = URL.createObjectURL(blob);
+                            fs.read_direct(fileInput, 'blob').then(function(res) {
+                                let blob;
+                                if (res instanceof Blob) {
+                                    blob = res;
+                                } else if (res && res.data) {
+                                    blob = new Blob([res.data], { type: "application/octet-stream" });
+                                } else {
+                                    blob = new Blob([res], { type: "application/octet-stream" });
+                                }
 
+                                const url = URL.createObjectURL(blob);
                                 const fileName = fileInput.split('/').pop();
+                                
                                 const a = document.createElement("a");
                                 a.href = url;
                                 a.download = fileName;
+                                document.body.appendChild(a);
                                 a.click();
+                                document.body.removeChild(a);
 
-                                URL.revokeObjectURL(url);
-                            }).catch(function(err){
+                                setTimeout(function() {
+                                    URL.revokeObjectURL(url);
+                                }, 200);
+
+                            }).catch(function(err) {
                                 ui.addNotification(null, E('p', _('Failed to download, please check if the file exists')));
                             });
-
                         }
                 })
             ]),
-
         ]);
 
         let tableBody;

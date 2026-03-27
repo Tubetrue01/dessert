@@ -3,10 +3,11 @@
     "description": "FileManager minimal ACL",
     "read": {
       "file": {
-        "/tmp/upload/*": ["list", "read"]
+        "/*": [ "read", "list" ]
       },
       "ubus": {
-        "file": ["list", "read", "stat"]
+        "file": ["list", "read", "stat"],
+        "fs": [ "read", "list", "stat" ]
       }
     },
     "write": {
