@@ -26,13 +26,6 @@ const callMkdir = rpc.declare({
 
 });
 
-const callRemove = rpc.declare({
-    object: 'luci.filemanager',
-    method: 'remove',
-    params: ["filename"],
-
-});
-
 const formatMode = function(mode) {
         const res = [];
         const types = {

@@ -1,6 +1,5 @@
 'use strict';
 
-// 导入必要的 fs 模块函数
 import { stat, mkdir, rename, chmod, popen } from 'fs';
 
 function sanitize_path(path) {
@@ -10,27 +9,27 @@ function sanitize_path(path) {
     return true;
 }
 
-/* 兼容性执行函数：优先使用内置 system，否则使用 popen */
 function run_cmd(command_array) {
-    // 检查是否有内置 system 函数
     if (type(system) == "function") {
         return system(command_array);
     }
 
-    // 如果没有，通过 popen 模拟 (将数组转为字符串)
     let cmd_str = join(" ", command_array);
     let p = popen(cmd_str);
+
     if (p) {
-        return p.close(); // 返回退出状态码
+        return p.close();
     }
+
     return -1;
 }
 
 const methods = {
     install: {
         args: { filename: "filename" },
-        call: function(args) {
-            let ipk = args.filename;
+        call: function(req) {
+            let ipk = req.args.filename;
+
             if (!ipk || !stat(ipk)) {
                 return { code: 1, message: "File not found" };
             }
@@ -43,10 +42,8 @@ const methods = {
  rename: {
         args: { oldName: "oldName", newName: "newName" },
         call: function(req) {
-            let args = req.args;
-
-            let old_path = args.oldName;
-            let new_path = args.newName;
+            let old_path = req.args.oldName;
+            let new_path = req.args.newName;
 
             if (!sanitize_path(old_path) || !sanitize_path(new_path)) {
                 return { code: 255, message: "Security violation: Invalid path" };
@@ -68,8 +65,9 @@ const methods = {
     },
     mkdirUpload: {
         args: { uploadPath: "uploadPath" },
-        call: function(args) {
-            let up_path = args.uploadPath;
+        call: function(req) {
+            let up_path = req.args.uploadPath;
+
             if (up_path && mkdir(up_path, 0o755)) {
                 return { code: 0, message: "Directory created" };
             } else {
