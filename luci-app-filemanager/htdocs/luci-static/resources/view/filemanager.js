@@ -129,7 +129,9 @@ return L.view.extend({
                         request.post(`${L.env.cgi_base}/cgi-upload`, data, {
                             timeout: 0
                         }).then(function(res) {
-                            return L.resolveDefault(callRename(`${upload_path}/${tmp_file}`, `${upload_path}/${fileInput.name}`), {}).then(function(ret) {
+                            return L.resolveDefault(callRename(
+                                `${upload_path}/${tmp_file}`, `${upload_path}/${fileInput.name}`)
+    , {}).then(function(ret) {
                                 if (ret.code === 0) {
                                     ui.addNotification(null, E('p', _('Upload Success')));
                                     fetchTableFiles();

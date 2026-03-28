@@ -1,108 +1,91 @@
-#!/bin/sh
+#!/usr/bin/ucode
 
-. /usr/share/libubox/jshn.sh
+import { readfile, popen } from 'fs';
 
-sanitize_path() {
-    local path="$1"
-    case "$path" in
-        *..*) return 1 ;;
-    esac
-    return 0
+function sanitize_path(path) {
+    if (!path || index(path, "..") != -1) {
+        return false;
+    }
+    return true;
 }
 
-msg_json() {
-    json_init
-    json_add_int "code" "$1"
-    json_add_string "message" "$2"
-    json_dump
-    json_cleanup
+function msg_json(code, message) {
+    print(push({}, {
+        code: code,
+        message: message
+    }));
 }
 
-case "$1" in
-"list")
-    json_init
-    json_add_object "install"
-        json_add_string "filename" "filename"
-    json_close_object
-    json_add_object "rename"
-        json_add_string "oldName" "oldName"
-        json_add_string "newName" "newName"
-    json_close_object
-    json_add_object "mkdirUpload"
-        json_add_string "uploadPath" "uploadPath"
-    json_close_object
-    json_dump
-    json_cleanup
-    ;; 
-call)
-    case "$2" in
+function get_input() {
+    let raw = stdin.read("all");
+    return json(raw);
+}
 
-    install)
-        read -r input
-        json_load "$input"
-        json_get_var ipk_file "filename"
-        json_cleanup
+const cmd = ARGV[0];
+const method = ARGV[1];
 
-        if [ ! -f "$ipk_file" ]; then
-            msg_json 1 "File not found"
-            exit 1
-        fi
+switch (cmd) {
+    case "list":
+        /* 定义接口参数结构 */
+        print({
+            install: { filename: "filename" },
+            rename: { oldName: "oldName", newName: "newName" },
+            mkdirUpload: { uploadPath: "uploadPath" }
+        });
+        break;
 
-        if opkg install "$ipk_file" >/dev/null 2>&1; then
-            msg_json 0 "Installation successful"
-        else
-            msg_json 1 "Installation failed"
-            exit 1
-        fi
-        ;;
+    case "call":
+        let args = get_input();
 
-    rename)
-        read -r input
-        json_load "$input"
-        json_get_var old "oldName"
-        json_get_var new "newName"
-        json_cleanup
+        switch (method) {
+            case "install":
+                let ipk = args?.filename;
+                if (!ipk || system(['test', '-f', ipk]) != 0) {
+                    msg_json(1, "File not found");
+                    exit(1);
+                }
 
-        if ! sanitize_path "$old" || ! sanitize_path "$new"; then
-            msg_json 255 "Security violation: Invalid path"
-            exit 255
-        fi
+                if (system(['opkg', 'install', ipk]) == 0) {
+                    msg_json(0, "Installation successful");
+                } else {
+                    msg_json(1, "Installation failed");
+                    exit(1);
+                }
+                break;
 
-        if [ ! -f "$old" ]; then
-            msg_json 1 "Source file not found"
-            exit 1
-        fi
+            case "rename":
+                let old_path = args?.oldName;
+                let new_path = args?.newName;
 
-        if mv "$old" "$new" 2>/dev/null; then
-            chmod 0644 "$new"
-            msg_json 0 "Rename successful"
-        else
-            msg_json 1 "Rename failed"
-        fi
-        ;;
+                if (!sanitize_path(old_path) || !sanitize_path(new_path)) {
+                    msg_json(255, "Security violation: Invalid path");
+                    exit(255);
+                }
 
-    mkdirUpload)
-        read -r input
-        json_load "$input"
-        json_get_var upload_path "uploadPath"
-        json_cleanup
+                if (system(['mv', old_path, new_path]) == 0) {
+                    system(['chmod', '0644', new_path]);
+                    msg_json(0, "Rename successful");
+                } else {
+                    msg_json(1, "Rename failed");
+                }
+                break;
 
-        if mkdir -p "$upload_path"; then
-            msg_json 0 "Directory created"
-        else
-            msg_json 1 "Failed to create directory"
-        fi
-        ;;
+            case "mkdirUpload":
+                let up_path = args?.uploadPath;
+                if (up_path && system(['mkdir', '-p', up_path]) == 0) {
+                    msg_json(0, "Directory created");
+                } else {
+                    msg_json(1, "Failed to create directory");
+                }
+                break;
 
-    *)
-        msg_json 1 "Unknown method: $2"
-        exit 1
-        ;;
-    esac
-    ;;
+            default:
+                msg_json(1, "Unknown method: " + (method || "none"));
+                exit(1);
+        }
+        break;
 
-*)
-    msg_json 1 "Unknown command: $1"
-    exit 1
-    ;;
-esac
+    default:
+        msg_json(1, "Unknown command: " + (cmd || "none"));
+        exit(1);
+}

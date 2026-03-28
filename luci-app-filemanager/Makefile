@@ -11,10 +11,8 @@ PKG_RELEASE:=1
 define Package/$(PKG_NAME)/postinst
 #!/bin/sh
 [ -n "$${IPKG_INSTROOT}" ] || {
-	chmod +x /usr/libexec/rpcd/*
 	rm -rf /tmp/luci-indexcache /tmp/luci-modulecache/
 	/etc/init.d/rpcd restart
-	/etc/init.d/uhttpd restart
 	exit 0
 }
 endef
