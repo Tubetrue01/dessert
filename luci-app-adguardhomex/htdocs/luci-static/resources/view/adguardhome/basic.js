@@ -52,7 +52,7 @@ return view.extend({
     render: function (data) {
         let m, s, o, v;
 
-        m = new form.Map('adguardhome', _('AdGuard Home'),
+        m = new form.Map('AdGuardHome', _('AdGuard Home'),
             _('免费开源，功能强大的全网络广告和跟踪程序拦截 DNS 服务器'));
 
         // status bar 
@@ -82,7 +82,7 @@ return view.extend({
             ]);
         }
 
-        s = m.section(form.NamedSection, 'config', 'adguardhome');
+        s = m.section(form.NamedSection, 'AdGuardHome', 'AdGuardHome');
 
         // Enable button
         o = s.option(form.Flag, 'enabled', _('开启'));
@@ -98,7 +98,7 @@ return view.extend({
         o = s.option(form.DummyValue, '_link', _('Control Panel'));
         o.render = function(section_id) {
             const host = window.location.hostname;
-            const port = uci.get('adguardhome', section_id, 'httpport') || '3000';
+            const port = uci.get('AdGuardHome', section_id, 'httpport') || '3000';
             const url = `http://${host}:${port}`;
 
             return E('div', { 'class': 'cbi-value' }, [
