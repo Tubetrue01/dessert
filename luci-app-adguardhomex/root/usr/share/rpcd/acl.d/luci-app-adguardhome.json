@@ -10,7 +10,7 @@
         "write": {
             "uci": [ "AdGuardHome" ],
             "ubus": {
-                "AdGuardHome": [ "start_update" ]
+                "luci.adguardhome": [ "clearLog" ]
             }
         }
     }
