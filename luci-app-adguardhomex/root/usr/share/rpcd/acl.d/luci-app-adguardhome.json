@@ -1,17 +1,31 @@
 {
-    "luci-app-adguardhome": {
-        "description": "控制 AdGuardHome 插件的所有权限",
-        "read": {
-            "uci": [ "AdGuardHome" ],
-            "ubus": {
-                "AdGuardHome": [ "get_status", "read_log" ]
-            }
-        },
-        "write": {
-            "uci": [ "AdGuardHome" ],
-            "ubus": {
-                "luci.adguardhome": [ "clearLog" ]
-            }
-        }
+  "luci-app-adguardhome": {
+    "description": "控制 AdGuardHome 插件的所有权限",
+    "read": {
+      "uci": [
+        "AdGuardHome"
+      ],
+      "ubus": {
+        "AdGuardHome": [
+          "get_status",
+          "read_log"
+        ]
+      },
+      "file": {
+        "*.log": [
+          "read"
+        ]
+      }
+    },
+    "write": {
+      "uci": [
+        "AdGuardHome"
+      ],
+      "ubus": {
+        "luci.adguardhome": [
+          "clearLog"
+        ]
+      }
     }
+  }
 }

@@ -12,16 +12,10 @@ const callClearLog = rpc.declare({
     params: ['filename'],
 });
 
-const callDownloadLog = rpc.declare({
-    object: 'luci.adguardhome',
-    method: 'downloadLog',
-    params: ['filename'],
-});
-
 const formatLocalTime =(text) => {
     return text.replace(/\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z/g, function(utcstr) {
         const date = new Date(utcstr);
-        if (isNaN(date.getTime())) return utcstr; 
+        if (isNaN(date.getTime())) return utcstr;
         return date.toLocaleString('zh-CN', { hour12: false }).replace(/\//g, '-');
     });
 }
@@ -120,8 +114,8 @@ return L.view.extend({
 
             function createButton(text, className, handler) {
                 return E('button', {
-                    'class': 'cbi-button ' + className, 
-                    'click': ui.createHandlerFn(this, handler),  
+                    'class': 'cbi-button ' + className,
+                    'click': ui.createHandlerFn(this, handler),
                     'style': 'margin-right: 1rem ;margin-bottom: 1rem'
                 }, text);
             }
@@ -146,7 +140,7 @@ return L.view.extend({
 
                     const url = URL.createObjectURL(blob);
                     const fileName = logPath.split('/').pop();
-                    
+
                     const a = document.createElement("a");
                     a.href = url;
                     a.download = fileName;
