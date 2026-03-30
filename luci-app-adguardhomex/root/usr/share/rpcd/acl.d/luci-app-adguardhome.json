@@ -14,6 +14,9 @@
       "file": {
         "*.log": [
           "read"
+        ],
+        "*.yaml":[
+          "read"
         ]
       }
     },
@@ -24,7 +27,12 @@
       "ubus": {
         "luci.adguardhome": [
           "clearLog"
-        ]
+        ],
+        "file":{
+          "*.yaml":[
+            "write"
+          ]
+        }
       }
     }
   }
