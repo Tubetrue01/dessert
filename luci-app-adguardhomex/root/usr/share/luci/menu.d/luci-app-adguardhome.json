@@ -7,7 +7,7 @@
 		},
 		"depends": {
 			"acl": [ "luci-app-adguardhome" ],
-			"uci": { "adguardhome": true }
+			"uci": { "AdGuardHome": true }
 		}
 	},
 	"admin/services/adguardhome/basic": {

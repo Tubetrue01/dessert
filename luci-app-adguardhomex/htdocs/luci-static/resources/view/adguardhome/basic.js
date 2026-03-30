@@ -4,6 +4,8 @@
 'require uci';
 'require form';
 'require view';
+'require ui';
+
 
 const callServiceList = rpc.declare({
     object: 'service',
@@ -106,7 +108,7 @@ return view.extend({
                 E('div', { 'class': 'cbi-value-field' }, [
                     E('input', {
                         'type': 'text',
-                        'class': 'cbi-input-text', // 继承主题的输入框样式
+                        'class': 'cbi-input-text', 
                         'readonly': true,
                         'value': `AdguardHomeWeb:${port}`,
                         'style': 'text-align: center; cursor:pointer; color:green; font-weight:bold; width:100%;',
@@ -126,7 +128,9 @@ return view.extend({
             const renderLog = (textarea, checkbox) => {
                 const displayData = checkbox.checked ? [...logData].reverse() : logData;
                 textarea.value = displayData.join('\n');
-                if (!checkbox.checked) textarea.scrollTop = textarea.scrollHeight;
+                if (!checkbox.checked) {
+                    textarea.scrollTop = textarea.scrollHeight;
+                }
             };
 
             const logBox = E('textarea', {
@@ -135,15 +139,23 @@ return view.extend({
                 'readonly': true
             });
 
-            const reverseCheck = E('input', { 'type': 'checkbox', 'style': 'margin-right:5px' });
-            const checkLabel = E('label', { 'style': 'display:none; margin-top:10px' }, [
-                reverseCheck, _('逆序排列日志')
+            const reverseCheck = E('input', { 
+                'type': 'checkbox', 
+                'style': 'margin: 0; cursor: pointer; width: 14px; height: 14px; top: 0'  
+            });
+
+            const checkLabel = E('label', { 
+                'style': 'display:none; margin-top:10px; align-items: center; cursor: pointer; gap: 6px; line-height: 1;' 
+            }, [
+                reverseCheck,
+                E('span', { 'style': 'line-height: 1;' }, _('逆序排列日志'))
             ]);
 
             const btnForce = E('button', {
                 'class': 'cbi-button cbi-button-reset',
                 'style': 'display:none; margin-left:10px',
-                'click': () => {
+                'click': (ev) => {
+                    ev.preventDefault();
                     logData.push(`[${new Date().toLocaleTimeString()}] 触发强制更新...`);
                     renderLog(logBox, reverseCheck);
                 }
@@ -152,24 +164,210 @@ return view.extend({
             const btnUpdate = E('button', {
                 'class': 'cbi-button cbi-button-apply',
                 'click': (ev) => {
+                    ev.preventDefault();
                     btnForce.style.display = 'inline-block';
                     logBox.style.display = 'block';
-                    checkLabel.style.display = 'block';
+                    checkLabel.style.display = 'flex';
                     
                     logData.push(`[${new Date().toLocaleTimeString()}] 开始检查更新...`);
                     renderLog(logBox, reverseCheck);
                 }
-            }, [ _('更新核心版本') ]);
+            }, [ _('更新核心版本')]);
 
             reverseCheck.onclick = () => renderLog(logBox, reverseCheck);
 
             return E('div', { 'class': 'cbi-value' }, [
-                E('label', { 'class': 'cbi-value-title' }, _('更新')),
-                E('div', {}, [ btnUpdate, btnForce ]),
-                checkLabel,
-                logBox
+                E('label', { 'class': 'cbi-value-title' }, _('版本更新')),
+                E('div', { 'class': 'cbi-value-field' }, [
+                    E('div', { 'style': 'margin-bottom: 8px;' }, [ btnUpdate, btnForce ]),
+                    E('div', { 'class': 'cbi-value-description' }, [
+                        E('img', { 
+                            'src': L.resource('cbi/help.gif'), 
+                            'style': 'vertical-align: middle; margin-right: 4px;' 
+                        }),
+                        _('当前的核心版本为：0x162')
+                    ]),
+                    checkLabel,
+                    logBox
+                ])
             ]);
         };
+
+        // Redirect Mode
+        o = s.option(form.ListValue, 'port_mode', _('重定向'));
+        o.description = _('选择处理 DNS 流量的方式。');
+
+        o.value('none', _('无'));
+        o.value('dnsmasq-upstream', _('作为 Dnsmasq 的上游服务器'));
+        o.value('redirect', _('重定向 53 端口到 AdGuardHome'));
+        o.value('exchange', _('使用 53 端口替换 Dnsmasq'));
+
+        o.default = 'none';
+
+        // Binary path
+        o = s.option(form.Value, 'binary_path', _('执行文件路径'));
+        o.description =_('AdGuardHome 执行文件路径 如果没有执行文件将自动下载');
+        o.datatype = 'string';
+        o.default = '/usr/bin/AdGuardHome';
+        o.placeholder = '/usr/bin/AdGuardHome';
+
+        // Architecture
+        o = s.option(form.ListValue, 'arch', _('要下载的程序架构'));
+        o.description = _('手动下载前如该选项有变更需先保存并应用后再点下载');
+
+        o.value('auto', _('自动'));
+        o.value('386', 'i386');
+        o.value('amd64', 'x86_64');
+        o.value('armv5','armv5');
+        o.value('armv6','armv6');
+        o.value('armv7','armv7');
+        o.value('arm64','aarch64');
+        o.value('mips_softfloat','mips');
+        o.value('mips64_softfloat','mips64');
+        o.value('mipsle_softfloat','mipsel');
+        o.value('mips64le_softfloat','mips64el');
+        o.value('ppc64le','powerpc64');
+
+        o.default = 'auto';
+
+        // Upx to compress
+        o = s.option(form.ListValue, 'upx',_('下载后使用 upx 压缩执行文件')); 
+        o.description=_('减小执行文件空间占用，但是可能压缩后有兼容性问题');
+
+        o.value('0', _('无'));
+        o.value('-1', _('快速压缩'));
+        o.value('-9', _('更好的压缩'));
+        o.value('--best', _('最好的压缩(大文件可能慢)'));
+        o.value('--brute', _('尝试所有可能的压缩方法和过滤器[慢]'));
+        o.value('--ultra-brute', _('尝试更多变体压缩手段[很慢]'));
+
+        o.default = '0';
+
+        // Config path
+        o = s.option(form.Value, 'config_path', _('配置文件路径'));
+        o.description =_('AdGuardHome 配置文件路径');
+        o.datatype = 'string';
+        o.default = '/etc/AdGuardHome.yaml';
+        o.placeholder = '/etc/AdGuardHome.yaml';
+        
+        // Work dir
+        o = s.option(form.Value, 'work_dir', _('工作目录'));
+        o.description =_('AdGuardHome 工作目录包含规则，审计日志和数据库');
+        o.datatype = 'string';
+        o.default = '/opt/data/AdGuardHome';
+        o.placeholder = '/opt/data/AdGuardHome';
+
+        // Logs path
+        o = s.option(form.Value, 'logs_path', _('运行日志'));
+        o.description =_(' AdGuardHome 运行日志 如果填 syslog 将写入系统日志；如果空则不记录日志');
+        o.datatype = 'string';
+        o.default = '/opt/data/AdGuardHome/log.log';
+        o.placeholder = '/opt/data/AdGuardHome/log.log';
+
+        // Detail log
+        o = s.option(form.Flag, 'enable_detail_log', _('详细日志'));
+        o.default = "0";
+        o.rmempty = false;
+
+        // Auto restart after boot
+        o = s.option(form.ListValue, 'backup_files', _('在关机时备份工作目录文件'));
+        o.description = _('在工作目录 /data 为空的时候恢复');
+        o.widget = 'checkbox';
+
+        o.renderWidget = function(section_id, option_index, cfgvalue) {
+            const choices = this.transformChoices();
+            const widget = new ui.Select(cfgvalue, choices, {
+                id: this.cbid(section_id),
+                multiple: true,         
+                widget: 'checkbox',     
+                orientation: 'horizontal',  
+                disabled: (this.readonly != null) ? this.readonly : this.map.readonly
+            });
+
+            const node = widget.render();
+
+            requestAnimationFrame(() => {
+                node.querySelectorAll('.cbi-checkbox').forEach(el => {
+                    el.style.marginRight = '1rem';
+                    el.style.display = 'inline-flex';
+                    el.style.alignItems = 'center';
+                    el.style.gap = '0.2rem';
+                });
+            });
+            return node;
+        };
+
+        o.value('filters', 'filters');
+        o.value('stats.db', 'stats.db');
+        o.value('querylog.json', 'querylog.json');
+        o.value('sessions.db', 'sessions.db');
+        o.value('querylog.json.1', 'querylog.json.1');
+
+        o.rmempty = true;
+
+        // Work dir backup path
+        o = s.option(form.Value, 'work_dir_backup', _('工作目录备份路径'));
+        o.datatype = 'string';
+        o.default = '/opt/data/AdGuardHome/backup';
+        o.placeholder = '/opt/data/AdGuardHome/backup';
+
+        // Version type to update
+        o = s.option(form.ListValue, 'version_type',_('选择需要更新的版本')); 
+        o.description=_('如果修改了版本选项，请自行确认下方升级用的下载链接');
+
+        o.value('release', _('稳定版（默认）'));
+        o.value('beta', _('测试版'));
+
+        o.default = 'release';
+
+        // Update link
+        o = s.option(form.TextValue, 'update_link', _('升级用的下载链接'));
+        o.rows = 10;      
+        o.cols = 50;     
+        o.wrap = 'on';    
+        o.monospace = true;  
+        o.rmempty = true;  
+
+        // Additional 
+        o = s.option(form.ListValue, '_add_select', _('更多选项'));
+        o.value('gfwdel', _('删除 gfw 列表'));
+        o.value('gfwadd', _('加入 gfw 列表'));
+        o.value('gfwupstream', _('gfw 列表上游服务器'));
+        o.value('hashpass', _('改变网页登录密码'));
+        o.value('upprotect', _('系统升级时保留文件'));
+        o.value('crontab', _('计划任务'));
+
+        o.renderWidget = function(section_id, option_index, cfgvalue) {
+        const selectNode = L.form.ListValue.prototype.renderWidget.apply(this, [section_id, option_index, cfgvalue]);
+        const container = E('div', { 'style': 'display: flex; align-items: center;' }, [
+            selectNode,
+            E('button', {
+                'class': 'cbi-button cbi-button-add',
+                'style': 'margin-left: 0.5rem;',
+                'click': ui.createHandlerFn(this, function(ev) {
+                    const val = selectNode.querySelector('select').value;
+                    if (!val) return;
+
+                    const current = uci.get('your_config', section_id, 'backup_list') || [];
+                    if (typeof(current) === 'string') current = current.split(/\s+/);
+                    
+                    if (current.indexOf(val) === -1) {
+                        current.push(val);
+                        uci.set('your_config', section_id, 'backup_list', current);
+                        
+                        return uci.save().then(function() {
+                            return uci.apply().then(function() {
+                                window.location.reload();
+                            });
+                        });
+                    }
+                })
+            }, [_('添加')])
+        ]);
+
+            return container;
+        };
+
 
         return m.render();
 
