@@ -1,0 +1,27 @@
+'use strict';
+
+const fs = require('fs');
+
+const methods = {
+    clearLog: {
+        args: { filename: "filename" },
+        call: function(req) {
+            const filename = req.args.filename;
+
+            if (!filename) {
+                return { code: 1, error: "未指定文件名" };
+            }
+
+            const fd = fs.open(filename, "w");
+
+            if (fd) {
+                fd.close(); 
+                return { code: 0, message: "文件已成功清空", path: filename };
+            } else {
+                return { code: 1, error: "无法打开文件进行写入", path: filename };
+            }
+        }
+    }
+};
+
+return { "luci.adguardhome": methods };
