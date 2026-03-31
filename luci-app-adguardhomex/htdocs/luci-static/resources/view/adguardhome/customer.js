@@ -47,12 +47,13 @@ async function loadCodeMirrorResources() {
 return view.extend({
 	load: function() {
 		return Promise.all([
-			loadCodeMirrorResources()
+			loadCodeMirrorResources(),
+			uci.load('AdGuardHome')
 		]);
 	},
 
 	render: function (data) {
-		const configPath = uci.get('AdGuardHome', 'AdGuardHome', 'configpath');
+		const configPath = uci.get('AdGuardHome', 'AdGuardHome', 'config');
 		
 		const m = new form.Map('AdGuardHome', null);
 		const s = m.section(form.NamedSection, 'AdGuardHome', 'AdGuardHome');

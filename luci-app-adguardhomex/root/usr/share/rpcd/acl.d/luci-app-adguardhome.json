@@ -5,12 +5,6 @@
       "uci": [
         "AdGuardHome"
       ],
-      "ubus": {
-        "AdGuardHome": [
-          "get_status",
-          "read_log"
-        ]
-      },
       "file": {
         "*.log": [
           "read"
@@ -27,13 +21,14 @@
       "ubus": {
         "luci.adguardhome": [
           "clearLog"
-        ],
-        "file":{
+        ]
+      },
+       "file":{
           "*.yaml":[
             "write"
           ]
         }
-      }
     }
   }
 }
+

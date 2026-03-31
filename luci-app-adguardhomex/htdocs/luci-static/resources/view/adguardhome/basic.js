@@ -92,7 +92,7 @@ return view.extend({
         o.default = '0';
 
         // WebPort
-        o = s.option(form.Value, 'httpport', _('网页管理端口'));
+        o = s.option(form.Value, 'http_port', _('网页管理端口'));
         o.datatype = 'port';
         o.default = '3000';
 
@@ -194,18 +194,17 @@ return view.extend({
         };
 
         // Redirect Mode
-        o = s.option(form.ListValue, 'port_mode', _('重定向'));
+        o = s.option(form.ListValue, 'redirect', _('重定向'));
         o.description = _('选择处理 DNS 流量的方式。');
 
         o.value('none', _('无'));
-        o.value('dnsmasq-upstream', _('作为 Dnsmasq 的上游服务器'));
+        o.value('upstream', _('作为 Dnsmasq 的上游服务器'));
         o.value('redirect', _('重定向 53 端口到 AdGuardHome'));
-        o.value('exchange', _('使用 53 端口替换 Dnsmasq'));
 
         o.default = 'none';
 
         // Binary path
-        o = s.option(form.Value, 'binary_path', _('执行文件路径'));
+        o = s.option(form.Value, 'bin_path', _('执行文件路径'));
         o.description =_('AdGuardHome 执行文件路径 如果没有执行文件将自动下载');
         o.datatype = 'string';
         o.default = '/usr/bin/AdGuardHome';
@@ -231,7 +230,7 @@ return view.extend({
         o.default = 'auto';
 
         // Upx to compress
-        o = s.option(form.ListValue, 'upx',_('下载后使用 upx 压缩执行文件')); 
+        o = s.option(form.ListValue, 'upx_flag',_('下载后使用 upx 压缩执行文件')); 
         o.description=_('减小执行文件空间占用，但是可能压缩后有兼容性问题');
 
         o.value('0', _('无'));
@@ -258,14 +257,14 @@ return view.extend({
         o.placeholder = '/opt/data/AdGuardHome';
 
         // Logs path
-        o = s.option(form.Value, 'logs_path', _('运行日志'));
+        o = s.option(form.Value, 'log_file', _('运行日志'));
         o.description =_(' AdGuardHome 运行日志 如果填 syslog 将写入系统日志；如果空则不记录日志');
         o.datatype = 'string';
         o.default = '/opt/data/AdGuardHome/log.log';
         o.placeholder = '/opt/data/AdGuardHome/log.log';
 
         // Detail log
-        o = s.option(form.Flag, 'enable_detail_log', _('详细日志'));
+        o = s.option(form.Flag, 'verbose', _('详细日志'));
         o.default = "0";
         o.rmempty = false;
 
@@ -312,65 +311,15 @@ return view.extend({
         o.placeholder = '/opt/data/AdGuardHome/backup';
 
         // Version type to update
-        o = s.option(form.ListValue, 'version_type',_('选择需要更新的版本')); 
-        o.description=_('如果修改了版本选项，请自行确认下方升级用的下载链接');
+        s = m.section(form.NamedSection, 'UpdateLinks', 'AdGuardHome', null);
+        s.addremove = false;  
+        s.anonymous = false;
 
-        o.value('release', _('稳定版（默认）'));
-        o.value('beta', _('测试版'));
-
-        o.default = 'release';
-
-        // Update link
-        o = s.option(form.TextValue, 'update_link', _('升级用的下载链接'));
-        o.rows = 10;      
-        o.cols = 50;     
-        o.wrap = 'on';    
-        o.monospace = true;  
-        o.rmempty = true;  
-
-        // Additional 
-        o = s.option(form.ListValue, '_add_select', _('更多选项'));
-        o.value('gfwdel', _('删除 gfw 列表'));
-        o.value('gfwadd', _('加入 gfw 列表'));
-        o.value('gfwupstream', _('gfw 列表上游服务器'));
-        o.value('hashpass', _('改变网页登录密码'));
-        o.value('upprotect', _('系统升级时保留文件'));
-        o.value('crontab', _('计划任务'));
-
-        o.renderWidget = function(section_id, option_index, cfgvalue) {
-        const selectNode = L.form.ListValue.prototype.renderWidget.apply(this, [section_id, option_index, cfgvalue]);
-        const container = E('div', { 'style': 'display: flex; align-items: center;' }, [
-            selectNode,
-            E('button', {
-                'class': 'cbi-button cbi-button-add',
-                'style': 'margin-left: 0.5rem;',
-                'click': ui.createHandlerFn(this, function(ev) {
-                    const val = selectNode.querySelector('select').value;
-                    if (!val) return;
-
-                    const current = uci.get('your_config', section_id, 'backup_list') || [];
-                    if (typeof(current) === 'string') current = current.split(/\s+/);
-                    
-                    if (current.indexOf(val) === -1) {
-                        current.push(val);
-                        uci.set('your_config', section_id, 'backup_list', current);
-                        
-                        return uci.save().then(function() {
-                            return uci.apply().then(function() {
-                                window.location.reload();
-                            });
-                        });
-                    }
-                })
-            }, [_('添加')])
-        ]);
-
-            return container;
-        };
-
-
+        o = s.option(form.DynamicList, 'url', _('升级用的下载链接'));
+        o.rmempty = true;
+        o.datatype = 'string';
+        
         return m.render();
-
     }
 
 });

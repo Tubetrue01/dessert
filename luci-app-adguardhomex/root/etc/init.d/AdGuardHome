@@ -1,0 +1,57 @@
+#!/bin/sh /etc/rc.common
+
+USE_PROCD=1
+
+START=95
+STOP=01
+
+SERVER_NAME=AdGuardHome
+CONFIGURATION=${SERVER_NAME}
+ADG_HELPER="/usr/share/adguardhome/adguardhome.uc"
+
+service_triggers() {
+    procd_add_reload_trigger "${CONFIGURATION}"
+}
+
+start_service() {
+    local bin_args=$($ADG_HELPER apply)  
+    
+    if [ "$bin_args" = "false" ] || [ -z "$bin_args" ]; then
+        $ADG_HELPER stop
+        return 1
+    fi
+
+    local tz=$(cat /etc/TZ 2>/dev/null)
+
+    procd_open_instance "AdGuardHome"
+    [ -n "$tz" ] && procd_set_param env TZ="$tz"
+    procd_set_param limits nofile="65535 65535"
+    procd_set_param respawn 3600 5 5
+    procd_set_param stderr 1
+    
+    set -- $bin_args
+    procd_set_param command "$@" 
+    procd_set_param file "/etc/config/AdGuardHome"
+    
+    procd_close_instance
+
+    (
+        sleep 10
+        if ! pgrep -f "$1" > /dev/null; then
+            logger -t AdGuardHome "Process $1 failed to start, restoring network..."
+            $ADG_HELPER stop
+        fi
+    ) &
+}
+
+stop_service() {
+    $ADG_HELPER stop
+}
+
+reload_service() {
+    if pgrep -f "AdGuardHome" > /dev/null; then
+        procd_send_signal AdGuardHome
+    else
+        start_service
+    fi
+}
