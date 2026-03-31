@@ -304,13 +304,13 @@ function apply_config_to_yaml() {
 
     if (!stat(work_dir)) {
         exec_sys(`mkdir -p ${work_dir}`);
-    }
 
-    const work_dir_backup = _get_conf(service_name, "work_dir_backup");
-    if (work_dir_backup && stat(work_dir_backup)) {
-        const files = fs.readdir(work_dir);
-        if (!files || length(files) === 0) {
-            exec_sys(`cp -r ${work_dir_backup}/* ${work_dir}/`);
+        const work_dir_backup = _get_conf(service_name, "work_dir_backup");
+        if (work_dir_backup && stat(work_dir_backup)) {
+            const files = fs.readdir(work_dir);
+            if (!files || length(files) === 0) {
+                exec_sys(`cp -r ${work_dir_backup}/* ${work_dir}/`);
+            }
         }
     }
 
