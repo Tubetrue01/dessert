@@ -14,6 +14,11 @@ config AdGuardHome 'AdGuardHome'
 	option backup_files 'filter status.db'
 
 config AdGuardHome 'UpdateLinks'
-	list url 'http://example.com/file1.bin'
-	list url 'http://example.com/file2.bin'
-	list url 'http://example.com/file3.bin'
+	list url 'https://static.adguard.com/adguardhome/release/AdGuardHome_linux_${Arch}.tar.gz'
+	list url '#https://static.adguard.com/adguardhome/beta/AdGuardHome_linux_${Arch}.tar.gz'
+	list url 'https://github.com/AdguardTeam/AdGuardHome/releases/download/${latest_ver}/AdGuardHome_linux_${Arch}.tar.gz'
+
+
+
+
+
