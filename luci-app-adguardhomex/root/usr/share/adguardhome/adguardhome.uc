@@ -251,7 +251,7 @@ function _backup_data() {
         let retry_count = 0;
 
         while (!success && retry_count < 2) {
-            const src = `${work_dir}/${item}`;
+            const src = `${work_dir}/data/${item}`;
             const cmd = `cp -u -r -f \"${src}\" \"${backup_path}\" 2>&1`;
 
             const fd = popen(cmd);
@@ -272,15 +272,15 @@ function _backup_data() {
 
 function _clear_space_for_backup(workDir, backupDataDir) {
     const logFile = "querylog.json";
-    if (stat(`${workDir}/${logFile}`)) {
-        unlink(`${workDir}/${logFile}`);
+    if (stat(`${workDir}/data/${logFile}`)) {
+        unlink(`${workDir}/data/${logFile}`);
     }
     if (stat(`${backupDataDir}/${logFile}`)) {
         unlink(`${backupDataDir}/${logFile}`);
     }
 
-    if (stat(`${workDir}/${filters}`)){
-        exec_sys(`rm -rf ${workDir}/filters`);
+    if (stat(`${workDir}/data/${filters}`)){
+        exec_sys(`rm -rf ${workDir}/data/filters`);
     }
 
     if (stat(`${backupDataDir}/filters`)) {
@@ -297,19 +297,19 @@ function apply_config_to_yaml() {
 
     const config_path = _get_conf(service_name, "config_path");
     const httpport = _get_conf(service_name, "http_port", "3000");
-    const work_dir = _get_conf(service_name, "work_dir", "/etc/AdGuardHome");
+    const work_dir = _get_conf(service_name, "work_dir", "/opt/data/AdGuardHome");
     const bin_path = _get_conf(service_name, "bin_path", "/usr/bin/AdGuardHome");
 
     _patch_config(config_path, "http.address", `0.0.0.0:${httpport}`);
 
-    if (!stat(work_dir)) {
-        exec_sys(`mkdir -p ${work_dir}`);
+    if (!stat(`${work_dir}/data`)) {
+        exec_sys(`mkdir -p ${work_dir}/data`);
 
         const work_dir_backup = _get_conf(service_name, "work_dir_backup");
         if (work_dir_backup && stat(work_dir_backup)) {
-            const files = fs.readdir(work_dir);
+            const files = fs.readdir(`${work_dir}/data`);
             if (!files || length(files) === 0) {
-                exec_sys(`cp -r ${work_dir_backup}/* ${work_dir}/`);
+                exec_sys(`cp -r ${work_dir_backup}/* ${work_dir}/data`);
             }
         }
     }
@@ -317,7 +317,7 @@ function apply_config_to_yaml() {
     if (_getFilesystem(work_dir) === "jffs2") {
         const dbFiles = ["stats.db", "sessions.db"];
         for (let file in dbFiles) {
-            const filePath = `${work_dir}/${file}`;
+            const filePath = `${work_dir}/data/${file}`;
             const tmpPath = `/tmp/AdGuardHome_${file}`;
 
             if (!fs.readlink(filePath)) {
