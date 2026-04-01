@@ -1,6 +1,148 @@
 'use strict';
 
 const fs = require('fs');
+const uci = require("uci").cursor();
+
+const archMap = {
+    "aarch64": "arm64",
+    "x86_64": "amd64",
+    "i386": "386",
+    "armv7l": "armv7", 
+    "armv6l": "armv6",
+    "armv5": "armv5",
+    "mips": "mips_softfloat",
+    "mipsel": "mipsle_softfloat",
+    "mips64": "mips64_softfloat",
+    "mips64el": "mips64le_softfloat",
+    "powerpc64": "ppc64le"
+};
+
+const service_name = "AdGuardHome";
+const github_api = "https://api.github.com/repos/AdguardTeam/AdGuardHome/releases/latest";
+uci.load(service_name);
+
+function _exec_sys(cmd) {
+    const p = fs.popen(`sh -c "${cmd} 2>&1"`, "r");
+    if (!p) return { code: -1, data: "" };
+
+    let stdout = p.read("all");
+    const code = p.close();
+
+    return {
+        code: code,
+        data: (type(stdout) == "string") ? trim(stdout) : ""
+    };
+}
+
+function _log(msg) {
+    const log_path = "/tmp/AdGuardHome_update.log";
+    const f = fs.open(log_path, "a");
+    const date = system.date();
+    if (f) {
+        f.write(`[${date}] ${msg}\n`);
+        f.close(); 
+    }
+}
+
+function _uci_get(setction_name, defaultVal) {
+    return uci.get(service_name, service_name, setction_name) || defaultVal;
+}
+
+function _update() {
+    let arch = _uci_get("arch", "auto");
+
+    if (arch === "auto") {
+        const uname = _exec_sys("uname -m").data;
+        arch = archMap[uname] || "amd64";
+        _log(`The detected system architecture is: ${arch}`);
+    } else {
+        _log(`The manually selected architecture is: ${arch}`);
+    }
+
+    let version = "";
+    const res = _exec_sys(`curl -sL --connect-timeout 5 "${github_api}"`).data;
+
+    try {
+        const data = json(res);
+        if (data?.tag_name) {
+            version = data.tag_name;
+            _log(`The latest version obtained is: ${version}`);
+        }
+    } catch(e) {
+        _log("Unable to retrieve the latest version. Please try again later.");
+        return;
+    }
+
+    const bin_path = _uci_get("bin_path");
+
+    let links = [];
+    uci.foreach(service_name, service_name, (s) => {
+        if (s[".name"] === "UpdateLinks" && s.url) {
+            if (type(s.url) === "array") {
+                    for (let i, u in s.url) {
+                        if (u && index(u, "#") !== 0) {
+                            push(links, u);
+                        }
+                    }
+            } else if (type(s.url) === "string" && !s.url.match(/^#/)) {
+                push(links, s.url);
+            }
+        }
+    });
+
+    const upx = _uci_get("upx_flag");
+    _log(`upx is: ${upx}`);
+
+    const tmp = "/tmp/AGH_update";
+    _exec_sys(`rm -rf ${tmp} && mkdir -p ${tmp}`);
+
+    for (let i, tpl in links) {
+        const url = replace(tpl, /\$\{([^}]+)\}/g,
+            (m, k) => k === "Arch" ? arch :
+                        k === "latest_ver" ? version : m
+        );
+
+        const file = `${tmp}/agh.tar.gz`;
+        _log(`Starting download from: ${url}`);
+        const down_rtn = _exec_sys(`wget --no-check-certificate -O ${file} ${url}`);
+       
+        if (down_rtn.code !== 0) {
+            _log(`Download failed: ${down_rtn.data}, and try again by other links.`);
+            continue;
+        }
+
+        if (_exec_sys(`tar -tzf "${file}"`).code !== 0) {
+            continue;
+        }
+
+        _exec_sys(`tar -xzf "${file}" -C ${tmp}`);
+
+        const found = _exec_sys(`find ${tmp} -type f -name AdGuardHome`).data;
+        if (!found) {
+            continue;
+        }
+
+        const extracted = split(found, "\n")[0];
+        if (!stat(extracted)) {
+            continue;
+        }
+
+        if (upx) {
+            _log("Ready to upx it.");
+            _exec_sys(`/usr/bin/upx ${upx} "${extracted}"`);
+        }
+        
+        _exec_sys(`mv "${extracted}" "${bin_path}"`);
+        _exec_sys(`chmod +x "${bin_path}"`);
+        _exec_sys(`rm -rf ${tmp}`);
+
+        if (fs.stat(bin_path)) {
+            _log("Success.");
+            return;
+        }
+        _log("Failed, please try it agin for a later.");
+    }    
+}
 
 const methods = {
     clearLog: {
@@ -20,6 +162,13 @@ const methods = {
             } else {
                 return { code: 1, error: "Unable to open the file for writing", path: filename };
             }
+        }
+    },
+    updateCore: {
+        call: function() {
+            const cmd = "ucode -e \"require('/usr/share/rpcd/ucode/luci.adguardhome')._update()\" &";
+            system(cmd);
+            return { code: 0, message: "Update task started in background" };
         }
     }
 };

@@ -7,6 +7,8 @@
 'require ui';
 
 
+const serviceName = "AdGuardHome";
+
 const callServiceList = rpc.declare({
     object: 'service',
     method: 'list',
@@ -14,35 +16,30 @@ const callServiceList = rpc.declare({
     expect: { '': {} }
 });
 
+const callUpateCore = rpc.declare({
+    object: 'luci.adguardhome',
+    method: "updateCore",
+});
+
 const getServiceStatus = () => {
-    // TODO need to process redirecting status
-    return L.resolveDefault(callServiceList('adguardhome'), {}).then(function (res) {
+    return L.resolveDefault(callServiceList(serviceName), {}).then(function (res) {
         let isRunning = false;
         try {
-            isRunning = res['adguardhome']['instances']['adguardhome']['running'];
+            isRunning = res[serviceName]['instances'][serviceName]['running'];
         } catch (e) { }
         return isRunning;
     });
 }
 
-const renderStatus = (isRunning, isRedirecting) => {
+const runnintStatus = (isRunning) => {
     const runColor = isRunning ? 'green' : 'red';
     const runText = isRunning ? _('Running') : _('Stopped');
-
-    const redirColor = isRedirecting ? 'green' : 'red';
-    const redirText = isRedirecting ? _('Redirecting') : _('NotRedirect');
 
     return `
         <em>
             <span style="color:${runColor}"><strong>${_("AdGuard Home")} ${runText}</strong></span>
-            <span style="color:${redirColor}"><strong> | ${redirText}</strong></span>
         </em>`;
 }
-
-const loadStaticResource = async () => {
-
-}
-
 
 return view.extend({
     load: function () {
@@ -54,7 +51,7 @@ return view.extend({
     render: function (data) {
         let m, s, o, v;
 
-        m = new form.Map('AdGuardHome', _('AdGuard Home'),
+        m = new form.Map(serviceName, _('AdGuard Home'),
             _('免费开源，功能强大的全网络广告和跟踪程序拦截 DNS 服务器'));
 
         // status bar 
@@ -68,7 +65,7 @@ return view.extend({
                         .then(function (running) {
                             const view = document.getElementById('serviceStatus');
                             if (view) {
-                                view.innerHTML = renderStatus(running, false);
+                                view.innerHTML = runnintStatus(running);
                             } else {
                                 console.error('Element #serviceStatus not found.');
                             }
@@ -76,15 +73,12 @@ return view.extend({
                 });
             }, 100);
 
-            // Now we can load static resources after the initial render to avoid blocking the UI
-            loadStaticResource();
-
             return E('div', { class: 'cbi-section', id: 'status_bar' }, [
                 E('p', { id: 'serviceStatus' }, _('Collecting data...'))
             ]);
         }
 
-        s = m.section(form.NamedSection, 'AdGuardHome', 'AdGuardHome');
+        s = m.section(form.NamedSection, serviceName, serviceName);
 
         // Enable button
         o = s.option(form.Flag, 'enabled', _('开启'));
@@ -100,7 +94,7 @@ return view.extend({
         o = s.option(form.DummyValue, '_link', _('Control Panel'));
         o.render = function(section_id) {
             const host = window.location.hostname;
-            const port = uci.get('AdGuardHome', 'AdGuardHome', 'http_port') || '3000';
+            const port = uci.get(serviceName, serviceName, 'http_port') || '3000';
             const url = `http://${host}:${port}`;
 
             return E('div', { 'class': 'cbi-value' }, [
@@ -151,21 +145,10 @@ return view.extend({
                 E('span', { 'style': 'line-height: 1;' }, _('逆序排列日志'))
             ]);
 
-            const btnForce = E('button', {
-                'class': 'cbi-button cbi-button-reset',
-                'style': 'display:none; margin-left:10px',
-                'click': (ev) => {
-                    ev.preventDefault();
-                    logData.push(`[${new Date().toLocaleTimeString()}] 触发强制更新...`);
-                    renderLog(logBox, reverseCheck);
-                }
-            }, [ _('强制更新') ]);
-
             const btnUpdate = E('button', {
                 'class': 'cbi-button cbi-button-apply',
                 'click': (ev) => {
                     ev.preventDefault();
-                    btnForce.style.display = 'inline-block';
                     logBox.style.display = 'block';
                     checkLabel.style.display = 'flex';
                     
@@ -179,7 +162,7 @@ return view.extend({
             return E('div', { 'class': 'cbi-value' }, [
                 E('label', { 'class': 'cbi-value-title' }, _('版本更新')),
                 E('div', { 'class': 'cbi-value-field' }, [
-                    E('div', { 'style': 'margin-bottom: 8px;' }, [ btnUpdate, btnForce ]),
+                    E('div', { 'style': 'margin-bottom: 8px;' }, [ btnUpdate ]),
                     E('div', { 'class': 'cbi-value-description' }, [
                         E('img', { 
                             'src': L.resource('cbi/help.gif'), 

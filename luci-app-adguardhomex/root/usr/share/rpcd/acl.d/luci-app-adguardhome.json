@@ -26,6 +26,9 @@
        "file":{
           "*.yaml":[
             "write"
+          ],
+          "/tmp/AdGuardHome_update.log":[
+            "write"
           ]
         }
     }

@@ -5,9 +5,8 @@
 'require view';
 'require fs';
 
-/**
- * 异步加载外部 JS 库
- */
+const serviceName = "AdGuardHome";
+
 async function loadCodeMirrorResources() {
 	const styles = [
 		'/luci-static/resources/view/adguardhome/codemirror5/theme/dracula.min.css',
@@ -53,10 +52,10 @@ return view.extend({
 	},
 
 	render: function (data) {
-		const configPath = uci.get('AdGuardHome', 'AdGuardHome', 'config');
+		const configPath = uci.get(serviceName, serviceName, 'config_path');
 		
-		const m = new form.Map('AdGuardHome', null);
-		const s = m.section(form.NamedSection, 'AdGuardHome', 'AdGuardHome');
+		const m = new form.Map(serviceName, null);
+		const s = m.section(form.NamedSection, serviceName, serviceName);
 
 		let configeditor = null;
 		const o = s.option(form.TextValue, 'yaml_config', _('YAML 配置内容')); 
