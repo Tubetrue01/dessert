@@ -5,6 +5,7 @@
 'require form';
 'require view';
 'require ui';
+'require fs';
 
 
 const serviceName = "AdGuardHome";
@@ -21,8 +22,14 @@ const callUpateCore = rpc.declare({
     method: "updateCore",
 });
 
+const callCurrentVersion = rpc.declare({
+    object: 'luci.adguardhome',
+    method: "currentVersion",
+    expect: { '': {} }
+});
+
 const getServiceStatus = () => {
-    return L.resolveDefault(callServiceList(serviceName), {}).then(function (res) {
+    return L.resolveDefault(callServiceList(serviceName), {}).then((res) =>  {
         let isRunning = false;
         try {
             isRunning = res[serviceName]['instances'][serviceName]['running'];
@@ -44,11 +51,12 @@ const runnintStatus = (isRunning) => {
 return view.extend({
     load: function () {
         return Promise.all([
-            L.resolveDefault(),
+            L.resolveDefault(callCurrentVersion(), {})
         ]);
     },
 
     render: function (data) {
+        const crrrentVersion = data[0].data;
         let m, s, o, v;
 
         m = new form.Map(serviceName, _('AdGuard Home'),
@@ -62,7 +70,7 @@ return view.extend({
             setTimeout(function () {
                 poll.add(function () {
                     return L.resolveDefault(getServiceStatus())
-                        .then(function (running) {
+                        .then( (running) => {
                             const view = document.getElementById('serviceStatus');
                             if (view) {
                                 view.innerHTML = runnintStatus(running);
@@ -151,9 +159,29 @@ return view.extend({
                     ev.preventDefault();
                     logBox.style.display = 'block';
                     checkLabel.style.display = 'flex';
-                    
-                    logData.push(`[${new Date().toLocaleTimeString()}] 开始检查更新...`);
-                    renderLog(logBox, reverseCheck);
+                    const logPath = "/tmp/AdGuardHome_update.log";
+
+                    L.resolveDefault(callUpateCore(), {}).then((res) => {
+                        const pollLogFn = () => {
+                            return L.resolveDefault(fs.read(logPath), '').then((logContent) => {
+                                if (logContent) {
+                                    const lines = logContent.trim().split('\n');
+                                    logData.splice(0, logData.length, ...lines);
+                                    renderLog(logBox, reverseCheck);
+
+                                    const lastLine = lines[lines.length - 1] || "";
+                                    
+                                    if (lastLine.includes("Success") || lastLine.includes("Failed")) {
+                                        L.Poll.remove(pollLogFn); 
+                                        L.resolveDefault(callCurrentVersion()).then((res) => {
+                                            document.getElementById("core_version_val").innerText =  res.data; 
+                                        });
+                                    }
+                                }
+                            });
+                        };
+                    L.Poll.add(pollLogFn, 1);
+                });
                 }
             }, [ _('更新核心版本')]);
 
@@ -168,7 +196,8 @@ return view.extend({
                             'src': L.resource('cbi/help.gif'), 
                             'style': 'vertical-align: middle; margin-right: 4px;' 
                         }),
-                        _('当前的核心版本为：0x162')
+                        _('当前的核心版本为：'),
+                        E('span', { 'id': 'core_version_val', 'style': 'font-weight: bold; color: green;' }, `${crrrentVersion}`)
                     ]),
                     checkLabel,
                     logBox

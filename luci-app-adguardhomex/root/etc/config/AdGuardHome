@@ -1,6 +1,6 @@
 config AdGuardHome 'AdGuardHome'
 	option enabled '0'
-	option htt_pport '3000'
+	option http_port '3000'
 	option redirect 'none'
 	option config_path '/etc/AdGuardHome.yaml'
 	option work_dir '/opt/data/AdGuardHome'

@@ -1,6 +1,6 @@
 #!/usr/bin/ucode
 
-import { popen, unlink, stat, readlink } from "fs";
+import { popen, open, unlink, stat, readlink } from "fs";
 const uci = require("uci").cursor();
 
 const service_name = "AdGuardHome";
@@ -29,7 +29,7 @@ const github_api = "https://api.github.com/repos/AdguardTeam/AdGuardHome/release
 uci.load(service_name);
 uci.load("dhcp");
 
-/* ================= 基础工具 ================= */
+/* ================= Base Tools ================= */
 
 function _exec_sys(cmd) {
     const p = popen(`sh -c "${cmd} 2>&1"`, "r");
@@ -50,6 +50,22 @@ function _safe_unlink(path) {
 
 function _uci_get(setction_name, defaultVal) {
     return uci.get(service_name, service_name, setction_name) || defaultVal;
+}
+
+function _log(msg, log_file) {
+    const p = popen("date '+%Y-%m-%d %H:%M:%S'");
+    const date = p ? trim(p.read("all")) : "0000-00-00 00:00:00";
+    if (p) {
+        p.close();
+    }
+
+    const log_msg = `[${date}] ${msg}\n`;
+
+    if (log_file) {
+         _exec_sys(`echo '${log_msg}' >> ${log_file}`);
+         return;
+    }
+    print(log_msg);
 }
 
 /* ================= Version ================= */
@@ -100,13 +116,33 @@ function _patch_config(file, key_path, value) {
 
 /* ================= Core Download ================= */
 
-function _update_core(binpath, upxflag, links) {
+function update_core(log_file) {
+    let links = [];
+    uci.foreach(service_name, service_name, (s) => {
+            if (s[".name"] === "UpdateLinks" && s.url) {
+                if (type(s.url) === "array") {
+                        for (let i, u in s.url) {
+                            if (u && index(u, "#") !== 0) {
+                                push(links, u);
+                            }
+                        }
+                    }
+                } else if (type(s.url) === "string" && !s.url.match(/^#/)) {
+                    push(links, s.url);
+                }
+    });
+
+
     if (!links || length(links) === 0) {
         return false;
     }
 
     _arch_version_set();
 
+    _log(`Target architecture is: ${state.arch}, and version is ${state.latest_ver}`, log_file);
+
+    const upx_flag = _uci_get("upx_flag");
+    const bin_path = _uci_get("bin_path");
     const tmp = "/tmp/AGH_update";
 
     _exec_sys(`rm -rf ${tmp} && mkdir -p ${tmp}`);
@@ -117,9 +153,12 @@ function _update_core(binpath, upxflag, links) {
                      k === "latest_ver" ? state.latest_ver : m
         );
 
+        _log(`Starting download from: ${url}`, log_file);
+
         const file = `${tmp}/agh.tar.gz`;
         const down_rtn = _exec_sys(`wget --no-check-certificate -O ${file} ${url}`);
         if (down_rtn.code !== 0) {
+            _log(`Download failed: ${down_rtn.data}, and try again by other links.`, log_file);
             continue;
         }
 
@@ -139,18 +178,23 @@ function _update_core(binpath, upxflag, links) {
             continue;
         }
 
-        if (upxflag) {
-            _exec_sys(`/usr/bin/upx ${upxflag} "${extracted}"`);
+        if (upx_flag) {
+            _log("Ready to upx it.", log_file);
+            _exec_sys(`/usr/bin/upx ${upx_flag} "${extracted}"`);
         }
             
-        _exec_sys(`mv "${extracted}" "${binpath}"`);
-        _exec_sys(`chmod +x "${binpath}"`);
+        _exec_sys(`mv "${extracted}" "${bin_path}"`);
+        _exec_sys(`chmod +x "${bin_path}"`);
         _exec_sys(`rm -rf ${tmp}`);
+
+        _log("Success.", log_file);
 
         return true;
     }
 
     _exec_sys(`rm -rf ${tmp}`);
+    _log("Failed, please try it agin for a later.", log_file);
+
     return false;
 }
 
@@ -283,24 +327,7 @@ function apply_config_to_yaml() {
     }
 
     if (!stat(bin_path)) {
-        let links = [];
-        uci.foreach(service_name, service_name, (s) => {
-                if (s[".name"] === "UpdateLinks" && s.url) {
-                    if (type(s.url) === "array") {
-                            for (let i, u in s.url) {
-                               if (u && index(u, "#") !== 0) {
-                                    push(links, u);
-                                }
-                            }
-                       }
-                    } else if (type(s.url) === "string" && !s.url.match(/^#/)) {
-                        push(links, s.url);
-                    }
-        });
-
-        const upx = _uci_get("upx_flag");
-
-        if (!_update_core(bin_path, upx, links)) {
+        if (!update_core()) {
             return "false";
         }
     }
@@ -340,4 +367,6 @@ if (action === "apply") {
     }
 
     _exec_sys(`nft delete table inet ${service_name} 2>/dev/null`);
+} else if (action === "update") {
+    update_core(ARGV[1]);
 }

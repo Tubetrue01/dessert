@@ -12,6 +12,12 @@
         "*.yaml":[
           "read"
         ]
+      },
+      "ubus": {
+        "luci.adguardhome": [
+          "currentVersion"
+        ],
+        "service": [ "list" ]
       }
     },
     "write": {
@@ -20,7 +26,8 @@
       ],
       "ubus": {
         "luci.adguardhome": [
-          "clearLog"
+          "clearLog",
+          "updateCore"
         ]
       },
        "file":{
