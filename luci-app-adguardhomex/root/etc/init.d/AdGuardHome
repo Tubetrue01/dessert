@@ -1,47 +1,39 @@
 #!/bin/sh /etc/rc.common
 
 USE_PROCD=1
-
 START=95
 STOP=01
 
 SERVER_NAME=AdGuardHome
-CONFIGURATION=${SERVER_NAME}
+CONFIGURATION=AdGuardHome
 ADG_HELPER="/usr/share/adguardhome/adguardhome.uc"
 
 service_triggers() {
-    procd_add_reload_trigger "${CONFIGURATION}"
+    procd_add_reload_trigger "AdGuardHome"
 }
 
 start_service() {
-    local bin_args=$($ADG_HELPER apply)  
+    local raw
+    raw=$($ADG_HELPER apply | tr -d '\r' | sed 's/#$//' | xargs)
     
-    if [ "$bin_args" = "false" ] || [ -z "$bin_args" ]; then
-        $ADG_HELPER stop
-        return 1
-    fi
-
-    local tz=$(cat /etc/TZ 2>/dev/null)
+    logger -t AdGuardHome "Starting with args: $raw"
 
     procd_open_instance "AdGuardHome"
-    [ -n "$tz" ] && procd_set_param env TZ="$tz"
-    procd_set_param limits nofile="65535 65535"
-    procd_set_param respawn 3600 5 5
-    procd_set_param stderr 1
-    
-    set -- $bin_args
-    procd_set_param command "$@" 
     procd_set_param file "/etc/config/AdGuardHome"
-    
-    procd_close_instance
 
-    (
-        sleep 10
-        if ! pgrep -f "$1" > /dev/null; then
-            logger -t AdGuardHome "Process $1 failed to start, restoring network..."
-            $ADG_HELPER stop
-        fi
-    ) &
+    if [ -n "$raw" ] && [ "$raw" != "false" ]; then
+        local tz=$(cat /etc/TZ 2>/dev/null)
+        [ -n "$tz" ] && procd_set_param env TZ="$tz"
+        procd_set_param limits nofile="65535 65535"
+        procd_set_param respawn 3600 5 5
+        procd_set_param stderr 1
+        
+        eval "set -- $raw"
+        procd_set_param command "$@" 
+    else
+        procd_set_param command /bin/true
+    fi
+    procd_close_instance
 }
 
 stop_service() {
@@ -49,9 +41,7 @@ stop_service() {
 }
 
 reload_service() {
-    if pgrep -f "AdGuardHome" > /dev/null; then
-        procd_send_signal AdGuardHome
-    else
-        start_service
-    fi
+    stop
+    sleep 1
+    start
 }

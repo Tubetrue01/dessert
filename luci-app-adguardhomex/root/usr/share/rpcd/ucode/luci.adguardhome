@@ -9,16 +9,16 @@ const methods = {
             const filename = req.args.filename;
 
             if (!filename) {
-                return { code: 1, error: "未指定文件名" };
+                return { code: 1, error: "No filename specified" };
             }
 
             const fd = fs.open(filename, "w");
 
             if (fd) {
                 fd.close(); 
-                return { code: 0, message: "文件已成功清空", path: filename };
+                return { code: 0, message: "File has been successfully cleared", path: filename };
             } else {
-                return { code: 1, error: "无法打开文件进行写入", path: filename };
+                return { code: 1, error: "Unable to open the file for writing", path: filename };
             }
         }
     }

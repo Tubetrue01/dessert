@@ -100,7 +100,7 @@ return view.extend({
         o = s.option(form.DummyValue, '_link', _('Control Panel'));
         o.render = function(section_id) {
             const host = window.location.hostname;
-            const port = uci.get('AdGuardHome', section_id, 'httpport') || '3000';
+            const port = uci.get('AdGuardHome', 'AdGuardHome', 'http_port') || '3000';
             const url = `http://${host}:${port}`;
 
             return E('div', { 'class': 'cbi-value' }, [
