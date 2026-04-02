@@ -113,7 +113,6 @@ function _patch_config(file, key_path, value) {
 }
 
 /* ================= Core Download ================= */
-
 function update_core(log_file) {
     let links = [];
     uci.foreach(service_name, service_name, (s) => {
@@ -196,7 +195,40 @@ function update_core(log_file) {
     return false;
 }
 
-/* ================= DNS Mode ================= */
+/* ================= DNS ================= */
+function _reset_dns_config() {
+    _exec_sys(`nft delete table inet ${service_name} 2>/dev/null`);
+
+    uci.set("dhcp", "@dnsmasq[0]", "port", "53");
+
+    const config_path = _uci_get("config_path", "/etc/AdGuardHome.yaml");
+    const port = _get_config(config_path, "dns.port", "53");
+    const addr = `127.0.0.1#${port}`;
+    
+    let servers = uci.get("dhcp", "@dnsmasq[0]", "server");
+
+    if (type(servers) === "string") {
+        servers = [servers];
+    } else if (type(servers) !== "array") {
+        servers = [];
+    }
+
+    const filtered = [];
+    for (let s in servers) { 
+        if (s !== addr) {
+            push(filtered, s); 
+        } 
+    }
+
+    if (length(filtered) > 0) {
+        uci.set("dhcp", "@dnsmasq[0]", "server", filtered);
+    } else {
+        uci.delete("dhcp", "@dnsmasq[0]", "server");
+    }
+    
+    uci.delete("dhcp", "@dnsmasq[0]", "noresolv");
+    uci.commit("dhcp");
+}
 
 /*
  * Since dnsmasq under nftables enables redirection of port 53 to itself, 
@@ -204,82 +236,48 @@ function update_core(log_file) {
  * port listening of dnsmasq will be disabled, and port 53 will be redirected to ADH.
  */
 function _set_dns_mode(mode) {
-    _exec_sys(`nft delete table inet ${service_name} 2>/dev/null`);
+    _reset_dns_config();
 
-    if (mode === "upstream") {
-        _set_upstream_dnsmasq();
-    } else if (mode === "redirect") {
-        _stop_upstream_dnsmasq();
-        uci.set("dhcp", "@dnsmasq[0]", "port", "0");
+    if (mode === "none") {
+        _exec_sys("/etc/init.d/dnsmasq restart");
+    } else if (mode === "upstream") {
 
-    const nft_rules = `
-        table inet ${service_name} {
-            chain prerouting {
-                type nat hook prerouting priority dstnat + 5;
-                meta nfproto { ipv4, ipv6 } meta l4proto { tcp, udp } th dport 53 counter redirect to :53 comment "DNS HIJACK"
-            }
+        const addr = `127.0.0.1#${port}`;
+        let servers = uci.get("dhcp", "@dnsmasq[0]", "server") || [];
+        
+        if (type(servers) !== "array") {
+            servers = [servers];
         }
-    `;
-        _exec_sys(`echo \`${nft_rules}\` | nft -f -`);
-    }
-}
-
-/* ================= dnsmasq ================= */
-function _set_upstream_dnsmasq() {
-    const port = _get_config(config_path, "dns.port", "53");
-    const addr = `127.0.0.1#${port}`;
-    let servers = uci.get("dhcp", "@dnsmasq[0]", "server");
-
-    if (type(servers) !== "array") {
-        servers = servers ? [servers] : [];
-    }
-
-    let exists = false;
-
-    for (let i, s in servers) {
-        if (s === addr) {
-            exists = true;
-            break;
-        }
-    }
-
-    if (!exists) {
+        
         push(servers, addr);
         uci.set("dhcp", "@dnsmasq[0]", "server", servers);
         uci.set("dhcp", "@dnsmasq[0]", "noresolv", "1");
-        uci.set("dhcp", "@dnsmasq[0]", "port", "53");
         uci.commit("dhcp");
         _exec_sys("/etc/init.d/dnsmasq restart");
-    }
-}
 
-function _stop_upstream_dnsmasq() {
-    const port = _get_config(config_path, "dns.port", "53");
-    const addr = `127.0.0.1#${port}`;
-    let servers = uci.get("dhcp", "@dnsmasq[0]", "server");
-
-    if (type(servers) !== "array") {
-        servers = servers ? [servers] : [];
-    }
-
-    const filtered = [];
-
-    for (let i, s in servers) {
-        if (s !== addr) {
-            push(filtered, s);
-        }
-    }
-
-    if (length(filtered) !== length(servers)) {
-        if (length(filtered) > 0) {
-            uci.set("dhcp", "@dnsmasq[0]", "server", filtered);
-        } else {
-            uci.delete("dhcp", "@dnsmasq[0]", "server");
-            uci.delete("dhcp", "@dnsmasq[0]", "noresolv");
-        }
+    } else if (mode === "redirect") {
+        uci.set("dhcp", "@dnsmasq[0]", "port", "0");
         uci.commit("dhcp");
-        _exec_sys("/etc/init.d/dnsmasq reload");
-    }
+        _exec_sys("/etc/init.d/dnsmasq restart");
+
+        const config_path = _uci_get("config_path");
+        const dns_port = _get_config(config_path, "dns.port");
+
+        const nft_conf = `table inet ${service_name} {
+            chain prerouting {
+                type nat hook prerouting priority dstnat + 5;
+                meta nfproto { ipv4, ipv6 } meta l4proto { tcp, udp } th dport 53 counter redirect to ${dns_port} comment "DNS HIJACK"
+            }
+        }`;
+
+        const f = open("/tmp/agh_nft.conf", "w");
+        if (f) {
+            f.write(nft_conf);
+            f.close();
+            _exec_sys("nft -f /tmp/agh_nft.conf");
+            unlink("/tmp/agh_nft.conf");
+        }
+    }  
 }
 
 /* ================= Clean ================= */
@@ -352,7 +350,6 @@ function apply_config_to_yaml() {
     }   
 
     uci.set(service_name, service_name, "enabled", "1");
-    uci.save();
     uci.commit(service_name);
 
     return args;
@@ -386,14 +383,10 @@ function stop() {
         }
     }
 
-    if (mode === "upstream") {
-        _stop_upstream_dnsmasq();
-    }
-
-    _exec_sys(`nft delete table inet ${service_name} 2>/dev/null`);
+    _reset_dns_config();
+    _exec_sys("/etc/init.d/dnsmasq restart");
 
     uci.set(service_name, service_name, "enabled", "0");
-    uci.save();
     uci.commit(service_name);
 }
 
@@ -405,7 +398,6 @@ function apply_from_yaml() {
     const port = (length(parts) > 1) ? parts[1] : null;
     
     uci.set(service_name, service_name, "http_port", port);
-    uci.save();
     uci.commit(service_name);
 }
 

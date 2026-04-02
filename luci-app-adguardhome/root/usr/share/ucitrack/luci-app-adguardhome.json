@@ -1,5 +1,4 @@
 {
 	"config": "AdGuardHome",
-	"init": "AdGuardHome",
-	"affects": ["AdGuardHome"]
+	"init": "AdGuardHome"
 }
