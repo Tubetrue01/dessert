@@ -30,7 +30,7 @@ const github_api = "https://api.github.com/repos/AdguardTeam/AdGuardHome/release
 /* ================= Base Tools ================= */
 
 function _exec_sys(cmd) {
-    const p = popen(`sh -c "${cmd} 2>&1"`, "r");
+    const p = popen(`sh -c '${cmd}'`, "r"); 
     if (!p) return { code: -1, data: "" };
 
     let stdout = p.read("all");
@@ -212,15 +212,15 @@ function _set_dns_mode(mode) {
         _stop_upstream_dnsmasq();
         uci.set("dhcp", "@dnsmasq[0]", "port", "0");
 
-        const nft_rules = `
-            table inet ${service_name} {
-                chain prerouting {
-                    type nat hook prerouting priority dstnat + 5;
-                    meta nfproto { ipv4, ipv6 } ip protocol { tcp, udp } th dport 53 counter redirect to :${port} comment "DNS HIJACK"
-                }
+    const nft_rules = `
+        table inet ${service_name} {
+            chain prerouting {
+                type nat hook prerouting priority dstnat + 5;
+                meta nfproto { ipv4, ipv6 } meta l4proto { tcp, udp } th dport 53 counter redirect to :53 comment "DNS HIJACK"
             }
-        `;
-        _exec_sys(`echo '${nft_rules}' | nft -f -`);
+        }
+    `;
+        _exec_sys(`echo \`${nft_rules}\` | nft -f -`);
     }
 }
 
