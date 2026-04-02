@@ -26,7 +26,7 @@ return L.view.extend({
     },
 
     render: function() {
-        const logPath = uci.get('AdGuardHome', 'AdGuardHome', 'logpath') || '/tmp/test.log';
+        const logPath = uci.get('AdGuardHome', 'AdGuardHome', 'log_file');
         const m = new form.Map('AdGuardHome', null);
         const s = m.section(form.NamedSection, 'AdGuardHome', 'AdGuardHome');
 

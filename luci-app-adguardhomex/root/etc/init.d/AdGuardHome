@@ -36,12 +36,18 @@ start_service() {
     procd_close_instance
 }
 
-stop_service() {
-    $ADG_HELPER stop
+reload_service() {
+    local enabled=$($ADG_HELPER reload) 
+
+    if [ "$enabled" = "1" ]; then
+        stop
+        sleep 1
+        start
+    else
+        stop
+    fi
 }
 
-reload_service() {
-    stop
-    sleep 1
-    start
+stop_service() {
+    $ADG_HELPER stop
 }

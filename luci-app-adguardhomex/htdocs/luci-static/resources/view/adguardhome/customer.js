@@ -111,8 +111,29 @@ return view.extend({
 			const editorContent = configeditor ? configeditor.getValue() : formvalue;
 			if (!editorContent) return;
 			return fs.write(configPath, editorContent.trim().replace(/\r\n/g, '\n') + '\n')
-				.then(() => fs.exec('/etc/init.d/adguardhome', ['restart']))
+				.then(() => {
+					fs.exec('/usr/share/adguardhome/adguardhome.uc', ['applyFromYaml']);
+				})
+				.then(() => fs.exec('/etc/init.d/AdGuardHome', ['reload']))
 				.catch(e => ui.addNotification(null, E('p', _('保存失败: %s').format(e.message)), 'danger'));
+		};
+
+		o.validate = function(section_id, value) {
+			const content = configeditor ? configeditor.getValue() : value;
+			
+			if (!content || content.trim() === "") {
+				return "";
+			}
+
+			try {
+				if (window.jsyaml) {
+					jsyaml.load(content);
+				}
+			} catch (e) {
+				return "";
+			}
+
+			return true;
 		};
 
         // Template
@@ -121,7 +142,7 @@ return view.extend({
 		btn.inputstyle = 'apply';
 		
 		btn.onclick = function(ev) {
-			const templatePath = '/etc/AdGuardHome.yaml';
+			const templatePath = '/usr/share/adguardhome/AdGuardHome_template.yaml';
 			return fs.read(templatePath).then(content => {
 				if (content && configeditor) {
 					configeditor.setValue(content);

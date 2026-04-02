@@ -36,7 +36,9 @@
           ],
           "/tmp/AdGuardHome_update.log":[
             "write"
-          ]
+          ],
+        "/usr/share/adguardhome/adguardhome.uc": ["exec"],
+        "/etc/init.d/AdGuardHome": ["exec"]
         }
     }
   }

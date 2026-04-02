@@ -26,8 +26,6 @@ const archMap = {
 };
 
 const github_api = "https://api.github.com/repos/AdguardTeam/AdGuardHome/releases/latest";
-uci.load(service_name);
-uci.load("dhcp");
 
 /* ================= Base Tools ================= */
 
@@ -110,8 +108,8 @@ function _patch_config(file, key_path, value) {
     if (old === value){
         return false; 
     }
-
-    return _exec_sys(`yq e -i '.${key_path} = "${value}"' "${file}"`).code === 0;
+    const cmd = sprintf("yq -i '.%s = \\\"%s\\\"' %s", key_path, value, file);
+    return _exec_sys(cmd);
 }
 
 /* ================= Core Download ================= */
@@ -198,15 +196,20 @@ function update_core(log_file) {
     return false;
 }
 
-/* ================= DNS 模式 ================= */
+/* ================= DNS Mode ================= */
 
-function _set_dns_mode(mode, port) {
+/*
+ * Since dnsmasq under nftables enables redirection of port 53 to itself, 
+ * when the AdGuard Home (ADH) redirect mode is selected, 
+ * port listening of dnsmasq will be disabled, and port 53 will be redirected to ADH.
+ */
+function _set_dns_mode(mode) {
     _exec_sys(`nft delete table inet ${service_name} 2>/dev/null`);
 
     if (mode === "upstream") {
-        _set_upstream_dnsmasq(port);
+        _set_upstream_dnsmasq();
     } else if (mode === "redirect") {
-        _stop_upstream_dnsmasq(port);
+        _stop_upstream_dnsmasq();
         uci.set("dhcp", "@dnsmasq[0]", "port", "0");
 
         const nft_rules = `
@@ -222,8 +225,8 @@ function _set_dns_mode(mode, port) {
 }
 
 /* ================= dnsmasq ================= */
-
-function _set_upstream_dnsmasq(port) {
+function _set_upstream_dnsmasq() {
+    const port = _get_config(config_path, "dns.port", "53");
     const addr = `127.0.0.1#${port}`;
     let servers = uci.get("dhcp", "@dnsmasq[0]", "server");
 
@@ -250,7 +253,8 @@ function _set_upstream_dnsmasq(port) {
     }
 }
 
-function _stop_upstream_dnsmasq(port) {
+function _stop_upstream_dnsmasq() {
+    const port = _get_config(config_path, "dns.port", "53");
     const addr = `127.0.0.1#${port}`;
     let servers = uci.get("dhcp", "@dnsmasq[0]", "server");
 
@@ -279,7 +283,6 @@ function _stop_upstream_dnsmasq(port) {
 }
 
 /* ================= Clean ================= */
-
 function _clear_space_for_backup(workDir, backupDir) {
     const files = ["querylog.json", "stats.db"];
 
@@ -294,21 +297,23 @@ function _clear_space_for_backup(workDir, backupDir) {
 /* ================= Main ================= */
 
 function apply_config_to_yaml() {
-    
-    const enabled = _uci_get("enabled","0");
-    if (enabled === "0") {
-        return "false";
-    }
-
     const config_path = _uci_get("config_path", "/etc/AdGuardHome.yaml");
     const work_dir = _uci_get("work_dir", "/opt/data/AdGuardHome");
     const bin_path = _uci_get("bin_path", "/usr/bin/AdGuardHome");
     const http_port = _uci_get("http_port", "3000");
 
-    _patch_config(config_path, "http.address", `0.0.0.0:${http_port}`);
+    const address = _get_config(config_path, "http.address");
+    const parts = split(address || "", ":");
+    const ip = (length(parts) > 1) ? parts[0] : "0.0.0.0";
+    _patch_config(config_path, "http.address", `${ip}:${http_port}`);
 
     if (!stat(`${work_dir}/data`)) {
         _exec_sys(`mkdir -p ${work_dir}/data`);
+    
+        const work_dir_backup = _uci_get("work_dir_backup");
+        if (stat(work_dir_backup)) {
+           _exec_sys(`cp -a ${work_dir_backup}/. ${work_dir}/data/`);
+        }
     }
         
     const mount_info = _exec_sys("mount").data;
@@ -333,9 +338,7 @@ function apply_config_to_yaml() {
     }
 
     const mode = _uci_get("redirect", "none");
-    const dns_port = _get_config(config_path, "dns.port", "53");
-
-    _set_dns_mode(mode, dns_port);
+    _set_dns_mode(mode);
 
     let args = `${bin_path} -c ${config_path} -w ${work_dir}`;
 
@@ -348,25 +351,75 @@ function apply_config_to_yaml() {
         args += ` -l ${log_file}`;
     }   
 
+    uci.set(service_name, service_name, "enabled", "1");
+    uci.save();
+    uci.commit(service_name);
+
     return args;
 }
 
-/* ================= Entry Point ================= */
+function stop() {
+    if (_uci_get("enabled") == "0") {
+        return; 
+    }
 
+    const mode = _uci_get("redirect", "none");
+    const config_path = _uci_get("config_path");
+    const backup_files = _uci_get("backup_files");
+
+    if (backup_files && type(backup_files) == "array" && backup_files.length > 0) {
+        const work_dir = _uci_get("work_dir");
+        const work_dir_backup = _uci_get("work_dir_backup");
+
+        if (work_dir && work_dir_backup) {
+            if (!stat(work_dir_backup)) {
+                _exec_sys(`mkdir -p "${work_dir_backup}"`);
+            }
+
+            backup_files.forEach(file => {
+                const src_path = `${work_dir}/data/${file}`;
+
+                if (stat(src_path)) {
+                    _exec_sys(`cp -af "${src_path}" "${work_dir_backup}/"`);
+                } 
+            });
+        }
+    }
+
+    if (mode === "upstream") {
+        _stop_upstream_dnsmasq();
+    }
+
+    _exec_sys(`nft delete table inet ${service_name} 2>/dev/null`);
+
+    uci.set(service_name, service_name, "enabled", "0");
+    uci.save();
+    uci.commit(service_name);
+}
+
+function apply_from_yaml() {
+    const config_path = _uci_get("config_path", "/etc/AdGuardHome.yaml");
+    const address = _get_config(config_path, "http.address");
+
+    const parts = split(address || "", ":");
+    const port = (length(parts) > 1) ? parts[1] : null;
+    
+    uci.set(service_name, service_name, "http_port", port);
+    uci.save();
+    uci.commit(service_name);
+}
+
+/* ================= Entry Point ================= */
 const action = ARGV[0];
 
 if (action === "apply") {
     print(apply_config_to_yaml());
 } else if (action === "stop") {
-    const mode = _uci_get("redirect", "none");
-    const config_path = _uci_get("config_path");
-    const port = _get_config(config_path, "dns.port", "53");
-
-    if (mode === "upstream") {
-        _stop_upstream_dnsmasq(port);
-    }
-
-    _exec_sys(`nft delete table inet ${service_name} 2>/dev/null`);
+   stop();
 } else if (action === "update") {
     update_core(ARGV[1]);
+} else if (action === "reload") {
+    print(_uci_get("enabled"));
+} else if (action === "applyFromYaml") {
+    apply_from_yaml();
 }

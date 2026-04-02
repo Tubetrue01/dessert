@@ -283,7 +283,7 @@ return view.extend({
         // Auto restart after boot
         o = s.option(form.ListValue, 'backup_files', _('在关机时备份工作目录文件'));
         o.description = _('在工作目录 /data 为空的时候恢复');
-        o.widget = 'checkbox';
+        o.rmempty = true;
 
         o.renderWidget = function(section_id, option_index, cfgvalue) {
             const choices = this.transformChoices();
@@ -291,8 +291,7 @@ return view.extend({
                 id: this.cbid(section_id),
                 multiple: true,         
                 widget: 'checkbox',     
-                orientation: 'horizontal',  
-                disabled: (this.readonly != null) ? this.readonly : this.map.readonly
+                orientation: 'horizontal'
             });
 
             const node = widget.render();
@@ -308,13 +307,22 @@ return view.extend({
             return node;
         };
 
+        o.formvalue = function(section_id) {
+            const fieldName = this.cbid(section_id);
+            const nodes = document.querySelectorAll(`input[name="${fieldName}"]:checked`);
+            
+            const values = [];
+            nodes.forEach(n => {
+                if (n.value) values.push(n.value);
+            });
+            return values;
+        };
+
         o.value('filters', 'filters');
         o.value('stats.db', 'stats.db');
         o.value('querylog.json', 'querylog.json');
         o.value('sessions.db', 'sessions.db');
         o.value('querylog.json.1', 'querylog.json.1');
-
-        o.rmempty = true;
 
         // Work dir backup path
         o = s.option(form.Value, 'work_dir_backup', _('工作目录备份路径'));
