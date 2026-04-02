@@ -98,8 +98,8 @@ return L.view.extend({
                 }).catch(()=>{});
             };
 
-            const revCheckbox   = createCheckbox(_('逆序展示'), 'reverseCheck');
-            const localCheckbox = createCheckbox(_('本地时间'), 'localCheckbox');
+            const revCheckbox   = createCheckbox(_('Reverse'), 'reverseCheck');
+            const localCheckbox = createCheckbox(_('Local time'), 'localCheckbox');
 
             const botWrap = E('div', {
                 style:'padding:1rem 0 0 1rem;'
@@ -120,14 +120,14 @@ return L.view.extend({
                 }, text);
             }
 
-            const btnClear = createButton(_('删除日志'), 'cbi-button-remove', function() {
+            const btnClear = createButton(_('Delete'), 'cbi-button-remove', function() {
                 L.resolveDefault(callClearLog(logPath), {}).then(function(res) {
                     console.log(JSON.stringify(res));
                     updateLogDisplay()
                 });
             });
 
-            const btnDown = createButton(_('下载日志'), 'cbi-button-apply', function() {
+            const btnDown = createButton(_('Download'), 'cbi-button-apply', function() {
                   fs.read_direct(logPath, 'blob').then(function(res) {
                     let blob;
                     if (res instanceof Blob) {

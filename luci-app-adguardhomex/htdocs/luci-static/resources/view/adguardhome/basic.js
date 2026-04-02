@@ -60,7 +60,7 @@ return view.extend({
         let m, s, o, v;
 
         m = new form.Map(serviceName, _('AdGuard Home'),
-            _('免费开源，功能强大的全网络广告和跟踪程序拦截 DNS 服务器'));
+            _('A free, open-source, and powerful DNS server that blocks network-wide ads and tracking.'));
 
         // status bar 
         s = m.section(form.TypedSection, "status", _('Service Status'));
@@ -89,12 +89,12 @@ return view.extend({
         s = m.section(form.NamedSection, serviceName, serviceName);
 
         // Enable button
-        o = s.option(form.Flag, 'enabled', _('开启'));
+        o = s.option(form.Flag, 'enabled', _('Enable'));
         o.rmempty = false;
         o.default = '0';
 
         // WebPort
-        o = s.option(form.Value, 'http_port', _('网页管理端口'));
+        o = s.option(form.Value, 'http_port', _('Web management port'));
         o.datatype = 'port';
         o.default = '3000';
 
@@ -106,7 +106,7 @@ return view.extend({
             const url = `http://${host}:${port}`;
 
             return E('div', { 'class': 'cbi-value' }, [
-                E('label', { 'class': 'cbi-value-title' }, _('打开网页管理界面')),
+                E('label', { 'class': 'cbi-value-title' }, _('Open the web management interface')),
                 E('div', { 'class': 'cbi-value-field' }, [
                     E('input', {
                         'type': 'text',
@@ -125,7 +125,7 @@ return view.extend({
 
         // Update button
         let logData = [];
-        o = s.option(form.DummyValue, '_update_panel', _('版本更新'));
+        o = s.option(form.DummyValue, '_update_panel', _('Version update'));
         o.render = function() {
             const renderLog = (textarea, checkbox) => {
                 const displayData = checkbox.checked ? [...logData].reverse() : logData;
@@ -150,7 +150,7 @@ return view.extend({
                 'style': 'display:none; margin-top:10px; align-items: center; cursor: pointer; gap: 6px; line-height: 1;' 
             }, [
                 reverseCheck,
-                E('span', { 'style': 'line-height: 1;' }, _('逆序排列日志'))
+                E('span', { 'style': 'line-height: 1;' }, _('Reverse'))
             ]);
 
             const btnUpdate = E('button', {
@@ -183,12 +183,12 @@ return view.extend({
                     L.Poll.add(pollLogFn, 1);
                 });
                 }
-            }, [ _('更新核心版本')]);
+            }, [ _('Update core')]);
 
             reverseCheck.onclick = () => renderLog(logBox, reverseCheck);
 
             return E('div', { 'class': 'cbi-value' }, [
-                E('label', { 'class': 'cbi-value-title' }, _('版本更新')),
+                E('label', { 'class': 'cbi-value-title' }, _('Update version')),
                 E('div', { 'class': 'cbi-value-field' }, [
                     E('div', { 'style': 'margin-bottom: 8px;' }, [ btnUpdate ]),
                     E('div', { 'class': 'cbi-value-description' }, [
@@ -196,7 +196,7 @@ return view.extend({
                             'src': L.resource('cbi/help.gif'), 
                             'style': 'vertical-align: middle; margin-right: 4px;' 
                         }),
-                        _('当前的核心版本为：'),
+                        _('The current core version is:'),
                         E('span', { 'id': 'core_version_val', 'style': 'font-weight: bold; color: green;' }, `${crrrentVersion}`)
                     ]),
                     checkLabel,
@@ -206,27 +206,27 @@ return view.extend({
         };
 
         // Redirect Mode
-        o = s.option(form.ListValue, 'redirect', _('重定向'));
-        o.description = _('选择处理 DNS 流量的方式。');
+        o = s.option(form.ListValue, 'redirect', _('Redirect'));
+        o.description = _('Choose the method for handling DNS traffic');
 
-        o.value('none', _('无'));
-        o.value('upstream', _('作为 Dnsmasq 的上游服务器'));
-        o.value('redirect', _('重定向 53 端口到 AdGuardHome'));
+        o.value('none', _('None'));
+        o.value('upstream', _('Upstream server for Dnsmasq'));
+        o.value('redirect', _('Redirect port 53 to AdGuard Home'));
 
         o.default = 'none';
 
         // Binary path
-        o = s.option(form.Value, 'bin_path', _('执行文件路径'));
-        o.description =_('AdGuardHome 执行文件路径 如果没有执行文件将自动下载');
+        o = s.option(form.Value, 'bin_path', _('Binary path'));
+        o.description =_('The path to the AdGuard Home executable file. If the executable is not found, it will be downloaded automatically');
         o.datatype = 'string';
         o.default = '/usr/bin/AdGuardHome';
         o.placeholder = '/usr/bin/AdGuardHome';
 
         // Architecture
-        o = s.option(form.ListValue, 'arch', _('要下载的程序架构'));
-        o.description = _('手动下载前如该选项有变更需先保存并应用后再点下载');
+        o = s.option(form.ListValue, 'arch', _('The program architecture to download'));
+        o.description = _('If this option has been changed, you must first save and apply the changes before clicking download');
 
-        o.value('auto', _('自动'));
+        o.value('auto', _('Auto'));
         o.value('386', 'i386');
         o.value('amd64', 'x86_64');
         o.value('armv5','armv5');
@@ -242,47 +242,47 @@ return view.extend({
         o.default = 'auto';
 
         // Upx to compress
-        o = s.option(form.ListValue, 'upx_flag',_('下载后使用 upx 压缩执行文件')); 
-        o.description=_('减小执行文件空间占用，但是可能压缩后有兼容性问题');
+        o = s.option(form.ListValue, 'upx_flag',_('Compress the executable file with UPX after downloading')); 
+        o.description=_('Reduces the executable file size, but compression may cause compatibility issues');
 
-        o.value('0', _('无'));
-        o.value('-1', _('快速压缩'));
-        o.value('-9', _('更好的压缩'));
-        o.value('--best', _('最好的压缩(大文件可能慢)'));
-        o.value('--brute', _('尝试所有可能的压缩方法和过滤器[慢]'));
-        o.value('--ultra-brute', _('尝试更多变体压缩手段[很慢]'));
+        o.value('0', _('None'));
+        o.value('-1', _('Quick compression'));
+        o.value('-9', _('Better compression'));
+        o.value('--best', _('Maximum compression (may be slow for large files)'));
+        o.value('--brute', _('Try all methods and filters (slow)'));
+        o.value('--ultra-brute', _('Try more variant compression methods (very slow)'));
 
         o.default = '0';
 
         // Config path
-        o = s.option(form.Value, 'config_path', _('配置文件路径'));
-        o.description =_('AdGuardHome 配置文件路径');
+        o = s.option(form.Value, 'config_path', _('Configuration path'));
+        o.description =_('AdGuard Home configuration file path');
         o.datatype = 'string';
         o.default = '/etc/AdGuardHome.yaml';
         o.placeholder = '/etc/AdGuardHome.yaml';
         
         // Work dir
-        o = s.option(form.Value, 'work_dir', _('工作目录'));
-        o.description =_('AdGuardHome 工作目录包含规则，审计日志和数据库');
+        o = s.option(form.Value, 'work_dir', _('Working directory'));
+        o.description =_('AdGuard Home working directory, containing rules, audit logs, and database');
         o.datatype = 'string';
         o.default = '/opt/data/AdGuardHome';
         o.placeholder = '/opt/data/AdGuardHome';
 
         // Logs path
-        o = s.option(form.Value, 'log_file', _('运行日志'));
-        o.description =_(' AdGuardHome 运行日志 如果填 syslog 将写入系统日志；如果空则不记录日志');
+        o = s.option(form.Value, 'log_file', _('Running log'));
+        o.description =_('AdGuard Home running log. If set to syslog, logs will be written to the system log; if left empty, no logs will be recorded');
         o.datatype = 'string';
         o.default = '/opt/data/AdGuardHome/log.log';
         o.placeholder = '/opt/data/AdGuardHome/log.log';
 
         // Detail log
-        o = s.option(form.Flag, 'verbose', _('详细日志'));
+        o = s.option(form.Flag, 'verbose', _('Verbose'));
         o.default = "0";
         o.rmempty = false;
 
         // Auto restart after boot
-        o = s.option(form.ListValue, 'backup_files', _('在关机时备份工作目录文件'));
-        o.description = _('在工作目录 /data 为空的时候恢复');
+        o = s.option(form.ListValue, 'backup_files', _('Backup the working directory files on shutdown.'));
+        o.description = _('Restore when the working directory /data is empty');
         o.rmempty = true;
 
         o.renderWidget = function(section_id, option_index, cfgvalue) {
@@ -325,7 +325,7 @@ return view.extend({
         o.value('querylog.json.1', 'querylog.json.1');
 
         // Work dir backup path
-        o = s.option(form.Value, 'work_dir_backup', _('工作目录备份路径'));
+        o = s.option(form.Value, 'work_dir_backup', _('Backup path for the working directory'));
         o.datatype = 'string';
         o.default = '/opt/data/AdGuardHome/backup';
         o.placeholder = '/opt/data/AdGuardHome/backup';
@@ -335,7 +335,7 @@ return view.extend({
         s.addremove = false;  
         s.anonymous = false;
 
-        o = s.option(form.DynamicList, 'url', _('升级用的下载链接'));
+        o = s.option(form.DynamicList, 'url', _('Download link for the upgrade'));
         o.rmempty = true;
         o.datatype = 'string';
         

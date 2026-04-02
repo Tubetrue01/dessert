@@ -1,2 +1,137 @@
-msgid ""
+msgid "A free, open-source, and powerful DNS server that blocks network-wide ads and tracking."
 msgstr "免费开源，功能强大的全网络广告和跟踪程序拦截 DNS 服务器"
+
+msgid "Enable"
+msgstr "开启"
+
+msgid "Web management port"
+msgstr "网页管理端口"
+
+msgid "Open the web management interface"
+msgstr "打开网页管理界面"
+
+msgid "Version update"
+msgstr "版本更新"
+
+msgid "Reverse"
+msgstr "逆序展示"
+
+msgid "Update core"
+msgstr "更新核心版本"
+
+msgid "Update version"
+msgstr "版本更新"
+
+msgid "The current core version is:"
+msgstr "当前的核心版本为："
+
+msgid "Choose the method for handling DNS traffic"
+msgstr "选择处理 DNS 流量的方式"
+
+msgid "Redirect"
+msgstr "重定向"
+
+msgid "None"
+msgstr "无"
+
+msgid "Upstream server for Dnsmasq"
+msgstr "作为 Dnsmasq 的上游服务器"
+
+msgid "Redirect port 53 to AdGuard Home"
+msgstr "重定向 53 端口到 AdGuardHome"
+
+msgid "Binary path"
+msgstr "执行文件路径"
+
+msgid "The path to the AdGuard Home executable file. If the executable is not found, it will be downloaded automatically"
+msgstr "AdGuardHome 执行文件路径，如果没有执行文件将自动下载"
+
+msgid "The program architecture to download"
+msgstr "要下载的程序架构"
+
+msgid "If this option has been changed, you must first save and apply the changes before clicking download"
+msgstr "手动下载前如该选项有变更需先保存并应用后再点下载"
+
+msgid "Auto"
+msgstr "自动"
+
+msgid "Compress the executable file with UPX after downloading"
+msgstr "下载后使用 upx 压缩执行文件"
+
+msgid "Reduces the executable file size, but compression may cause compatibility issues"
+msgstr "减小执行文件空间占用，但是可能压缩后有兼容性问题"
+
+msgid "Quick compression"
+msgstr "快速压缩"
+
+msgid "Better compression"
+msgstr "更好的压缩"
+
+msgid "Maximum compression (may be slow for large files)"
+msgstr "最好的压缩（大文件可能慢）"
+
+msgid "Try all methods and filters (slow)"
+msgstr "尝试所有可能的压缩方法和过滤器（慢）"
+
+msgid "Try more variant compression methods (very slow)"
+msgstr "尝试更多变体压缩手段（很慢）"
+
+msgid "Configuration path"
+msgstr "配置文件路径"
+
+msgid "AdGuard Home configuration file path"
+msgstr "AdGuardHome 配置文件路径"
+
+msgid "Working directory"
+msgstr "工作目录"
+
+msgid "AdGuard Home working directory, containing rules, audit logs, and database"
+msgstr "AdGuardHome 工作目录包含规则，审计日志和数据库"
+
+msgid "Running log"
+msgstr "运行日志"
+
+msgid "AdGuard Home running log. If set to syslog, logs will be written to the system log; if left empty, no logs will be recorded"
+msgstr "AdGuardHome 运行日志 如果填 syslog 将写入系统日志；如果空则不记录日志"
+
+msgid "Verbose"
+msgstr "详细日志"
+
+msgid "Backup the working directory files on shutdown."
+msgstr "在关机时备份工作目录文件"
+
+msgid "Restore when the working directory /data is empty"
+msgstr "在工作目录 /data 为空的时候恢复"
+
+msgid "Backup path for the working directory"
+msgstr "工作目录备份路径"
+
+msgid "Download link for the upgrade"
+msgstr "升级用的下载链接"
+
+msgid "YAML configuration content"
+msgstr "YAML 配置内容"
+
+msgid "Failed to save"
+msgstr "保存失败"
+
+msgid "Apply default template"
+msgstr "应用默认模版"
+
+msgid "Failed to read the template"
+msgstr "读取模版失败"
+
+msgid "Local time"
+msgstr "本地时间"
+
+msgid "Delete"
+msgstr "删除"
+
+msgid "Download"
+msgstr "下载"
+
+msgid "Logs"
+msgstr "日志"
+
+msgid "Customer"
+msgstr "自定义配置"

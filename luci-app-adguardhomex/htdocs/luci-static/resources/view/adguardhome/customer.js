@@ -58,7 +58,7 @@ return view.extend({
 		const s = m.section(form.NamedSection, serviceName, serviceName);
 
 		let configeditor = null;
-		const o = s.option(form.TextValue, 'yaml_config', _('YAML 配置内容')); 
+		const o = s.option(form.TextValue, 'yaml_config', _('YAML configuration content')); 
 		
 		o.render = function(section_id, option_id, value) {
 			return form.TextValue.prototype.render.apply(this, [section_id, option_id, value])
@@ -115,7 +115,7 @@ return view.extend({
 					fs.exec('/usr/share/adguardhome/adguardhome.uc', ['applyFromYaml']);
 				})
 				.then(() => fs.exec('/etc/init.d/AdGuardHome', ['reload']))
-				.catch(e => ui.addNotification(null, E('p', _('保存失败: %s').format(e.message)), 'danger'));
+				.catch(e => ui.addNotification(null, E('p', _('Failed to save').format(e.message)), 'danger'));
 		};
 
 		o.validate = function(section_id, value) {
@@ -138,7 +138,7 @@ return view.extend({
 
         // Template
 		const btn = s.option(form.Button, '_apply_template');
-		btn.inputtitle = _('应用默认模版');
+		btn.inputtitle = _('Apply default template');
 		btn.inputstyle = 'apply';
 		
 		btn.onclick = function(ev) {
@@ -148,7 +148,7 @@ return view.extend({
 					configeditor.setValue(content);
 				}
 			}).catch(e => {
-				ui.addNotification(null, E('p', _('读取模版失败: %s').format(e.message)), 'danger');
+				ui.addNotification(null, E('p', _('Failed to read the template').format(e.message)), 'danger');
 			});
 		};
 
