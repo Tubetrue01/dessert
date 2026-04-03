@@ -28,7 +28,6 @@ const archMap = {
 const github_api = "https://api.github.com/repos/AdguardTeam/AdGuardHome/releases/latest";
 
 /* ================= Base Tools ================= */
-
 function _exec_sys(cmd) {
     const p = popen(`sh -c '${cmd}' 2>&1`, "r"); 
     if (!p) return { code: -1, data: "" };
@@ -56,9 +55,7 @@ function _log(msg, log_file) {
     if (p) {
         p.close();
     }
-
     const log_msg = `[${date}] ${msg}\n`;
-
     if (log_file) {
         const f = open(log_file, "a");
         if (f) {
@@ -71,7 +68,6 @@ function _log(msg, log_file) {
 }
 
 /* ================= Version ================= */
-
 function _arch_version_set() {
     const now = time();
 
@@ -100,7 +96,6 @@ function _arch_version_set() {
 }
 
 /* ================= YAML ================= */
-
 function _get_config(file, key_path, defaultVal) {
     const res = _exec_sys(`yq e '.${key_path}' "${file}"`).data;
     return res ? res : defaultVal;
@@ -360,9 +355,6 @@ function apply_config_to_yaml() {
         args += ` -l ${log_file}`;
     }   
 
-    uci.set(service_name, service_name, "enabled", "1");
-    uci.commit(service_name);
-
     return args;
 }
 
@@ -418,8 +410,6 @@ if (action === "apply") {
    stop();
 } else if (action === "update") {
     update_core(ARGV[1]);
-} else if (action === "reload") {
-    print(_uci_get("enabled"));
 } else if (action === "applyFromYaml") {
     apply_from_yaml();
 }

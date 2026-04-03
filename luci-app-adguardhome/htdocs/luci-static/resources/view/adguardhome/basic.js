@@ -207,7 +207,7 @@ return view.extend({
 
         // Redirect Mode
         o = s.option(form.ListValue, 'redirect', _('Redirect'));
-        o.description = _('Choose the method for handling DNS traffic');
+        o.description = _('In Redirect mode, dnsmasq’s port 53 is disabled, so it is best to have AdGuardHome run on port 53');
 
         o.value('none', _('None'));
         o.value('upstream', _('Upstream server for Dnsmasq'));

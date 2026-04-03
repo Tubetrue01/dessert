@@ -47,7 +47,7 @@ return view.extend({
 	load: function() {
 		return Promise.all([
 			loadCodeMirrorResources(),
-			uci.load('AdGuardHome')
+			uci.load(serviceName)
 		]);
 	},
 
@@ -103,22 +103,21 @@ return view.extend({
 				});
 		};
 
-		o.cfgvalue = function(section_id) {
+		o.cfgvalue = function(sectionId) {
 			return fs.read(configPath).then(content => content || '');
 		};
 
-		o.write = function(section_id, formvalue) {
+		o.write = function(sectionId, formvalue) {
 			const editorContent = configeditor ? configeditor.getValue() : formvalue;
 			if (!editorContent) return;
 			return fs.write(configPath, editorContent.trim().replace(/\r\n/g, '\n') + '\n')
-				.then(() => {
-					fs.exec('/usr/share/adguardhome/adguardhome.uc', ['applyFromYaml']);
-				})
-				.then(() => fs.exec('/etc/init.d/AdGuardHome', ['reload']))
-				.catch(e => ui.addNotification(null, E('p', _('Failed to save').format(e.message)), 'danger'));
+				.catch(e => {
+					ui.addNotification(null, E('p', _('Failed to save').format(e.message)), 'danger');
+					throw e;
+				});
 		};
 
-		o.validate = function(section_id, value) {
+		o.validate = function(sectionId, value) {
 			const content = configeditor ? configeditor.getValue() : value;
 			
 			if (!content || content.trim() === "") {
@@ -149,11 +148,12 @@ return view.extend({
 				}
 			}).catch(e => {
 				ui.addNotification(null, E('p', _('Failed to read the template').format(e.message)), 'danger');
+				throw e; 
 			});
 		};
 
-		btn.render = function(section_id, option_id, value) {
-			return form.Button.prototype.render.apply(this, [section_id, option_id, value])
+		btn.render = function(sectionId, optionId, value) {
+			return form.Button.prototype.render.apply(this, [sectionId, optionId, value])
 				.then(node => {
 					const container = node.closest('.cbi-value');
 					if (container) {
@@ -170,5 +170,21 @@ return view.extend({
 		};
 
 		return m.render();
-	}
+	},
+
+		handleSaveApply: function(ev, mode) {
+ 			ui.changes.displayStatus('notice spinning', E('p', _('Starting configuration apply…')));
+			
+			return this.handleSave(ev).then(() => {
+				return fs.exec('/usr/share/adguardhome/adguardhome.uc', ['applyFromYaml']);
+			}).then(() => {
+				return fs.exec('/etc/init.d/AdGuardHome', ['reload']);
+			}).then(() => {
+				ui.changes.displayStatus(false);
+				ui.addNotification(null, E('p', _('Applied successfully.')), 'info');
+			}).catch(e => {
+				ui.changes.displayStatus(false);
+				ui.addNotification(null, E('p', _('Failed to apply: %s').format(e.message || e)), 'danger');
+			});
+		},
 });
