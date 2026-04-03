@@ -30,7 +30,7 @@ const github_api = "https://api.github.com/repos/AdguardTeam/AdGuardHome/release
 /* ================= Base Tools ================= */
 
 function _exec_sys(cmd) {
-    const p = popen(`sh -c '${cmd}'`, "r"); 
+    const p = popen(`sh -c '${cmd}' 2>&1`, "r"); 
     if (!p) return { code: -1, data: "" };
 
     let stdout = p.read("all");
@@ -60,8 +60,12 @@ function _log(msg, log_file) {
     const log_msg = `[${date}] ${msg}\n`;
 
     if (log_file) {
-         _exec_sys(`echo '${log_msg}' >> ${log_file}`);
-         return;
+        const f = open(log_file, "a");
+        if (f) {
+            f.write(log_msg);
+            f.close();
+            return;
+        }
     }
     print(log_msg);
 }
@@ -129,7 +133,6 @@ function update_core(log_file) {
                 }
     });
 
-
     if (!links || length(links) === 0) {
         return false;
     }
@@ -175,16 +178,19 @@ function update_core(log_file) {
             continue;
         }
 
-        if (upx_flag) {
+        if (upx_flag !== "0") {
             _log("Ready to upx it.", log_file);
-            _exec_sys(`/usr/bin/upx ${upx_flag} "${extracted}"`);
+            const rtn = _exec_sys(`/usr/bin/upx ${upx_flag} "${extracted}"`);
+            if (rtn.code != 0) {
+                _log(rtn.data, log_file);
+            }
         }
             
         _exec_sys(`mv "${extracted}" "${bin_path}"`);
         _exec_sys(`chmod +x "${bin_path}"`);
         _exec_sys(`rm -rf ${tmp}`);
 
-        _log("Success.", log_file);
+        _log("Download Success.", log_file);
 
         return true;
     }
@@ -295,6 +301,11 @@ function _clear_space_for_backup(workDir, backupDir) {
 /* ================= Main ================= */
 
 function apply_config_to_yaml() {
+    const enabled = _uci_get("enabled");
+    if (enabled === "0") {
+        return "false";
+    }
+
     const config_path = _uci_get("config_path", "/etc/AdGuardHome.yaml");
     const work_dir = _uci_get("work_dir", "/opt/data/AdGuardHome");
     const bin_path = _uci_get("bin_path", "/usr/bin/AdGuardHome");
@@ -385,9 +396,6 @@ function stop() {
 
     _reset_dns_config();
     _exec_sys("/etc/init.d/dnsmasq restart");
-
-    uci.set(service_name, service_name, "enabled", "0");
-    uci.commit(service_name);
 }
 
 function apply_from_yaml() {
