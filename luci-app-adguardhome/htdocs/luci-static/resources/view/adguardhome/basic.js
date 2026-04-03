@@ -1,4 +1,4 @@
-'use strict'
+'use strict';
 'require poll';
 'require rpc';
 'require uci';
@@ -100,7 +100,7 @@ return view.extend({
 
         // Web Interface Link
         o = s.option(form.DummyValue, '_link', _('Control Panel'));
-        o.render = function(section_id) {
+        o.render = function(sectionId) {
             const host = window.location.hostname;
             const port = uci.get(serviceName, serviceName, 'http_port') || '3000';
             const url = `http://${host}:${port}`;
@@ -285,10 +285,10 @@ return view.extend({
         o.description = _('Restore when the working directory /data is empty');
         o.rmempty = true;
 
-        o.renderWidget = function(section_id, option_index, cfgvalue) {
+        o.renderWidget = function(sectionId, option_index, cfgvalue) {
             const choices = this.transformChoices();
             const widget = new ui.Select(cfgvalue, choices, {
-                id: this.cbid(section_id),
+                id: this.cbid(sectionId),
                 multiple: true,         
                 widget: 'checkbox',     
                 orientation: 'horizontal'
@@ -307,8 +307,8 @@ return view.extend({
             return node;
         };
 
-        o.formvalue = function(section_id) {
-            const fieldName = this.cbid(section_id);
+        o.formvalue = function(sectionId) {
+            const fieldName = this.cbid(sectionId);
             const nodes = document.querySelectorAll(`input[name="${fieldName}"]:checked`);
             
             const values = [];

@@ -60,8 +60,8 @@ return view.extend({
 		let configeditor = null;
 		const o = s.option(form.TextValue, 'yaml_config', _('YAML configuration content')); 
 		
-		o.render = function(section_id, option_id, value) {
-			return form.TextValue.prototype.render.apply(this, [section_id, option_id, value])
+		o.render = function(sectionId, optionId, value) {
+			return form.TextValue.prototype.render.apply(this, [sectionId, optionId, value])
 				.then(node => {
 					const container = node.closest('.cbi-value');
 					if (container) {
