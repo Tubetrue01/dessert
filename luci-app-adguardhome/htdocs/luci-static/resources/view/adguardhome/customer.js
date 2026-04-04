@@ -187,7 +187,7 @@ return view.extend({
             .then(() => {
                 ui.changes.displayStatus(
                     'notice',
-                    E('p', _('Applied successfully'))
+                    E('p', _('Configuration changes applied.'))
                 );
 
                 setTimeout(() => {

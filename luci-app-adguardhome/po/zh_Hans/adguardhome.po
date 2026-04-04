@@ -136,11 +136,5 @@ msgstr "日志"
 msgid "Customer"
 msgstr "自定义配置"
 
-msgid "Configuration applied successfully."
-msgstr "应用成功"
-
 msgid "Failed to apply"
 msgstr "应用失败"
-
-msgid "Applied successfully"
-msgstr "配置成功"
