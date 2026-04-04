@@ -23,7 +23,7 @@
  */
 
 :root {
-  --primary: #5e72e4;
+  --primary: #212121;
   --dark-primary: #483d8b;
   --header-color: #fff;
   --menu-bg-color: #ffffff;
@@ -154,6 +154,10 @@ input,
   transition: box-shadow .15s ease;
 }
 
+input::placeholder {
+  color: var(--default);
+  opacity: 1;
+}
 
 
 select {
@@ -233,7 +237,11 @@ select[multiple="multiple"] {
   background-color: #fff;
   box-shadow: 0 2px 2px 0 rgba(0, 0, 0, .16), 0 0 2px 0 rgba(0, 0, 0, .12);
   text-shadow: none;
+  transition: opacity 0.3s ease;
 
+  &.fade-out {
+    opacity: 0;
+  }
 
   &.error {
     background-color: #fff;

@@ -143,4 +143,4 @@ msgid "Failed to apply"
 msgstr "应用失败"
 
 msgid "Applied successfully"
-msgstr "配置成功”
+msgstr "配置成功"
