@@ -181,7 +181,6 @@ return view.extend({
 				return fs.exec('/etc/init.d/AdGuardHome', ['reload']);
 			}).then(() => {
 				ui.changes.displayStatus(false);
-				ui.addNotification(null, E('p', _('Applied successfully.')), 'info');
 			}).catch(e => {
 				ui.changes.displayStatus(false);
 				ui.addNotification(null, E('p', _('Failed to apply: %s').format(e.message || e)), 'danger');

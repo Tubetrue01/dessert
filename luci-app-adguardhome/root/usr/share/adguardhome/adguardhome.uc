@@ -359,9 +359,6 @@ function apply_config_to_yaml() {
 }
 
 function stop() {
-    if (_uci_get("enabled") == "0") {
-        return; 
-    }
 
     const mode = _uci_get("redirect", "none");
     const config_path = _uci_get("config_path");
