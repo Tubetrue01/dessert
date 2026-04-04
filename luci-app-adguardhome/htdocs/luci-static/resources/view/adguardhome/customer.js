@@ -174,7 +174,7 @@ return view.extend({
     handleSaveApply: function(ev, mode) {
         ui.changes.displayStatus(
             'notice spinning',
-            E('p', _('Applying configuration...'))
+            E('p', _('Starting configuration apply…'))
         );
 
         return this.handleSave(ev)
