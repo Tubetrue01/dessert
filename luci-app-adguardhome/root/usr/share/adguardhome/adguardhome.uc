@@ -202,10 +202,6 @@ function _reset_dns_config() {
 
     uci.set("dhcp", "@dnsmasq[0]", "port", "53");
 
-    const config_path = _uci_get("config_path", "/etc/AdGuardHome.yaml");
-    const port = _get_config(config_path, "dns.port", "53");
-    const addr = `127.0.0.1#${port}`;
-    
     let servers = uci.get("dhcp", "@dnsmasq[0]", "server");
 
     if (type(servers) === "string") {
@@ -215,10 +211,10 @@ function _reset_dns_config() {
     }
 
     const filtered = [];
-    for (let s in servers) { 
-        if (s !== addr) {
-            push(filtered, s); 
-        } 
+    for (let index, s in servers) {
+        if (s && !wildcard(s, "127.0.0.1#*")) {
+            push(filtered, s);
+        }
     }
 
     if (length(filtered) > 0) {
@@ -242,8 +238,10 @@ function _set_dns_mode(mode) {
     if (mode === "none") {
         _exec_sys("/etc/init.d/dnsmasq restart");
     } else if (mode === "upstream") {
-
+        const config_path = _uci_get("config_path", "/etc/AdGuardHome.yaml");
+        const port = _get_config(config_path, "dns.port");
         const addr = `127.0.0.1#${port}`;
+
         let servers = uci.get("dhcp", "@dnsmasq[0]", "server") || [];
         
         if (type(servers) !== "array") {
