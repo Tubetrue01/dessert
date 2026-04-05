@@ -173,7 +173,7 @@ function update_core(log_file) {
             continue;
         }
 
-        if (upx_flag !== "0") {
+        if (upx_flag && upx_flag !== "0") {
             _log("Ready to upx it.", log_file);
             const rtn = _exec_sys(`/usr/bin/upx ${upx_flag} "${extracted}"`);
             if (rtn.code != 0) {
