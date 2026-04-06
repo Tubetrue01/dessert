@@ -2175,9 +2175,6 @@ td > table > tbody > tr > td,
 .cbi-button-neutral[value="Restart"] {
     font-weight: normal;
     color: #fff;
-    background-color: #f0ad4e !important;
-    border-color: #eea236 !important;
-    color: #fff !important;
     background-color: #ff0080 !important;
 }
 
@@ -3139,7 +3136,7 @@ body:not(.Interfaces) .cbi-rowstyle-2:first-child {
 
 .modal ul li {
     list-style-type: square;
-    color: #808080;
+    color: var(--primary);
 }
 
 .modal p {

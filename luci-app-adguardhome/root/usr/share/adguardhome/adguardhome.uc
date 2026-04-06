@@ -15,7 +15,7 @@ const archMap = {
     "aarch64": "arm64",
     "x86_64": "amd64",
     "i386": "386",
-    "armv7l": "armv7", 
+    "armv7l": "armv7",
     "armv6l": "armv6",
     "armv5": "armv5",
     "mips": "mips_softfloat",
@@ -29,7 +29,7 @@ const github_api = "https://api.github.com/repos/AdguardTeam/AdGuardHome/release
 
 /* ================= Base Tools ================= */
 function _exec_sys(cmd) {
-    const p = popen(`sh -c '${cmd}' 2>&1`, "r"); 
+    const p = popen(`sh -c '${cmd}' 2>&1`, "r");
     if (!p) return { code: -1, data: "" };
 
     let stdout = p.read("all");
@@ -105,7 +105,7 @@ function _patch_config(file, key_path, value) {
     const old = _get_config(file, key_path, "");
 
     if (old === value){
-        return false; 
+        return false;
     }
     const cmd = sprintf("yq -i '.%s = \\\"%s\\\"' %s", key_path, value, file);
     return _exec_sys(cmd);
@@ -180,7 +180,7 @@ function update_core(log_file) {
                 _log(rtn.data, log_file);
             }
         }
-            
+
         _exec_sys(`mv "${extracted}" "${bin_path}"`);
         _exec_sys(`chmod +x "${bin_path}"`);
         _exec_sys(`rm -rf ${tmp}`);
@@ -201,6 +201,7 @@ function _reset_dns_config() {
     _exec_sys(`nft delete table inet ${service_name} 2>/dev/null`);
 
     uci.set("dhcp", "@dnsmasq[0]", "port", "53");
+    uci.set("dhcp", "@dnsmasq[0]", "dns_redirect", "1");
 
     let servers = uci.get("dhcp", "@dnsmasq[0]", "server");
 
@@ -222,14 +223,14 @@ function _reset_dns_config() {
     } else {
         uci.delete("dhcp", "@dnsmasq[0]", "server");
     }
-    
+
     uci.delete("dhcp", "@dnsmasq[0]", "noresolv");
     uci.commit("dhcp");
 }
 
 /*
- * Since dnsmasq under nftables enables redirection of port 53 to itself, 
- * when the AdGuard Home (ADH) redirect mode is selected, 
+ * Since dnsmasq under nftables enables redirection of port 53 to itself,
+ * when the AdGuard Home (ADH) redirect mode is selected,
  * port listening of dnsmasq will be disabled, and port 53 will be redirected to ADH.
  */
 function _set_dns_mode(mode) {
@@ -243,11 +244,11 @@ function _set_dns_mode(mode) {
         const addr = `127.0.0.1#${port}`;
 
         let servers = uci.get("dhcp", "@dnsmasq[0]", "server") || [];
-        
+
         if (type(servers) !== "array") {
             servers = [servers];
         }
-        
+
         push(servers, addr);
         uci.set("dhcp", "@dnsmasq[0]", "server", servers);
         uci.set("dhcp", "@dnsmasq[0]", "noresolv", "1");
@@ -256,6 +257,8 @@ function _set_dns_mode(mode) {
 
     } else if (mode === "redirect") {
         uci.set("dhcp", "@dnsmasq[0]", "port", "0");
+        uci.set("dhcp", "@dnsmasq[0]", "dns_redirect", "0");
+
         uci.commit("dhcp");
         _exec_sys("/etc/init.d/dnsmasq restart");
 
@@ -276,7 +279,7 @@ function _set_dns_mode(mode) {
             _exec_sys("nft -f /tmp/agh_nft.conf");
             unlink("/tmp/agh_nft.conf");
         }
-    }  
+    }
 }
 
 /* ================= Clean ================= */
@@ -311,13 +314,13 @@ function apply_config_to_yaml() {
 
     if (!stat(`${work_dir}/data`)) {
         _exec_sys(`mkdir -p ${work_dir}/data`);
-    
+
         const work_dir_backup = _uci_get("work_dir_backup");
         if (stat(work_dir_backup)) {
            _exec_sys(`cp -a ${work_dir_backup}/. ${work_dir}/data/`);
         }
     }
-        
+
     const mount_info = _exec_sys("mount").data;
 
     if (index(mount_info, "on /overlay type jffs2") !== -1) {
@@ -351,7 +354,7 @@ function apply_config_to_yaml() {
     const log_file = _uci_get("log_file");
     if (log_file) {
         args += ` -l ${log_file}`;
-    }   
+    }
 
     return args;
 }
@@ -391,7 +394,7 @@ function apply_from_yaml() {
 
     const parts = split(address || "", ":");
     const port = (length(parts) > 1) ? parts[1] : null;
-    
+
     uci.set(service_name, service_name, "http_port", port);
     uci.commit(service_name);
 }
