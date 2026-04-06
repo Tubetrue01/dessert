@@ -12,11 +12,22 @@ const callClearLog = rpc.declare({
     params: ['filename'],
 });
 
-const formatLocalTime =(text) => {
-    return text.replace(/\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z/g, function(utcstr) {
+const formatLocalTime = (text) => {
+    return text.replace(/(\d{4})\/(\d{2})\/(\d{2})\s(\d{2}:\d{2}:\d{2})/g, function(match, y, m, d, time) {
+        const utcstr = `${y}-${m}-${d}T${time}Z`;
         const date = new Date(utcstr);
-        if (isNaN(date.getTime())) return utcstr;
-        return date.toLocaleString('zh-CN', { hour12: false }).replace(/\//g, '-');
+        
+        if (isNaN(date.getTime())) return match;
+        
+        return date.toLocaleString('zh-CN', { 
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit',
+            hour: '2-digit', 
+            minute: '2-digit', 
+            second: '2-digit',
+            hour12: false 
+        }).replace(/\//g, '-');
     });
 }
 

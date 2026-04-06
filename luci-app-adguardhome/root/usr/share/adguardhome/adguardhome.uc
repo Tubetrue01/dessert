@@ -362,7 +362,7 @@ function stop() {
     const config_path = _uci_get("config_path");
     const backup_files = _uci_get("backup_files");
 
-    if (backup_files && type(backup_files) == "array" && backup_files.length > 0) {
+    if (backup_files && type(backup_files) == "array" && length(backup_files) > 0) {
         const work_dir = _uci_get("work_dir");
         const work_dir_backup = _uci_get("work_dir_backup");
 
@@ -371,13 +371,13 @@ function stop() {
                 _exec_sys(`mkdir -p "${work_dir_backup}"`);
             }
 
-            backup_files.forEach(file => {
+            for (let file in backup_files) {
                 const src_path = `${work_dir}/data/${file}`;
 
                 if (stat(src_path)) {
                     _exec_sys(`cp -af "${src_path}" "${work_dir_backup}/"`);
-                } 
-            });
+                }
+            }
         }
     }
 
