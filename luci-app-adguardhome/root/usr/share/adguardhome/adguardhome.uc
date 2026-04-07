@@ -377,7 +377,6 @@ function stop() {
             }
 
             for (let file in backup_files) {
-                print(`file : ${file}`);
                 const src_path = `${work_dir}/data/${file}`;
 
                 if (stat(src_path)) {
