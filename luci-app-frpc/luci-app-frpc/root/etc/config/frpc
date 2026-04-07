@@ -8,17 +8,21 @@ config frpc 'common'
     list auth_additionalScopes 'HeartBeats'
     list auth_additionalScopes 'NewWorkConns'
     option user 'OpenWrt'
-    option log_level 'info'
-    option log_maxDays '3'
-    option log_to '/tmp/frpc.log'
+
     option transport_protocol 'tcp'
     option transport_tls_certFile ''
     option transport_tls_keyFile ''
     option transport_tls_trustedCaFile ''
     option transport_tls_serverName ''
+
     option transport_poolCount "1"
     option transport_tcpMux "true"
     option transport_tls_enable 'true'
+
+    option log_level 'info'
+    option log_maxDays '3'
+    option log_to '/tmp/frpc.log'
+
     option loginFailExit 'false'
     list includes '/var/etc/frp/frpc/confd/*.toml'
 
@@ -27,7 +31,7 @@ config proxy
     option enabled '1'
     option remark 'town-op'
     option type 'https'
-    list custom_domains 'frpc.github.com"'
+    list custom_domains 'frpc.github.com'
     option transport_useEncryption 'true'
     option transport_useCompression 'true'
     option healthCheck_type 'tcp'

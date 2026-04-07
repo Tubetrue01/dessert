@@ -1,0 +1,17 @@
+{
+  "admin/services/frpc": {
+    "title": "Frpc",
+    "action": {
+      "type": "view",
+      "path": "frpc/basic"
+    },
+    "depends": {
+      "acl": [
+        "luci-app-frpc"
+      ],
+      "uci": {
+        "frpc": true
+      }
+    }
+  }
+}
