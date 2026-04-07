@@ -17,7 +17,7 @@ const callServiceList = rpc.declare({
     expect: { '': {} }
 });
 
-const callUpateCore = rpc.declare({
+const callUpdateCore = rpc.declare({
     object: 'luci.adguardhome',
     method: "updateCore",
 });
@@ -38,7 +38,7 @@ const getServiceStatus = () => {
     });
 }
 
-const runnintStatus = (isRunning) => {
+const runningStatus = (isRunning) => {
     const runColor = isRunning ? 'green' : 'red';
     const runText = isRunning ? _('Running') : _('Stopped');
 
@@ -56,7 +56,7 @@ return view.extend({
     },
 
     render: function (data) {
-        const crrrentVersion = data[0].data;
+        const currentVersion = data[0].data;
         let m, s, o, v;
 
         m = new form.Map(serviceName, _('AdGuard Home'),
@@ -73,7 +73,7 @@ return view.extend({
                         .then( (running) => {
                             const view = document.getElementById('serviceStatus');
                             if (view) {
-                                view.innerHTML = runnintStatus(running);
+                                view.innerHTML = runningStatus(running);
                             } else {
                                 console.error('Element #serviceStatus not found.');
                             }
@@ -161,7 +161,7 @@ return view.extend({
                     checkLabel.style.display = 'flex';
                     const logPath = "/tmp/AdGuardHome_update.log";
 
-                    L.resolveDefault(callUpateCore(), {}).then((res) => {
+                    L.resolveDefault(callUpdateCore(), {}).then((res) => {
                         const pollLogFn = () => {
                             return L.resolveDefault(fs.read(logPath), '').then((logContent) => {
                                 if (logContent) {
@@ -197,7 +197,7 @@ return view.extend({
                             'style': 'vertical-align: middle; margin-right: 4px;' 
                         }),
                         _('The current core version is:'),
-                        E('span', { 'id': 'core_version_val', 'style': 'font-weight: bold; color: green;' }, `${crrrentVersion}`)
+                        E('span', { 'id': 'core_version_val', 'style': 'font-weight: bold; color: green;' }, `${currentVersion}`)
                     ]),
                     checkLabel,
                     logBox
