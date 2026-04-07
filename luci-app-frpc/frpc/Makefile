@@ -16,6 +16,10 @@ PKG_MAINTAINER:=fatedier
 GO_PKG:=github.com/fatedier/frp
 GO_PKG_BUILD_PKG:=github.com/fatedier/frp/cmd/frpc
 
+GO_PKG_LDFLAGS:=-s -w
+GO_PKG_TAGS:=frpc,noweb
+GO_PKG_BUILD_VARS:=GO111MODULE=on CGO_ENABLED=0 GOPROXY=https://goproxy.cn,direct
+
 include $(INCLUDE_DIR)/package.mk
 include $(TOPDIR)/feeds/packages/lang/golang/golang-package.mk
 
@@ -30,20 +34,6 @@ endef
 
 define Package/frpc/description
   frpc is the client of frp, a fast reverse proxy.
-endef
-
-define Build/Compile
-	( \
-		cd $(PKG_BUILD_DIR); \
-		GO111MODULE=on \
-		CGO_ENABLED=0 \
-		GOPROXY=https://goproxy.cn,direct \
-		go build -v -trimpath \
-			-ldflags "-s -w" \
-			-tags "frpc,noweb" \
-			-o $(GO_PKG_BUILD_BIN_DIR)/frpc \
-			./cmd/frpc \
-	)
 endef
 
 define Package/frpc/install
