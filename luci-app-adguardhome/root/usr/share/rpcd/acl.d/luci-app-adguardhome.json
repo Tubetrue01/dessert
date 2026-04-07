@@ -11,9 +11,7 @@
         ],
         "*.yaml":[
           "read"
-        ],
-        "/usr/share/adguardhome/adguardhome.uc applyFromYaml": ["exec"],
-        "/etc/init.d/AdGuardHome reload": ["exec"]
+        ]
       },
       "ubus": {
         "luci.adguardhome": [
@@ -36,9 +34,8 @@
           "*.yaml":[
             "write"
           ],
-          "/tmp/AdGuardHome_update.log":[
-            "write"
-          ]
+        "/usr/share/adguardhome/adguardhome.uc applyFromYaml": ["exec"],
+        "/etc/init.d/AdGuardHome reload": ["exec"]
         }
     }
   }

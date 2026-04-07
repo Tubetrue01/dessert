@@ -32,7 +32,7 @@ function _exec_sys(cmd) {
     const p = popen(`sh -c '${cmd}' 2>&1`, "r");
     if (!p) return { code: -1, data: "" };
 
-    let stdout = p.read("all");
+    const stdout = p.read("all");
     const code = p.close();
 
     return {
@@ -42,7 +42,9 @@ function _exec_sys(cmd) {
 }
 
 function _safe_unlink(path) {
-    if (stat(path)) unlink(path);
+    if (stat(path)) {
+        unlink(path);
+    }
 }
 
 function _uci_get(setction_name, defaultVal) {
@@ -117,7 +119,7 @@ function update_core(log_file) {
     uci.foreach(service_name, service_name, (s) => {
             if (s[".name"] === "UpdateLinks" && s.url) {
                 if (type(s.url) === "array") {
-                        for (let i, u in s.url) {
+                        for (let u in s.url) {
                             if (u && index(u, "#") !== 0) {
                                 push(links, u);
                             }
@@ -142,7 +144,7 @@ function update_core(log_file) {
 
     _exec_sys(`rm -rf ${tmp} && mkdir -p ${tmp}`);
 
-    for (let i, tpl in links) {
+    for (let tpl in links) {
         const url = replace(tpl, /\$\{([^}]+)\}/g,
             (m, k) => k === "Arch" ? state.arch :
                      k === "latest_ver" ? state.latest_ver : m
@@ -212,7 +214,7 @@ function _reset_dns_config() {
     }
 
     const filtered = [];
-    for (let index, s in servers) {
+    for (let s in servers) {
         if (s && !wildcard(s, "127.0.0.1#*")) {
             push(filtered, s);
         }
@@ -286,7 +288,7 @@ function _set_dns_mode(mode) {
 function _clear_space_for_backup(workDir, backupDir) {
     const files = ["querylog.json", "stats.db"];
 
-    for (let i, f in files) {
+    for (let f in files) {
         _safe_unlink(`${workDir}/data/${f}`);
         _safe_unlink(`${backupDir}/${f}`);
     }
@@ -326,7 +328,7 @@ function apply_config_to_yaml() {
     if (index(mount_info, "on /overlay type jffs2") !== -1) {
         const dbFiles = ["stats.db", "sessions.db"];
 
-        for (let i, f in dbFiles) {
+        for (let f in dbFiles) {
             const p = `${work_dir}/data/${f}`;
             const tmp = `/tmp/AGH_${f}`;
 
@@ -375,6 +377,7 @@ function stop() {
             }
 
             for (let file in backup_files) {
+                print(`file : ${file}`);
                 const src_path = `${work_dir}/data/${file}`;
 
                 if (stat(src_path)) {
