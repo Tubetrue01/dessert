@@ -188,7 +188,7 @@ return view.extend({
             ]);
         };
 
-        o.taboption('common', form.Value, 'config_path', _('配置路径')).description = _('用于存放生成的 toml 配置文件');;
+        o.taboption('common', form.Value, 'config_path', _('配置路径')).description = _('用于存放生成的 toml 配置文件');
         o.taboption('common', form.Value, 'serverAddr', _('服务器'));
         o.taboption('common', form.Value, 'serverPort', _('端口'));
 
@@ -250,7 +250,7 @@ return view.extend({
         logOption.css = 'width:100%; padding:1rem; font-family:monospace; overflow:auto; white-space:pre;';
 
 
-        logOption.render = function(section_id) {
+        logOption.render = function (section_id) {
             const textarea = E('textarea', {
                 'class': 'cbi-input-textarea',
                 'style': this.css + '; width:100%; resize:none;',
@@ -259,11 +259,12 @@ return view.extend({
             });
 
             function updateLogDisplay() {
-                fs.read(logPath).then(function(res) {
+                fs.read(logPath).then(function (res) {
                     let lines = (res || '').trim().split('\n');
                     textarea.value = lines.join('\n');
 
-                }).catch(function(){});
+                }).catch(function () {
+                });
             }
 
 
@@ -278,9 +279,8 @@ return view.extend({
             ]);
         };
 
-
         // Proxy list
-        const proxyList = m.section(form.GridSection, "proxy", _('Proxy 配置'));
+        const proxyList = m.section(form.GridSection, 'proxy', _('服务列表'));
         proxyList.addremove = true;
         proxyList.anonymous = true;
         proxyList.sortable = true;
@@ -288,51 +288,86 @@ return view.extend({
         proxyList.tab('basic', _('基本配置'));
         proxyList.tab('advanced', _('高级配置'));
 
-        let type = proxyList.option(form.ListValue, 'type', _('类型'));
-        type.value('tcp', _('TCP'));
-        type.value('https', _('HTTPS'));
+        o = proxyList.taboption('basic', form.Value, 'remark', _('服务备注名'));
 
-        proxyList.option(form.Value, 'remark', _('备注'));
+        o = proxyList.taboption('basic', form.ListValue, 'type', _('Frp 协议类型'));
+        o.value('http', 'HTTP');
+        o.value('https', 'HTTPS');
+        o.value('tcp', 'TCP');
 
-        let enabled = proxyList.option(form.Flag, 'enabled', _('启用'));
-        enabled.enabled = '1';
-        enabled.disabled = '0';
-        enabled.default = '1';
+        o = proxyList.taboption('basic', form.Value, 'custom_domains', _('自定义域名'));
+        o.depends('type', 'https');
+        o.depends('type', 'http');
 
-        type.atab = 'basic';
-        proxyList.getOption('remark').atab = 'basic';
-        enabled.atab = 'basic';
+        o.cfgvalue = function(section_id) {
+            const type = uci.get('frpc', section_id, 'type');
+            if (type === 'tcp') {
+                return null;
+            }
+
+            const d = uci.get('frpc', section_id, 'custom_domains');
+            if (!d) return {
+                null;
+            }
+            return Array.isArray(d) ? d : [d];
+        };
+
+        o.write = function(section_id, value) {
+            let type = uci.get('frpc', section_id, 'type');
+
+            if (type === 'https' || type === 'http') {
+                if (!value || value.length === 0) {
+                    uci.unset('frpc', section_id, 'custom_domains');
+                } else {
+                    uci.set('frpc', section_id, 'custom_domains', value);
+                }
+            }
+        };
+
+        o = proxyList.taboption('basic', form.ListValue, '_domain_type', _('域名类型'));
+
+        o.value('subdomain', '子域名');
+        o.value('custom', '自定义域名');
+        o.value('both', '同时使用两种域名');
+
+        o.cfgvalue = function(section_id) {
+            let type = uci.get('frpc', section_id, 'some_field'); // 可自定义逻辑
+            if (type === 'something')
+                return 'subdomain';
+            return 'toplevel';
+        };
+
+        o.write = function(section_id, value) {
+        };
+
+        o = proxyList.taboption('basic', form.Value, '_rport', _('远程端口'));
+        o.readonly = true;
+        o.cfgvalue = function(section_id) {
+            let type = uci.get('frpc', section_id, 'type');
+            return (type === 'https') ? uci.get('frpc', 'common', 'serverPort') : (uci.get('frpc', section_id, 'remotePort') || '-');
+        };
 
         proxyList.taboption('basic', form.Value, 'localIP', _('本地 IP'));
         proxyList.taboption('basic', form.Value, 'localPort', _('本地端口'));
 
-        let remotePort = proxyList.taboption('basic', form.Value, 'remotePort', _('远程端口'));
-        remotePort.depends('type', 'tcp');
+        o = proxyList.taboption('basic', form.Value, 'remotePort', _('远程端口设置'));
+        o.modalonly = true;
+        o.depends('type', 'tcp');
 
-        let enc = proxyList.taboption('advanced', form.Flag, 'transport_useEncryption', _('启用加密'));
-        enc.enabled = 'true';
-        enc.disabled = 'false';
 
-        let comp = proxyList.taboption('advanced', form.Flag, 'transport_useCompression', _('启用压缩'));
-        comp.enabled = 'true';
-        comp.disabled = 'false';
+        o = proxyList.taboption('advanced', form.Flag, 'transport_useEncryption', _('加密'));
+        o.enabled = 'true';
+        o.disabled = 'false';
 
-        let hcType = proxyList.taboption('advanced', form.ListValue, 'healthCheck_type', _('健康检查类型'));
-        hcType.value('tcp', _('TCP'));
-        hcType.value('http', _('HTTP'));
+        o = proxyList.taboption('advanced', form.Flag, 'transport_useCompression', _('压缩'));
+        o.enabled = 'true';
+        o.disabled = 'false';
 
-        proxyList.taboption('advanced', form.Value, 'healthCheck_timeoutSeconds', _('超时秒数'));
-        proxyList.taboption('advanced', form.Value, 'healthCheck_maxFailed', _('最大失败次数'));
-        proxyList.taboption('advanced', form.Value, 'healthCheck_intervalSeconds', _('间隔秒数'));
-
-        let pType = proxyList.taboption('advanced', form.ListValue, 'plugin_type', _('插件类型'));
-        pType.value('https2http', _('HTTPS→HTTP'));
-        pType.value('other', _('其他'));
-
-        proxyList.taboption('advanced', form.Value, 'plugin_localAddr', _('插件本地地址')).depends('plugin_type', 'https2http');
-        proxyList.taboption('advanced', form.DynamicList, 'custom_domains', _('自定义域名')).depends('type', 'https');
+        o = proxyList.taboption('basic', form.Flag, 'enabled', _('启用'));
+        o.enabled = '1';
+        o.disabled = '0';
+        o.editable = true;
 
         return m.render();
     }
-
 });
