@@ -137,17 +137,17 @@ return view.extend({
 
             const logBox = E('textarea', {
                 'class': 'cbi-input-textarea',
-                'style': 'width:100%; height:200px; font-family:monospace; margin-top:10px; display:none;',
+                'style': 'width:100%; height:10rem; font-family:monospace; margin-top:1rem; display:none;',
                 'readonly': true
             });
 
             const reverseCheck = E('input', { 
                 'type': 'checkbox', 
-                'style': 'margin: 0; cursor: pointer; width: 14px; height: 14px; top: 0'  
+                'style': 'margin: 0; cursor: pointer; top: 0'
             });
 
             const checkLabel = E('label', { 
-                'style': 'display:none; margin-top:10px; align-items: center; cursor: pointer; gap: 6px; line-height: 1;' 
+                'style': 'display:none; margin-top:1rem; align-items: center; cursor: pointer; gap: 0.5rem; line-height: 1;'
             }, [
                 reverseCheck,
                 E('span', { 'style': 'line-height: 1;' }, _('Reverse'))
@@ -183,18 +183,18 @@ return view.extend({
                     L.Poll.add(pollLogFn, 1);
                 });
                 }
-            }, [ _('Update core')]);
+            }, [ _('Update Core')]);
 
             reverseCheck.onclick = () => renderLog(logBox, reverseCheck);
 
             return E('div', { 'class': 'cbi-value' }, [
                 E('label', { 'class': 'cbi-value-title' }, _('Update version')),
                 E('div', { 'class': 'cbi-value-field' }, [
-                    E('div', { 'style': 'margin-bottom: 8px;' }, [ btnUpdate ]),
+                    E('div', { 'style': 'margin-bottom: 1rem;' }, [ btnUpdate ]),
                     E('div', { 'class': 'cbi-value-description' }, [
                         E('img', { 
                             'src': L.resource('cbi/help.gif'), 
-                            'style': 'vertical-align: middle; margin-right: 4px;' 
+                            'style': 'vertical-align: middle; margin-right: 0.3rem;'
                         }),
                         _('The current core version is:'),
                         E('span', { 'id': 'core_version_val', 'style': 'font-weight: bold; color: green;' }, `${currentVersion}`)
