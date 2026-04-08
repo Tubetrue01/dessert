@@ -13,7 +13,7 @@ user: "OpenWrt"
 log:
   level: "info"
   maxDays: 3
-  to: "/var/etc/frp/frpc.log"
+  to: "/tmp/frpc.log"
 
 transport:
   protocol: "tcp"

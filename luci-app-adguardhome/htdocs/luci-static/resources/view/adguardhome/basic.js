@@ -62,8 +62,8 @@ return view.extend({
         m = new form.Map(serviceName, _('AdGuard Home'),
             _('A free, open-source, and powerful DNS server that blocks network-wide ads and tracking.'));
 
-        // status bar 
-        s = m.section(form.TypedSection, "status", _('Service Status'));
+        // status bar
+        s = m.section(form.TypedSection, "status", null);
 
         s.anonymous = true;
         s.render = function () {
@@ -82,7 +82,7 @@ return view.extend({
             }, 100);
 
             return E('div', { class: 'cbi-section', id: 'status_bar' }, [
-                E('p', { id: 'serviceStatus' }, _('Collecting data...'))
+                E('p', { id: 'serviceStatus' }, _('Loading...'))
             ]);
         }
 
@@ -110,7 +110,7 @@ return view.extend({
                 E('div', { 'class': 'cbi-value-field' }, [
                     E('input', {
                         'type': 'text',
-                        'class': 'cbi-input-text', 
+                        'class': 'cbi-input-text',
                         'readonly': true,
                         'value': `AdguardHomeWeb:${port}`,
                         'style': 'text-align: center; cursor:pointer; color:green; font-weight:bold; width:100%;',
@@ -141,12 +141,12 @@ return view.extend({
                 'readonly': true
             });
 
-            const reverseCheck = E('input', { 
-                'type': 'checkbox', 
+            const reverseCheck = E('input', {
+                'type': 'checkbox',
                 'style': 'margin: 0; cursor: pointer; top: 0'
             });
 
-            const checkLabel = E('label', { 
+            const checkLabel = E('label', {
                 'style': 'display:none; margin-top:1rem; align-items: center; cursor: pointer; gap: 0.5rem; line-height: 1;'
             }, [
                 reverseCheck,
@@ -170,11 +170,11 @@ return view.extend({
                                     renderLog(logBox, reverseCheck);
 
                                     const lastLine = lines[lines.length - 1] || "";
-                                    
+
                                     if (lastLine.includes("Success") || lastLine.includes("Failed")) {
-                                        L.Poll.remove(pollLogFn); 
+                                        L.Poll.remove(pollLogFn);
                                         L.resolveDefault(callCurrentVersion()).then((res) => {
-                                            document.getElementById("core_version_val").innerText =  res.data; 
+                                            document.getElementById("core_version_val").innerText =  res.data;
                                         });
                                     }
                                 }
@@ -192,8 +192,8 @@ return view.extend({
                 E('div', { 'class': 'cbi-value-field' }, [
                     E('div', { 'style': 'margin-bottom: 1rem;' }, [ btnUpdate ]),
                     E('div', { 'class': 'cbi-value-description' }, [
-                        E('img', { 
-                            'src': L.resource('cbi/help.gif'), 
+                        E('img', {
+                            'src': L.resource('cbi/help.gif'),
                             'style': 'vertical-align: middle; margin-right: 0.3rem;'
                         }),
                         _('The current core version is:'),
@@ -242,7 +242,7 @@ return view.extend({
         o.default = 'auto';
 
         // Upx to compress
-        o = s.option(form.ListValue, 'upx_flag',_('Compress the executable file with UPX after downloading')); 
+        o = s.option(form.ListValue, 'upx_flag',_('Compress the executable file with UPX after downloading'));
         o.description=_('Reduces the executable file size, but compression may cause compatibility issues');
 
         o.value('0', _('None'));
@@ -260,7 +260,7 @@ return view.extend({
         o.datatype = 'string';
         o.default = '/etc/AdGuardHome.yaml';
         o.placeholder = '/etc/AdGuardHome.yaml';
-        
+
         // Work dir
         o = s.option(form.Value, 'work_dir', _('Working directory'));
         o.description =_('AdGuard Home working directory, containing rules, audit logs, and database');
@@ -289,8 +289,8 @@ return view.extend({
             const choices = this.transformChoices();
             const widget = new ui.Select(cfgvalue, choices, {
                 id: this.cbid(sectionId),
-                multiple: true,         
-                widget: 'checkbox',     
+                multiple: true,
+                widget: 'checkbox',
                 orientation: 'horizontal'
             });
 
@@ -310,7 +310,7 @@ return view.extend({
         o.formvalue = function(sectionId) {
             const fieldName = this.cbid(sectionId);
             const nodes = document.querySelectorAll(`input[name="${fieldName}"]:checked`);
-            
+
             const values = [];
             nodes.forEach(n => {
                 if (n.value) values.push(n.value);
@@ -332,13 +332,13 @@ return view.extend({
 
         // Version type to update
         s = m.section(form.NamedSection, 'UpdateLinks', 'AdGuardHome', null);
-        s.addremove = false;  
+        s.addremove = false;
         s.anonymous = false;
 
         o = s.option(form.DynamicList, 'url', _('Download link for the upgrade'));
         o.rmempty = true;
         o.datatype = 'string';
-        
+
         return m.render();
     }
 

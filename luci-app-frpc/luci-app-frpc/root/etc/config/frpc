@@ -1,5 +1,4 @@
 config frpc 'frpc'
     option enabled '1'
-    option config_path '/etc/frpc/frpc.yaml'
 
 

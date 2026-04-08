@@ -1,2 +1,71 @@
-msgid "Frpc is a high-performance reverse proxy client that can be used for intranet penetration."
+msgid "Frpc is a high-performance reverse proxy client."
 msgstr "Frpc 是一个可用于内网穿透的高性能的反向代理客户端。"
+
+msgid "Running"
+msgstr "运行中"
+
+msgid "Stopped"
+msgstr "已停止"
+
+msgid "Loading..."
+msgstr "载入中..."
+
+msgid "Enable"
+msgstr "开启"
+
+msgid "Update"
+msgstr "更新"
+
+msgid "Reverse"
+msgstr "逆序展示"
+
+msgid "Update Binary"
+msgstr "更新二进制"
+
+msgid "The current binary version is:"
+msgstr "当前版本为："
+
+msgid "Yaml Editor"
+msgstr "配置编辑器"
+
+msgid "Local time"
+msgstr "本地时间"
+
+msgid "Delete"
+msgstr "删除"
+
+msgid "Download"
+msgstr "下载"
+
+msgid "Failed to download, please check if the file exists"
+msgstr "下载失败，请查看文件是否存在"
+
+msgid "No configurations yet"
+msgstr "尚无任何配置"
+
+msgid "Server Lists"
+msgstr "服务列表"
+
+msgid "name"
+msgstr "名称"
+
+msgid "protocol type"
+msgstr "Frp 协议类型"
+
+msgid "domain/subdomain"
+msgstr "域名/子域名"
+
+msgid "remote port"
+msgstr "远程端口"
+
+msgid "local ip"
+msgstr "内网主机地址"
+
+msgid "local port"
+msgstr "本地端口"
+
+msgid "use encryption"
+msgstr "开启数据加密"
+
+msgid "use compression"
+msgstr "使用压缩"

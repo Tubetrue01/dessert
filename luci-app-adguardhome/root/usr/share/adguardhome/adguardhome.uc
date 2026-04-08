@@ -37,7 +37,7 @@ function _exec_sys(cmd) {
 
     return {
         code: code,
-        data: (type(stdout) == "string") ? trim(stdout) : ""
+        data: (type(stdout) === "string") ? trim(stdout) : ""
     };
 }
 
@@ -193,7 +193,7 @@ function update_core(log_file) {
     }
 
     _exec_sys(`rm -rf ${tmp}`);
-    _log("Failed, please try it agin for a later.", log_file);
+    _log("Failed, please try it again for a later.", log_file);
 
     return false;
 }

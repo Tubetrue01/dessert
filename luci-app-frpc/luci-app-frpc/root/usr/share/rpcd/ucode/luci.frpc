@@ -1,0 +1,72 @@
+'use strict';
+
+const fs = require('fs');
+
+const methods = {
+    clearLog: {
+        args: { filename: "filename" },
+        call: function(req) {
+            const filename = req.args.filename;
+
+            if (!filename) {
+                return { code: 1, error: "No filename specified" };
+            }
+
+            const fd = fs.open(filename, "w");
+
+            if (fd) {
+                fd.close();
+                return { code: 0, message: "File has been successfully cleared", path: filename };
+            } else {
+                return { code: 1, error: "Unable to open the file for writing", path: filename };
+            }
+        }
+    },
+    updateCore: {
+        call: function() {
+            const file_log = "/tmp/frpc_update.log";
+
+            const f = fs.open(file_log, "w");
+            if (f){
+                f.close();
+            }
+
+            const script_path = "/usr/share/frpc/frpc.uc";
+            const cmd = `ucode ${script_path} update ${file_log} &`;
+
+            const res = system(cmd);
+
+            if (res === 0) {
+                return { code: 0, message: "success", command: cmd };
+            } else {
+                return { code: 1, error: "failed", exit_code: res };
+            }
+        }
+    },
+    currentVersion: {
+        call: function() {
+            try {
+                const bin_path = "/usr/bin/frpc";
+
+                if (!bin_path || !fs.stat(bin_path)) {
+                    return { "code": 1, "data": "missing" };
+                }
+
+                const p = fs.popen(`${bin_path} -v`);
+                const stdout = (p ? p.read("all") : "") || "";
+
+                if (p) {
+                    p.close();
+                }
+
+                return {
+                    "code": 0,
+                    "data": stdout ? trim(stdout) : "unknown"
+                };
+            } catch (e) {
+            }
+        }
+    }
+};
+
+return { "luci.frpc": methods };

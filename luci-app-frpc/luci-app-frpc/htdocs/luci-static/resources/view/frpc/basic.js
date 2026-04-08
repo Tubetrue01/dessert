@@ -11,8 +11,28 @@
 'require fs';
 
 const serviceName = "frpc";
+const configPath = "/etc/frpc/frpc.yaml"
 
-/* RPC */
+const formatLocalTime = (text) => {
+    console.log(text);
+    return text.replace(/(\d{4})-(\d{2})-(\d{2})\s(\d{2}:\d{2}:\d{2})(\.\d+)?/g, function (match, y, m, d, time) {
+        const utcstr = `${y}-${m}-${d}T${time}Z`;
+        const date = new Date(utcstr);
+
+        if (isNaN(date.getTime())) return match;
+
+        return date.toLocaleString('zh-CN', {
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit',
+            hour: '2-digit',
+            minute: '2-digit',
+            second: '2-digit',
+            hour12: false
+        }).replace(/\//g, '-');
+    });
+}
+
 const callServiceList = rpc.declare({
     object: 'service',
     method: 'list',
@@ -31,7 +51,12 @@ const callCurrentVersion = rpc.declare({
     expect: {'': {}}
 });
 
-/* 加载 CodeMirror */
+const callClearLog = rpc.declare({
+    object: 'luci.frpc',
+    method: 'clearLog',
+    params: ['filename'],
+});
+
 async function loadCodeMirrorResources() {
     const styles = [
         '/luci-static/resources/view/adguardhome/codemirror5/codemirror.min.css',
@@ -69,8 +94,7 @@ async function loadCodeMirrorResources() {
     }
 }
 
-/* 服务状态 */
-function getServiceStatus() {
+const getServiceStatus = () => {
     return L.resolveDefault(callServiceList(serviceName), {}).then(res => {
         try {
             return res[serviceName].instances[serviceName].running;
@@ -81,11 +105,14 @@ function getServiceStatus() {
 }
 
 
-function renderStatus(running) {
+const renderStatus = (running) => {
     const color = running ? 'green' : 'red';
     const text = running ? _('Running') : _('Stopped');
 
-    return `<span style="color:${color}"><strong>Frpc ${text}</strong></span>`;
+    return `
+        <em>
+            <span style="color:${color}"><strong>${_("Frpc")} ${text}</strong></span>
+        </em>`;
 }
 
 return view.extend({
@@ -93,22 +120,21 @@ return view.extend({
     load: function () {
         return Promise.all([
             loadCodeMirrorResources(),
-            uci.load(serviceName)
-            // L.resolveDefault(callCurrentVersion(), {})
+            uci.load(serviceName),
+            L.resolveDefault(callCurrentVersion(), {})
         ]);
     },
 
     render: function (data) {
-        const currentVersion = data[1]?.data || "unknown";
-        const configPath = uci.get(serviceName, serviceName, 'config_path');
-
+        const currentVersion = data[2]?.data || "unknown";
         let m, s, o, yaml;
 
         m = new form.Map(serviceName, _('Frpc'),
             _('Frpc is a high-performance reverse proxy client.'));
 
+        this.map = m;
         // Status bar
-        s = m.section(form.TypedSection, "status", _('Service Status'));
+        s = m.section(form.TypedSection, "status", null);
         s.anonymous = true;
 
         s.render = function () {
@@ -127,39 +153,14 @@ return view.extend({
         o = m.section(form.NamedSection, serviceName, serviceName);
         o.addremove = false;
 
-        o.tab('common', _('Basic Settings'));
+        o.tab('common', _('通用配置'));
         o.tab('log', _('Logs'));
 
         o.taboption('common', form.Flag, 'enabled', _('Enable')).default = 1;
 
-        const configPathOption = o.taboption('common', form.Value, 'config_path', _('Config Path'));
-        configPathOption.render = function (sectionId, optionId, value) {
-            return form.Value.prototype.render.apply(this, [sectionId, optionId, value])
-                .then(node => {
-                    const input = node.querySelector('input');
-                    if (input) {
-                        input.addEventListener('change', () => {
-                            const newPath = input.value.trim();
-                            if (!newPath) {
-                                return;
-                            }
-
-                            yaml.cfgvalue = () => fs.read(newPath).then(c => c || '');
-
-                            if (editor) {
-                                fs.read(newPath).then(content => {
-                                    editor.setValue(content || '');
-                                });
-                            }
-                        });
-                    }
-                    return node;
-                });
-        }
-
         // Update binary
         let logData = [];
-        const updateBtn = o.taboption('common', form.DummyValue, '_update_panel', _('更新'));
+        const updateBtn = o.taboption('common', form.DummyValue, '_update_panel', _('Update'));
         updateBtn.render = function () {
             const renderLog = (textarea, checkbox) => {
                 const displayData = checkbox.checked ? [...logData].reverse() : logData;
@@ -222,13 +223,13 @@ return view.extend({
             reverseCheck.onclick = () => renderLog(logBox, reverseCheck);
 
             return E('div', {'class': 'cbi-value'}, [
-                E('label', {'class': 'cbi-value-title'}, _('Update version')),
+                E('label', {'class': 'cbi-value-title'}, _('Update')),
                 E('div', {'class': 'cbi-value-field'}, [
-                    E('div', {'style': 'margin-bottom: 8px;'}, [btnUpdate]),
+                    E('div', {'style': 'margin-bottom: 1rem;'}, [btnUpdate]),
                     E('div', {'class': 'cbi-value-description'}, [
                         E('img', {
                             'src': L.resource('cbi/help.gif'),
-                            'style': 'vertical-align: middle; margin-right: 4px;'
+                            'style': 'vertical-align: middle; margin-right: 0.3rem;'
                         }),
                         _('The current binary version is:'),
                         E('span', {'id': 'bin_version_val', 'style': 'font-weight: bold; color: green;'}, `${currentVersion}`)
@@ -240,20 +241,27 @@ return view.extend({
         };
 
         // Yaml
+        let logPath;
         let editor = null;
 
-        yaml = o.taboption('common', form.TextValue, 'config', "配置编辑器");
+        yaml = o.taboption('common', form.TextValue, 'config', _('Yaml Editor'));
         yaml.rows = 10;
 
-        yaml.cfgvalue = () => fs.read(configPath).then(c => c || '');
+        yaml.cfgvalue = () =>
+            fs.read(configPath).then(c => {
+                const content = c || '';
+                try {
+                    const cfg = jsyaml.load(content);
+                    if (cfg?.log?.to) logPath = cfg.log.to;
+                } catch (e) {
+                    console.error("YAML parse error:", e);
+                }
+                return content;
+            });
 
         yaml.write = function (sid, val) {
             const content = editor ? editor.getValue() : val;
-
-            return fs.write(configPath, content.trim() + '\n')
-                .then(() => {
-                    ui.addNotification(null, E('p', _('Saved successfully')), 'info');
-                });
+            return fs.write(configPath, content.trim() + '\n');
         };
 
         yaml.validate = function (sid, val) {
@@ -265,7 +273,6 @@ return view.extend({
                 jsyaml.load(content);
                 return true;
             } catch (e) {
-                return _('YAML error: %s').format(e.message);
             }
         };
 
@@ -312,16 +319,13 @@ return view.extend({
         };
 
         // Logs
-        const logPath = '/tmp/frpc.log';
-
-        const logOption = o.taboption('log', form.TextValue, '_contents', '');
+        const logOption = o.taboption('log', form.TextValue, '_contents', null);
         logOption.rows = 30;
         logOption.readonly = true;
         logOption.monospace = true;
         logOption.css = 'width:100%; padding:1rem; font-family:monospace; overflow:auto; white-space:pre;';
 
-
-        logOption.render = function (section_id) {
+        logOption.render = function (sectionId) {
             const textarea = E('textarea', {
                 'class': 'cbi-input-textarea',
                 'style': this.css + '; width:100%; resize:none;',
@@ -329,28 +333,130 @@ return view.extend({
                 'rows': this.rows
             });
 
+            const topRow = E('div', {
+                style: 'display:flex; align-items:center; padding-bottom:1rem;'
+            });
+
+            function createCheckbox(labelText, id) {
+                const wrapper = E('div', {
+                    style: 'display:inline-flex; align-items:center; margin-right:1rem; cursor:pointer;'
+                });
+
+                const checkbox = E('input', {
+                    type: 'checkbox',
+                    id: id,
+                    style: 'margin-right:0.5rem; cursor:pointer;'
+                });
+
+                const label = E('label', {
+                    for: id,
+                    style: 'margin:0; cursor:pointer;'
+                }, labelText);
+
+                wrapper.appendChild(checkbox);
+                wrapper.appendChild(label);
+                topRow.appendChild(wrapper);
+
+                return checkbox;
+            }
+
+            const revCheckbox = createCheckbox(_('Reverse'), 'reverseCheck');
+            const localCheckbox = createCheckbox(_('Local time'), 'localCheckbox');
+
+            const botRow = E('div', {
+                style: 'display:flex; align-items:center; gap:1rem; padding-top:1rem;'
+            });
+
+            function createButton(text, className, handler) {
+                return E('button', {
+                    'class': 'cbi-button ' + className,
+                    'click': ui.createHandlerFn(this, handler),
+                    'style': 'margin-bottom:1rem;'
+                }, text);
+            }
+
+            const btnClear = createButton(_('Delete'), 'cbi-button-remove', function () {
+                L.resolveDefault(callClearLog(logPath), {}).then(function () {
+                    updateLogDisplay();
+                });
+            });
+
+            const btnDown = createButton(_('Download'), 'cbi-button-apply', function () {
+                fs.read_direct(logPath, 'blob').then(function (res) {
+                    let blob;
+
+                    if (res instanceof Blob) {
+                        blob = res;
+                    } else if (res && res.data) {
+                        blob = new Blob([res.data], {type: "application/octet-stream"});
+                    } else {
+                        blob = new Blob([res], {type: "application/octet-stream"});
+                    }
+
+                    const url = URL.createObjectURL(blob);
+                    const fileName = logPath.split('/').pop();
+
+                    const a = document.createElement("a");
+                    a.href = url;
+                    a.download = fileName;
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+
+                    setTimeout(() => URL.revokeObjectURL(url), 200);
+
+                }).catch(function () {
+                    ui.addNotification(null, E('p', _('Failed to download, please check if the file exists')));
+                });
+            });
+
+            botRow.appendChild(btnClear);
+            botRow.appendChild(btnDown);
+
             function updateLogDisplay() {
                 fs.read(logPath).then(function (res) {
                     let lines = (res || '').trim().split('\n');
+
+                    if (revCheckbox.checked) {
+                        lines.reverse();
+                    }
+
+                    if (localCheckbox.checked) {
+                        lines = lines.map(line => formatLocalTime(line));
+                    }
+
+                    const oldScrollTop = textarea.scrollTop;
+
                     textarea.value = lines.join('\n');
+
+                    if (!revCheckbox.checked) {
+                        textarea.scrollTop = textarea.scrollHeight;
+                    } else {
+                        textarea.scrollTop = oldScrollTop;
+                    }
 
                 }).catch(function () {
                 });
             }
+
+            revCheckbox.addEventListener('change', updateLogDisplay);
+            localCheckbox.addEventListener('change', updateLogDisplay);
 
             poll.add(updateLogDisplay, 3);
             updateLogDisplay();
 
             return E('div', {
                 'class': 'cbi-section',
-                'style': 'padding: 1rem;'
+                'style': 'padding:1rem;'
             }, [
-                textarea
+                topRow,
+                textarea,
+                botRow
             ]);
         };
 
         // Proxy list
-        let ps = m.section(form.TypedSection, null);
+        const ps = m.section(form.TypedSection, null);
 
         ps.render = function () {
             return fs.read(configPath).then(content => {
@@ -365,7 +471,7 @@ return view.extend({
 
                 let rows = proxies.length === 0
                     ? [E('tr', {'class': 'tr cbi-section-table-row placeholder'}, [
-                        E('td', {'class': 'td', 'colspan': '8'}, [E('em', {}, [_('尚无任何配置')])])
+                        E('td', {'class': 'td', 'colspan': '8'}, [E('em', {}, [_('No configurations yet')])])
                     ])]
                     : proxies.map(p => E('tr', {'class': 'tr cbi-section-table-row'}, [
                         E('td', {'class': 'td cbi-section-table-cell'}, [p.name || '-']),
@@ -383,18 +489,18 @@ return view.extend({
                     'class': 'cbi-section cbi-tblsection',
                     'style': 'margin-top: 1rem;'
                 }, [
-                    E('h3', {}, [_('服务列表')]),
+                    E('h3', {}, [_('Server Lists')]),
                     E('table', {'class': 'table cbi-section-table'}, [
                         E('thead', {'class': 'thead cbi-section-thead'}, [
                             E('tr', {'class': 'tr cbi-section-table-titles anonymous'}, [
-                                E('th', {'class': 'th cbi-section-table-cell'}, [_('名称')]),
-                                E('th', {'class': 'th cbi-section-table-cell'}, [_('Frp 协议类型')]),
-                                E('th', {'class': 'th cbi-section-table-cell'}, [_('域名/子域名')]),
-                                E('th', {'class': 'th cbi-section-table-cell'}, [_('远程端口')]),
-                                E('th', {'class': 'th cbi-section-table-cell'}, [_('内网主机地址')]),
-                                E('th', {'class': 'th cbi-section-table-cell'}, [_('本地端口')]),
-                                E('th', {'class': 'th cbi-section-table-cell'}, [_('开启数据加密')]),
-                                E('th', {'class': 'th cbi-section-table-cell'}, [_('使用压缩')]),
+                                E('th', {'class': 'th cbi-section-table-cell'}, [_('name')]),
+                                E('th', {'class': 'th cbi-section-table-cell'}, [_('protocol type')]),
+                                E('th', {'class': 'th cbi-section-table-cell'}, [_('domain/subdomain')]),
+                                E('th', {'class': 'th cbi-section-table-cell'}, [_('remote port')]),
+                                E('th', {'class': 'th cbi-section-table-cell'}, [_('local ip')]),
+                                E('th', {'class': 'th cbi-section-table-cell'}, [_('local port')]),
+                                E('th', {'class': 'th cbi-section-table-cell'}, [_('use encryption')]),
+                                E('th', {'class': 'th cbi-section-table-cell'}, [_('use compression')]),
                             ])
                         ]),
                         E('tbody', {'class': 'tbody cbi-section-tbody'}, rows)
@@ -402,15 +508,41 @@ return view.extend({
                 ]);
             });
         };
-
-
         return m.render();
     },
 
-
     handleSaveApply: function (ev, mode) {
-        return this.super('handleSaveApply', [ev, mode]).then(function () {
-            return fs.exec('/etc/init.d/frpc', ['reload']);
+        ui.changes.displayStatus(
+            'notice spinning',
+            E('p', _('Starting configuration apply…'))
+        );
+
+        return this.map.save().then(() => {
+            return uci.save();
+        }).then(() => {
+            return uci.apply().catch(e => {
+                return Promise.resolve();
+            });
+        }).then(() => {
+            return fs.exec('/etc/init.d/frpc', ['restart']);
+        }).then(() => {
+            return ui.changes.init();
+        }).then(() => {
+            ui.changes.displayStatus(
+                'notice',
+                E('p', _('Configuration changes applied.'))
+            );
+
+            setTimeout(() => {
+                ui.changes.displayStatus(false);
+            }, 1500);
+        }).catch(e => {
+            ui.changes.displayStatus(false);
+            ui.addNotification(
+                null,
+                E('p', _('Failed to apply: %s').format(e.message || e)),
+                'danger'
+            );
         });
     }
 });

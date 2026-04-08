@@ -1,6 +1,15 @@
 msgid "A free, open-source, and powerful DNS server that blocks network-wide ads and tracking."
 msgstr "免费开源，功能强大的全网络广告和跟踪程序拦截 DNS 服务器。"
 
+msgid "Running"
+msgstr "运行中"
+
+msgid "Stopped"
+msgstr "已停止"
+
+msgid "Loading..."
+msgstr "载入中..."
+
 msgid "Enable"
 msgstr "开启"
 
