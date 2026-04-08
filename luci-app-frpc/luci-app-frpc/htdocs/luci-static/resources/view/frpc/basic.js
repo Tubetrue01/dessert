@@ -10,16 +10,15 @@
 'require poll';
 'require fs';
 
-
 const serviceName = "frpc";
 
+/* RPC */
 const callServiceList = rpc.declare({
     object: 'service',
     method: 'list',
     params: ['name'],
     expect: {'': {}}
 });
-
 
 const callUpdateCore = rpc.declare({
     object: 'luci.frpc',
@@ -32,84 +31,136 @@ const callCurrentVersion = rpc.declare({
     expect: {'': {}}
 });
 
-const callClearLog = rpc.declare({
-    object: 'luci.frpc',
-    method: 'clearLog',
-    params: ['filename'],
-});
+/* 加载 CodeMirror */
+async function loadCodeMirrorResources() {
+    const styles = [
+        '/luci-static/resources/view/adguardhome/codemirror5/codemirror.min.css',
+        '/luci-static/resources/view/adguardhome/codemirror5/theme/dracula.min.css',
+        '/luci-static/resources/view/adguardhome/codemirror5/addon/lint/lint.min.css',
+    ];
 
-const getServiceStatus = () => {
-    return L.resolveDefault(callServiceList(serviceName), {}).then((res) => {
-        let isRunning = false;
-        try {
-            isRunning = res[serviceName]['instances'][serviceName]['running'];
-        } catch (e) {
+    const scripts = [
+        '/luci-static/resources/view/adguardhome/codemirror5/libs/js-yaml.min.js',
+        '/luci-static/resources/view/adguardhome/codemirror5/codemirror.min.js',
+        '/luci-static/resources/view/adguardhome/codemirror5/addon/display/autorefresh.min.js',
+        '/luci-static/resources/view/adguardhome/codemirror5/mode/yaml/yaml.min.js',
+        '/luci-static/resources/view/adguardhome/codemirror5/addon/lint/lint.min.js',
+        '/luci-static/resources/view/adguardhome/codemirror5/addon/lint/yaml-lint.min.js',
+    ];
+
+    for (const href of styles) {
+        if (!document.querySelector(`link[href="${href}"]`)) {
+            const link = document.createElement('link');
+            link.rel = 'stylesheet';
+            link.href = href;
+            document.head.appendChild(link);
         }
-        return isRunning;
+    }
+
+    for (const src of scripts) {
+        if (!document.querySelector(`script[src="${src}"]`)) {
+            await new Promise(resolve => {
+                const script = document.createElement('script');
+                script.src = src;
+                script.onload = resolve;
+                document.head.appendChild(script);
+            });
+        }
+    }
+}
+
+/* 服务状态 */
+function getServiceStatus() {
+    return L.resolveDefault(callServiceList(serviceName), {}).then(res => {
+        try {
+            return res[serviceName].instances[serviceName].running;
+        } catch (e) {
+            return false;
+        }
     });
 }
 
-const runningStatus = (isRunning) => {
-    const runColor = isRunning ? 'green' : 'red';
-    const runText = isRunning ? _('Running') : _('Stopped');
 
-    return `
-        <em>
-            <span style="color:${runColor}"><strong>${_("Frpc")} ${runText}</strong></span>
-        </em>`;
+function renderStatus(running) {
+    const color = running ? 'green' : 'red';
+    const text = running ? _('Running') : _('Stopped');
+
+    return `<span style="color:${color}"><strong>Frpc ${text}</strong></span>`;
 }
 
 return view.extend({
+
     load: function () {
         return Promise.all([
-            L.resolveDefault(callCurrentVersion(), {})
+            loadCodeMirrorResources(),
+            uci.load(serviceName)
+            // L.resolveDefault(callCurrentVersion(), {})
         ]);
     },
 
     render: function (data) {
-        const currentVersion = data[0].data;
-        let m, s, o;
+        const currentVersion = data[1]?.data || "unknown";
+        const configPath = uci.get(serviceName, serviceName, 'config_path');
+
+        let m, s, o, yaml;
 
         m = new form.Map(serviceName, _('Frpc'),
-            _('Frpc is a high-performance reverse proxy client that can be used for intranet penetration.'));
+            _('Frpc is a high-performance reverse proxy client.'));
 
-
-        // status bar
+        // Status bar
         s = m.section(form.TypedSection, "status", _('Service Status'));
-
         s.anonymous = true;
+
         s.render = function () {
-            setTimeout(function () {
-                poll.add(function () {
-                    return L.resolveDefault(getServiceStatus())
-                        .then((running) => {
-                            const view = document.getElementById('serviceStatus');
-                            if (view) {
-                                view.innerHTML = runningStatus(running);
-                            } else {
-                                console.error('Element #serviceStatus not found.');
-                            }
-                        });
+            const el = E('p', {id: 'serviceStatus'}, _('Loading...'));
+
+            poll.add(() => {
+                return getServiceStatus().then(running => {
+                    el.innerHTML = renderStatus(running);
                 });
-            }, 100);
+            }, 2);
 
-            return E('div', {class: 'cbi-section', id: 'status_bar'}, [
-                E('p', {id: 'serviceStatus'}, _('Collecting data...'))
-            ]);
-        }
+            return E('div', {class: 'cbi-section'}, [el]);
+        };
 
-        o = m.section(form.NamedSection, "common", serviceName, null);
+        // Config
+        o = m.section(form.NamedSection, serviceName, serviceName);
         o.addremove = false;
 
-        //  Common
-        o.tab('common', _('基本设置'));
-        o.taboption('common', form.Flag, 'enabled', _('启用')).default = 1;
+        o.tab('common', _('Basic Settings'));
+        o.tab('log', _('Logs'));
 
-        // Update button
+        o.taboption('common', form.Flag, 'enabled', _('Enable')).default = 1;
+
+        const configPathOption = o.taboption('common', form.Value, 'config_path', _('Config Path'));
+        configPathOption.render = function (sectionId, optionId, value) {
+            return form.Value.prototype.render.apply(this, [sectionId, optionId, value])
+                .then(node => {
+                    const input = node.querySelector('input');
+                    if (input) {
+                        input.addEventListener('change', () => {
+                            const newPath = input.value.trim();
+                            if (!newPath) {
+                                return;
+                            }
+
+                            yaml.cfgvalue = () => fs.read(newPath).then(c => c || '');
+
+                            if (editor) {
+                                fs.read(newPath).then(content => {
+                                    editor.setValue(content || '');
+                                });
+                            }
+                        });
+                    }
+                    return node;
+                });
+        }
+
+        // Update binary
         let logData = [];
-        const updateOption = o.taboption('common', form.DummyValue, '_update_panel', null);
-
-        updateOption.render = function () {
+        const updateBtn = o.taboption('common', form.DummyValue, '_update_panel', _('更新'));
+        updateBtn.render = function () {
             const renderLog = (textarea, checkbox) => {
                 const displayData = checkbox.checked ? [...logData].reverse() : logData;
                 textarea.value = displayData.join('\n');
@@ -157,7 +208,7 @@ return view.extend({
                                     if (lastLine.includes("Success") || lastLine.includes("Failed")) {
                                         L.Poll.remove(pollLogFn);
                                         L.resolveDefault(callCurrentVersion()).then((res) => {
-                                            document.getElementById("core_version_val").innerText = res.data;
+                                            document.getElementById("bin_version_val").innerText = res.data;
                                         });
                                     }
                                 }
@@ -166,12 +217,12 @@ return view.extend({
                         L.Poll.add(pollLogFn, 1);
                     });
                 }
-            }, [_('更新二进制')]);
+            }, [_('Update Binary')]);
 
             reverseCheck.onclick = () => renderLog(logBox, reverseCheck);
 
             return E('div', {'class': 'cbi-value'}, [
-                E('label', {'class': 'cbi-value-title'}, _('更新')),
+                E('label', {'class': 'cbi-value-title'}, _('Update version')),
                 E('div', {'class': 'cbi-value-field'}, [
                     E('div', {'style': 'margin-bottom: 8px;'}, [btnUpdate]),
                     E('div', {'class': 'cbi-value-description'}, [
@@ -180,7 +231,7 @@ return view.extend({
                             'style': 'vertical-align: middle; margin-right: 4px;'
                         }),
                         _('The current binary version is:'),
-                        E('span', {'id': 'core_version_val', 'style': 'font-weight: bold; color: green;'}, `${currentVersion}`)
+                        E('span', {'id': 'bin_version_val', 'style': 'font-weight: bold; color: green;'}, `${currentVersion}`)
                     ]),
                     checkLabel,
                     logBox
@@ -188,59 +239,79 @@ return view.extend({
             ]);
         };
 
-        o.taboption('common', form.Value, 'config_path', _('配置路径')).description = _('用于存放生成的 toml 配置文件');
-        o.taboption('common', form.Value, 'serverAddr', _('服务器'));
-        o.taboption('common', form.Value, 'serverPort', _('端口'));
+        // Yaml
+        let editor = null;
 
-        const authMethod = o.taboption('common', form.ListValue, 'auth_method', _('认证方法'));
+        yaml = o.taboption('common', form.TextValue, 'config', "配置编辑器");
+        yaml.rows = 10;
 
-        authMethod.value('', _('None'));
-        authMethod.value('token', _('Token'));
+        yaml.cfgvalue = () => fs.read(configPath).then(c => c || '');
 
-        o.taboption('common', form.Value, 'auth_token', _('令牌'));
+        yaml.write = function (sid, val) {
+            const content = editor ? editor.getValue() : val;
 
+            return fs.write(configPath, content.trim() + '\n')
+                .then(() => {
+                    ui.addNotification(null, E('p', _('Saved successfully')), 'info');
+                });
+        };
 
-        const additionalScopes = o.taboption('common', form.DynamicList, 'auth_additionalScopes', _('附加权限'));
+        yaml.validate = function (sid, val) {
+            const content = editor ? editor.getValue() : val;
 
-        additionalScopes.value('HeartBeats', _('HeartBeats'));
-        additionalScopes.value('NewWorkConns', _('NewWorkConns'));
+            if (!content.trim()) return true;
 
-        additionalScopes.default = ['HeartBeats', 'NewWorkConns'];
+            try {
+                jsyaml.load(content);
+                return true;
+            } catch (e) {
+                return _('YAML error: %s').format(e.message);
+            }
+        };
 
-        o.taboption('common', form.Value, 'user', _('用户')).description = _('用于连接 FRP 服务端的用户名');
+        yaml.render = function (sid) {
+            return form.TextValue.prototype.render.apply(this, arguments)
+                .then(node => {
 
-        // Advanced
-        o.tab('advanced', _('高级设置'));
-        const protocol = o.taboption('advanced', form.ListValue, 'transport_protocol', _('传输协议'));
+                    const textarea = node.querySelector('textarea');
 
-        protocol.value('tcp', _('TCP'));
+                    setTimeout(() => {
+                        if (window.CodeMirror) {
+                            editor = CodeMirror.fromTextArea(textarea, {
+                                mode: "yaml",
+                                theme: "dracula",
+                                lineNumbers: true,
+                                lineWrapping: true,
+                                lint: true,
+                                gutters: ['CodeMirror-lint-markers']
+                            });
 
-        protocol.default = 'tcp';
-        protocol.description = _('选择与 FRP 服务端通信使用的传输协议');
+                            editor.on('change', cm => {
+                                textarea.value = cm.getValue();
+                                textarea.dispatchEvent(new Event('change', {bubbles: true}));
+                            });
 
-        o.taboption('advanced', form.Value, 'transport_tls_certFile', _('证书文件'));
-        o.taboption('advanced', form.Value, 'transport_tls_keyFile', _('证书私钥'));
-        o.taboption('advanced', form.Value, 'transport_tls_trustedCaFile', _('CA 文件'));
-        o.taboption('advanced', form.Value, 'transport_tls_serverName', _('证书 SANS 域名'));
-        o.taboption('advanced', form.Value, 'transport_tls_certFile', _('证书文件'));
+                            const wrapper = editor.getWrapperElement();
 
-        o.taboption('advanced', form.Value, 'transport_poolCount', _('连接池大小'));
-        o.taboption('advanced', form.Flag, 'transport_tcpMux', _('开启 tcpMux'));
-        o.taboption('advanced', form.Flag, 'transport_tls_enable', _('开启 TLS 安全'));
+                            wrapper.style.width = "30rem";
+                            wrapper.style.minWidth = "30rem";
+                            wrapper.style.maxWidth = "30rem";
 
-        const logLevel = o.taboption('advanced', form.ListValue, 'log_level', _('日志级别'));
-        logLevel.value('trace', _('trace'));
-        logLevel.value('debug', _('debug'));
-        logLevel.value('info', _('info'));
-        logLevel.default = 'info';
+                            const scroller = editor.getScrollerElement();
+                            scroller.style.overflowX = "hidden";
+                            scroller.style.overflowY = "scroll";
 
-        o.taboption('advanced', form.Value, 'log_maxDays', _('日志最大天数'));
-        o.taboption('advanced', form.Value, 'log_to', _('日志路径'));
-        o.taboption('advanced', form.Flag, 'loginFailExit', _('登录失败时退出'));
+                            editor.setSize("30rem", "25rem");
 
+                            setTimeout(() => editor.refresh(), 0);
+                        }
+                    }, 100);
+
+                    return node;
+                });
+        };
 
         // Logs
-        o.tab('log', _('Logs'));
         const logPath = '/tmp/frpc.log';
 
         const logOption = o.taboption('log', form.TextValue, '_contents', '');
@@ -267,7 +338,6 @@ return view.extend({
                 });
             }
 
-
             poll.add(updateLogDisplay, 3);
             updateLogDisplay();
 
@@ -280,94 +350,67 @@ return view.extend({
         };
 
         // Proxy list
-        const proxyList = m.section(form.GridSection, 'proxy', _('服务列表'));
-        proxyList.addremove = true;
-        proxyList.anonymous = true;
-        proxyList.sortable = true;
+        let ps = m.section(form.TypedSection, null);
 
-        proxyList.tab('basic', _('基本配置'));
-        proxyList.tab('advanced', _('高级配置'));
-
-        o = proxyList.taboption('basic', form.Value, 'remark', _('服务备注名'));
-
-        o = proxyList.taboption('basic', form.ListValue, 'type', _('Frp 协议类型'));
-        o.value('http', 'HTTP');
-        o.value('https', 'HTTPS');
-        o.value('tcp', 'TCP');
-
-        o = proxyList.taboption('basic', form.Value, 'custom_domains', _('自定义域名'));
-        o.depends('type', 'https');
-        o.depends('type', 'http');
-
-        o.cfgvalue = function(section_id) {
-            const type = uci.get('frpc', section_id, 'type');
-            if (type === 'tcp') {
-                return null;
-            }
-
-            const d = uci.get('frpc', section_id, 'custom_domains');
-            if (!d) return {
-                null;
-            }
-            return Array.isArray(d) ? d : [d];
-        };
-
-        o.write = function(section_id, value) {
-            let type = uci.get('frpc', section_id, 'type');
-
-            if (type === 'https' || type === 'http') {
-                if (!value || value.length === 0) {
-                    uci.unset('frpc', section_id, 'custom_domains');
-                } else {
-                    uci.set('frpc', section_id, 'custom_domains', value);
+        ps.render = function () {
+            return fs.read(configPath).then(content => {
+                let proxies = [];
+                let yamlData;
+                try {
+                    yamlData = jsyaml.load(content || '') || {};
+                    proxies = yamlData.proxies || [];
+                } catch (e) {
+                    console.error("YAML Parse Error", e);
                 }
-            }
+
+                let rows = proxies.length === 0
+                    ? [E('tr', {'class': 'tr cbi-section-table-row placeholder'}, [
+                        E('td', {'class': 'td', 'colspan': '8'}, [E('em', {}, [_('尚无任何配置')])])
+                    ])]
+                    : proxies.map(p => E('tr', {'class': 'tr cbi-section-table-row'}, [
+                        E('td', {'class': 'td cbi-section-table-cell'}, [p.name || '-']),
+                        E('td', {'class': 'td cbi-section-table-cell'}, [p.type || '-']),
+                        E('td', {'class': 'td cbi-section-table-cell'}, [p.customDomains || yamlData.serverAddr]),
+                        E('td', {'class': 'td cbi-section-table-cell'}, [yamlData.serverPort || '-']),
+                        E('td', {'class': 'td cbi-section-table-cell'}, [p.localIP || '-']),
+                        E('td', {'class': 'td cbi-section-table-cell'}, [p.localPort || '-']),
+                        E('td', {'class': 'td cbi-section-table-cell'}, [p.transport.useEncryption || '-']),
+                        E('td', {'class': 'td cbi-section-table-cell'}, [p.transport.useEncryption || '-']),
+                    ]));
+
+                return E('div', {
+                    'id': 'cbi-frpc-proxies',
+                    'class': 'cbi-section cbi-tblsection',
+                    'style': 'margin-top: 1rem;'
+                }, [
+                    E('h3', {}, [_('服务列表')]),
+                    E('table', {'class': 'table cbi-section-table'}, [
+                        E('thead', {'class': 'thead cbi-section-thead'}, [
+                            E('tr', {'class': 'tr cbi-section-table-titles anonymous'}, [
+                                E('th', {'class': 'th cbi-section-table-cell'}, [_('名称')]),
+                                E('th', {'class': 'th cbi-section-table-cell'}, [_('Frp 协议类型')]),
+                                E('th', {'class': 'th cbi-section-table-cell'}, [_('域名/子域名')]),
+                                E('th', {'class': 'th cbi-section-table-cell'}, [_('远程端口')]),
+                                E('th', {'class': 'th cbi-section-table-cell'}, [_('内网主机地址')]),
+                                E('th', {'class': 'th cbi-section-table-cell'}, [_('本地端口')]),
+                                E('th', {'class': 'th cbi-section-table-cell'}, [_('开启数据加密')]),
+                                E('th', {'class': 'th cbi-section-table-cell'}, [_('使用压缩')]),
+                            ])
+                        ]),
+                        E('tbody', {'class': 'tbody cbi-section-tbody'}, rows)
+                    ])
+                ]);
+            });
         };
 
-        o = proxyList.taboption('basic', form.ListValue, '_domain_type', _('域名类型'));
-
-        o.value('subdomain', '子域名');
-        o.value('custom', '自定义域名');
-        o.value('both', '同时使用两种域名');
-
-        o.cfgvalue = function(section_id) {
-            let type = uci.get('frpc', section_id, 'some_field'); // 可自定义逻辑
-            if (type === 'something')
-                return 'subdomain';
-            return 'toplevel';
-        };
-
-        o.write = function(section_id, value) {
-        };
-
-        o = proxyList.taboption('basic', form.Value, '_rport', _('远程端口'));
-        o.readonly = true;
-        o.cfgvalue = function(section_id) {
-            let type = uci.get('frpc', section_id, 'type');
-            return (type === 'https') ? uci.get('frpc', 'common', 'serverPort') : (uci.get('frpc', section_id, 'remotePort') || '-');
-        };
-
-        proxyList.taboption('basic', form.Value, 'localIP', _('本地 IP'));
-        proxyList.taboption('basic', form.Value, 'localPort', _('本地端口'));
-
-        o = proxyList.taboption('basic', form.Value, 'remotePort', _('远程端口设置'));
-        o.modalonly = true;
-        o.depends('type', 'tcp');
-
-
-        o = proxyList.taboption('advanced', form.Flag, 'transport_useEncryption', _('加密'));
-        o.enabled = 'true';
-        o.disabled = 'false';
-
-        o = proxyList.taboption('advanced', form.Flag, 'transport_useCompression', _('压缩'));
-        o.enabled = 'true';
-        o.disabled = 'false';
-
-        o = proxyList.taboption('basic', form.Flag, 'enabled', _('启用'));
-        o.enabled = '1';
-        o.disabled = '0';
-        o.editable = true;
 
         return m.render();
+    },
+
+
+    handleSaveApply: function (ev, mode) {
+        return this.super('handleSaveApply', [ev, mode]).then(function () {
+            return fs.exec('/etc/init.d/frpc', ['reload']);
+        });
     }
 });

@@ -1,0 +1,67 @@
+serverAddr: "10.21.0.11"
+serverPort: 10086
+
+auth:
+  method: "token"
+  token: "frpc-toekn"
+  additionalScopes:
+    - "HeartBeats"
+    - "NewWorkConns"
+
+user: "OpenWrt"
+
+log:
+  level: "info"
+  maxDays: 3
+  to: "/var/etc/frp/frpc.log"
+
+transport:
+  protocol: "tcp"
+  poolCount: 1
+  tcpMux: true
+  tls:
+    enable: true
+    certFile: "/etc/config/certs/frpc/client.crt"
+    keyFile: "/etc/config/certs/frpc/client.key"
+    trustedCaFile: "/etc/config/certs/frpc/ca.crt"
+    serverName: "frpc.github.com"
+
+loginFailExit: false
+
+proxies:
+  - name: "ssh"
+    type: "tcp"
+    transport:
+      useEncryption: true
+      useCompression: true
+    healthCheck:
+      type: "tcp"
+      timeoutSeconds: 3
+      maxFailed: 3
+      intervalSeconds: 10
+    localIP: "172.31.0.1"
+    localPort: 22
+
+  - name: "https"
+    type: "https"
+    customDomains:
+      - "http.frpc.github.com"
+    transport:
+      useEncryption: true
+      useCompression: true
+    healthCheck:
+      type: "tcp"
+      timeoutSeconds: 3
+      maxFailed: 3
+      intervalSeconds: 10
+    localIP: "172.31.0.1"
+    localPort: 80
+    plugin:
+      type: "https2http"
+      localAddr: "172.31.0.1:80"
+      crtPath: "/etc/frpc/certs/frpc/http.frpc.github.com.pem"
+      keyPath: "/etc/frpc/certs/frpc/http.frpc.github.com.key"
+      hostHeaderRewrite: "172.31.0.1"
+      requestHeaders:
+        set:
+          x-from-where: "frp"
