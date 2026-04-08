@@ -1,3 +1,5 @@
+// noinspection JSAnnotator
+
 'use strict';
 'require ui';
 'require form';
@@ -57,7 +59,7 @@ return view.extend({
 		const m = new form.Map(serviceName, null);
 		const s = m.section(form.NamedSection, serviceName, serviceName);
 
-		let configeditor = null;
+		let configEditor = null;
 		const o = s.option(form.TextValue, 'yaml_config', _('YAML configuration content')); 
 		
 		o.render = function(sectionId, optionId, value) {
@@ -87,15 +89,21 @@ return view.extend({
 					if (textarea) {
 						setTimeout(() => {
 							if (window.CodeMirror) {
-								configeditor = CodeMirror.fromTextArea(textarea, {
+								configEditor = CodeMirror.fromTextArea(textarea, {
 									autoRefresh: true, lineNumbers: true, lineWrapping: true,
 									lint: true, gutters: ['CodeMirror-lint-markers'],
 									mode: "text/yaml", theme: "dracula", tabSize: 2, indentUnit: 2
 								});
-								const editorEl = configeditor.getWrapperElement();
+								const editorEl = configEditor.getWrapperElement();
 								editorEl.style.height = "40rem";
 								editorEl.style.width = "100%";
-								configeditor.refresh();
+
+                                configEditor.on('change', cm => {
+                                    textarea.value = cm.getValue();
+                                    textarea.dispatchEvent(new Event('change', { bubbles: true }));
+                                });
+
+								configEditor.refresh();
 							}
 						}, 150);
 					}
@@ -108,7 +116,7 @@ return view.extend({
 		};
 
 		o.write = function(sectionId, formvalue) {
-			const editorContent = configeditor ? configeditor.getValue() : formvalue;
+			const editorContent = configEditor ? configEditor.getValue() : formvalue;
 			if (!editorContent) return;
 			return fs.write(configPath, editorContent.trim().replace(/\r\n/g, '\n') + '\n')
 				.catch(e => {
@@ -118,7 +126,7 @@ return view.extend({
 		};
 
 		o.validate = function(sectionId, value) {
-			const content = configeditor ? configeditor.getValue() : value;
+			const content = configEditor ? configEditor.getValue() : value;
 			
 			if (!content || content.trim() === "") {
 				return "";
@@ -143,8 +151,8 @@ return view.extend({
 		btn.onclick = function(ev) {
 			const templatePath = '/usr/share/adguardhome/AdGuardHome_template.yaml';
 			return fs.read(templatePath).then(content => {
-				if (content && configeditor) {
-					configeditor.setValue(content);
+				if (content && configEditor) {
+					configEditor.setValue(content);
 				}
 			}).catch(e => {
 				ui.addNotification(null, E('p', _('Failed to read the template').format(e.message)), 'danger');
@@ -203,5 +211,5 @@ return view.extend({
                     'danger'
                 );
             });
-    }
+    },
 });
