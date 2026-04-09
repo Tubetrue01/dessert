@@ -52,7 +52,7 @@ return L.view.extend({
         o.css = 'width:100%; padding:1rem; font-family:monospace; overflow:auto; white-space:pre;';
 
         return m.render().then(L.bind(function (mapNode) {
-
+            let textarea;
             const h2 = mapNode.querySelector('h2');
             if (h2) {
                 h2.style.display = 'none';
@@ -84,7 +84,7 @@ return L.view.extend({
             }
 
             function updateLogDisplay() {
-                const textarea = mapNode.querySelector('textarea');
+                textarea = mapNode.querySelector('textarea');
                 if (!textarea) {
                     return;
                 }
@@ -93,11 +93,14 @@ return L.view.extend({
                 const oldScrollTop = textarea.scrollTop;
 
                 fs.exec('/usr/bin/tail', ['-n', '200', logPath]).then(function (res) {
-                    if (!textarea || !res.stdout) {
+                    let content = (res && res.stdout) ? res.stdout.trim() : "";
+
+                    if (content === "") {
+                        textarea.value = "";
                         return;
                     }
 
-                    let lines = res.stdout.trim().split('\n');
+                    let lines = content.split('\n');
 
                     if (localCheckbox.checked) {
                         lines = lines.map(line => {
@@ -124,6 +127,7 @@ return L.view.extend({
                     }
 
                 }).catch(() => {
+                    textarea.value = "";
                 });
             }
 
@@ -151,7 +155,9 @@ return L.view.extend({
 
             const btnClear = createButton(_('Delete'), 'cbi-button-remove', function () {
                 L.resolveDefault(callClearLog(logPath), {}).then(function (res) {
-                    console.log(JSON.stringify(res));
+                    if (textarea) {
+                        textarea.value = "";
+                    }
                     updateLogDisplay()
                 });
             });

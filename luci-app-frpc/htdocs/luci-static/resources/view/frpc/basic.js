@@ -14,7 +14,6 @@ const serviceName = "frpc";
 const configPath = "/etc/frpc/frpc.yaml"
 
 const formatLocalTime = (text) => {
-    console.log(text);
     return text.replace(/(\d{4})-(\d{2})-(\d{2})\s(\d{2}:\d{2}:\d{2})(\.\d+)?/g, function (match, y, m, d, time) {
         const utcstr = `${y}-${m}-${d}T${time}Z`;
         const date = new Date(utcstr);
@@ -377,6 +376,7 @@ return view.extend({
 
             const btnClear = createButton(_('Delete'), 'cbi-button-remove', function () {
                 L.resolveDefault(callClearLog(logPath), {}).then(function () {
+                    textarea.value = "";
                     updateLogDisplay();
                 });
             });
@@ -419,6 +419,7 @@ return view.extend({
 
                 fs.exec('/usr/bin/tail', ['-n', '200', logPath]).then(function (res) {
                     if (!res.stdout) {
+                        textarea.value = "";
                         return;
                     }
 
@@ -447,6 +448,7 @@ return view.extend({
                     }
 
                 }).catch(function () {
+                    textarea.value = "";
                 });
             }
 
