@@ -172,17 +172,17 @@ return view.extend({
 
             const logBox = E('textarea', {
                 'class': 'cbi-input-textarea',
-                'style': 'width:100%; height:200px; font-family:monospace; margin-top:10px; display:none;',
+                'style': 'width:100%; height:10rem; font-family:monospace; margin-top:1rem; display:none;',
                 'readonly': true
             });
 
             const reverseCheck = E('input', {
                 'type': 'checkbox',
-                'style': 'margin: 0; cursor: pointer; width: 14px; height: 14px; top: 0'
+                'style': 'margin: 0; cursor: pointer; top: 0'
             });
 
             const checkLabel = E('label', {
-                'style': 'display:none; margin-top:10px; align-items: center; cursor: pointer; gap: 6px; line-height: 1;'
+                'style': 'display:none; margin-top:1rem; align-items: center; cursor: pointer; gap: 0.5rem; line-height: 1;'
             }, [
                 reverseCheck,
                 E('span', {'style': 'line-height: 1;'}, _('Reverse'))
