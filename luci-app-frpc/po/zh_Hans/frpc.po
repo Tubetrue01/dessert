@@ -69,3 +69,6 @@ msgstr "开启数据加密"
 
 msgid "use compression"
 msgstr "使用压缩"
+
+msgid "Failed to apply: %s"
+msgstr "应用失败：%s"

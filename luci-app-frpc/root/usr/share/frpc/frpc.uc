@@ -1,6 +1,6 @@
 #!/usr/bin/ucode
 
-import {open, popen, readlink, stat, unlink} from "fs";
+import {open, popen, stat} from "fs";
 
 const uci = require("uci").cursor();
 
@@ -18,9 +18,7 @@ const archMap = {
     "mips": "mips"
 };
 
-const version = replace(state.latest_ver, /^v/, '');
 const github_api = "https://api.github.com/repos/fatedier/frp/releases/latest";
-const download_url = `https://github.com/fatedier/frp/releases/download/${state.latest_ver}/frp_${version}_linux_${state.arch}.tar.gz`;
 const bin_path = "/usr/bin/frpc";
 const config_path = "/etc/frpc/frpc.yaml";
 
@@ -36,12 +34,6 @@ function _exec_sys(cmd) {
         code: code,
         data: (type(stdout) === "string") ? trim(stdout) : ""
     };
-}
-
-function _safe_unlink(path) {
-    if (stat(path)) {
-        unlink(path);
-    }
 }
 
 function _uci_get(setction_name, defaultVal) {
@@ -114,6 +106,9 @@ function _patch_config(file, key_path, value) {
 /* ================= Core Download ================= */
 function update_core(log_file) {
     _arch_version_set();
+
+    const version = replace(state.latest_ver, /^v/, '');
+    const download_url = `https://github.com/fatedier/frp/releases/download/${state.latest_ver}/frp_${version}_linux_${state.arch}.tar.gz`;
 
     _log(`Target architecture is: ${state.arch}, and version is ${state.latest_ver}`, log_file);
 

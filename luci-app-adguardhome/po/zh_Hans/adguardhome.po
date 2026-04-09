@@ -145,5 +145,5 @@ msgstr "日志"
 msgid "Customer"
 msgstr "自定义配置"
 
-msgid "Failed to apply"
-msgstr "应用失败"
+msgid "Failed to apply: %s"
+msgstr "应用失败：%s"
