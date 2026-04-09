@@ -29,7 +29,8 @@
         ],
         "/etc/init.d/frpc": [
           "exec"
-        ]
+        ],
+        "/usr/bin/tail": ["exec"]
       },
       "uci": [
         "frpc"

@@ -35,7 +35,8 @@
             "write"
           ],
         "/usr/share/adguardhome/adguardhome.uc applyFromYaml": ["exec"],
-        "/etc/init.d/AdGuardHome reload": ["exec"]
+        "/etc/init.d/AdGuardHome reload": ["exec"],
+        "/usr/bin/tail": ["exec"]
         }
     }
   }

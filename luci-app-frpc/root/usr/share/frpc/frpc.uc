@@ -23,6 +23,7 @@ const github_api = "https://api.github.com/repos/fatedier/frp/releases/latest";
 const download_url = `https://github.com/fatedier/frp/releases/download/${state.latest_ver}/frp_${version}_linux_${state.arch}.tar.gz`;
 const bin_path = "/usr/bin/frpc";
 const config_path = "/etc/frpc/frpc.yaml";
+
 /* ================= Base Tools ================= */
 function _exec_sys(cmd) {
     const p = popen(`sh -c '${cmd}' 2>&1`, "r");

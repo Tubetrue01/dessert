@@ -339,18 +339,18 @@ return view.extend({
 
             function createCheckbox(labelText, id) {
                 const wrapper = E('div', {
-                    style: 'display:inline-flex; align-items:center; margin-right:1rem; cursor:pointer;'
+                    style: 'display:inline-flex; align-items:center; margin-right:1.5rem; cursor:pointer; line-height: 1;'
                 });
 
                 const checkbox = E('input', {
                     type: 'checkbox',
                     id: id,
-                    style: 'margin-right:0.5rem; cursor:pointer;'
+                    style: 'margin: 0 0.5rem 0 0; cursor:pointer; width: 1rem; height: 1rem;'
                 });
 
                 const label = E('label', {
                     for: id,
-                    style: 'margin:0; cursor:pointer;'
+                    style: 'margin:0; cursor:pointer; display: flex; align-items: center;'
                 }, labelText);
 
                 wrapper.appendChild(checkbox);
@@ -414,25 +414,36 @@ return view.extend({
             botRow.appendChild(btnDown);
 
             function updateLogDisplay() {
-                fs.read(logPath).then(function (res) {
-                    let lines = (res || '').trim().split('\n');
+                const isAtBottom = textarea.scrollHeight - textarea.scrollTop <= textarea.clientHeight + 10;
+                const oldScrollTop = textarea.scrollTop;
 
-                    if (revCheckbox.checked) {
-                        lines.reverse();
+                fs.exec('/usr/bin/tail', ['-n', '200', logPath]).then(function (res) {
+                    if (!res.stdout) {
+                        return;
                     }
+
+                    let lines = res.stdout.trim().split('\n');
 
                     if (localCheckbox.checked) {
                         lines = lines.map(line => formatLocalTime(line));
                     }
 
-                    const oldScrollTop = textarea.scrollTop;
+                    if (revCheckbox.checked) {
+                        lines.reverse();
+                    }
 
-                    textarea.value = lines.join('\n');
+                    const newText = lines.join('\n');
 
-                    if (!revCheckbox.checked) {
-                        textarea.scrollTop = textarea.scrollHeight;
-                    } else {
-                        textarea.scrollTop = oldScrollTop;
+                    if (textarea.value !== newText) {
+                        textarea.value = newText;
+
+                        if (revCheckbox.checked) {
+                            textarea.scrollTop = oldScrollTop;
+                        } else if (isAtBottom) {
+                            textarea.scrollTop = textarea.scrollHeight;
+                        } else {
+                            textarea.scrollTop = oldScrollTop;
+                        }
                     }
 
                 }).catch(function () {
