@@ -43,8 +43,47 @@ msgstr "下载失败，请查看文件是否存在"
 msgid "No configurations yet"
 msgstr "尚无任何配置"
 
+msgid "Server"
+msgstr "服务器"
+
 msgid "Server Lists"
 msgstr "服务列表"
+
+msgid "true"
+msgstr "开启"
+
+msgid "false"
+msgstr "关闭"
+
+msgid "address"
+msgstr "服务器地址"
+
+msgid "port"
+msgstr "端口"
+
+msgid "auth"
+msgstr "认证方式"
+
+msgid "log level"
+msgstr "日志级别"
+
+msgid "log path"
+msgstr "日志路径"
+
+msgid "transport protocol"
+msgstr "传输协议"
+
+msgid "pool count"
+msgstr "链接池大小"
+
+msgid "tcpMux"
+msgstr "多路复用"
+
+msgid "tls"
+msgstr "TLS"
+
+msgid "login fail exit"
+msgstr "登录失败时退出"
 
 msgid "name"
 msgstr "名称"
@@ -52,8 +91,11 @@ msgstr "名称"
 msgid "protocol type"
 msgstr "Frp 协议类型"
 
-msgid "domain/subdomain"
-msgstr "域名/子域名"
+msgid "domain"
+msgstr "域名"
+
+msgid "subdomain"
+msgstr "子域名"
 
 msgid "remote port"
 msgstr "远程端口"
