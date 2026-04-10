@@ -21,9 +21,9 @@ transport:
   tcpMux: true
   tls:
     enable: true
-    certFile: "/etc/config/certs/frpc/client.crt"
-    keyFile: "/etc/config/certs/frpc/client.key"
-    trustedCaFile: "/etc/config/certs/frpc/ca.crt"
+    certFile: "/etc/frpc/certs/client.crt"
+    keyFile: "/etc/frpc/certs/client.key"
+    trustedCaFile: "/etc/frpc/certs/ca.crt"
     serverName: "frpc.github.com"
 
 loginFailExit: false
@@ -59,8 +59,8 @@ proxies:
     plugin:
       type: "https2http"
       localAddr: "172.31.0.1:80"
-      crtPath: "/etc/frpc/certs/frpc/http.frpc.github.com.pem"
-      keyPath: "/etc/frpc/certs/frpc/http.frpc.github.com.key"
+      crtPath: "/etc/frpc/certs/http.frpc.github.com.pem"
+      keyPath: "/etc/frpc/certs/http.frpc.github.com.key"
       hostHeaderRewrite: "172.31.0.1"
       requestHeaders:
         set:
