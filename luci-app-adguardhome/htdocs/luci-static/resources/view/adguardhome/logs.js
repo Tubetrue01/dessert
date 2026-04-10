@@ -31,11 +31,13 @@ const formatLocalTime = (text) => {
             minute: '2-digit',
             second: '2-digit',
             hour12: false
-        }).replace(/\//g, '-');
+        });
     });
 }
 
 return L.view.extend({
+    lastLogContent: "",
+
     load: function () {
         return uci.load(serviceName);
     },
@@ -45,164 +47,122 @@ return L.view.extend({
         const m = new form.Map(serviceName, null);
         const s = m.section(form.NamedSection, serviceName, serviceName);
 
-        const o = s.option(form.TextValue, '_contents', '');
-        o.rows = 30;
-        o.readonly = true;
-        o.monospace = true;
-        o.css = 'width:100%; padding:1rem; font-family:monospace; overflow:auto; white-space:pre;';
+        const o = s.option(form.DummyValue, '_log_container');
 
         return m.render().then(L.bind(function (mapNode) {
-            let textarea;
             const h2 = mapNode.querySelector('h2');
             if (h2) {
                 h2.style.display = 'none';
             }
 
             const sectionNode = mapNode.querySelector('.cbi-section-node');
-            const topWrap = E('div', {style: 'padding:1rem 0 0 0;'});
-            const topRow = E('div', {style: 'display:flex; align-items:center; padding-left:1rem; padding-bottom:1rem;'});
 
-            topWrap.appendChild(topRow);
-            sectionNode.prepend(topWrap);
+            const topRow = E('div', { style: 'display:flex; align-items:center; padding:1rem;' });
+            sectionNode.prepend(topRow);
+
+            const logBox = E('div', {
+                id: 'log_content_box',
+                'class': 'cbi-input-textarea',
+                style: 'height:30rem; padding:1rem; \
+                        overflow-y:auto; \
+                        white-space:pre-wrap; \
+                        word-break:break-all; \
+                        margin:0 1rem; \
+                        font-size:0.875rem; \
+                        display:block;'
+            });
+
+            const dummy = mapNode.querySelector('[id$="_log_container"]');
+            if (dummy) {
+                dummy.parentNode.replaceChild(logBox, dummy);
+            }
 
             function createCheckbox(labelText, id) {
-                const wrapper = E('div', {style: 'display:inline-flex; align-items:center; margin-right:1rem; cursor:pointer;'});
-
-                const checkbox = E('input', {
-                    type: 'checkbox',
-                    id: id,
-                    style: 'margin: 0 0.5rem 0 0; cursor:pointer; width: 1rem; height: 1rem;'
-                });
-
-                const label = E('label', {for: id, style: 'margin:0; cursor:pointer;'}, labelText);
-
+                const wrapper = E('div', { style: 'display:inline-flex; align-items:center; margin-right:1rem; cursor:pointer;' });
+                const checkbox = E('input', { type: 'checkbox', id: id, style: 'margin:0 0.5rem 0 0; cursor:pointer; width:1rem; height:1rem;' });
+                const label = E('label', { for: id, style: 'margin:0; cursor:pointer;' }, labelText);
                 wrapper.appendChild(checkbox);
                 wrapper.appendChild(label);
                 topRow.appendChild(wrapper);
-
                 return checkbox;
-            }
-
-            function updateLogDisplay() {
-                textarea = mapNode.querySelector('textarea');
-                if (!textarea) {
-                    return;
-                }
-
-                const isAtBottom = textarea.scrollHeight - textarea.scrollTop <= textarea.clientHeight + 10;
-                const oldScrollTop = textarea.scrollTop;
-
-                fs.exec('/usr/bin/tail', ['-n', '200', logPath]).then(function (res) {
-                    let content = (res && res.stdout) ? res.stdout.trim() : "";
-
-                    if (content === "") {
-                        textarea.value = "";
-                        return;
-                    }
-
-                    let lines = content.split('\n');
-
-                    if (localCheckbox.checked) {
-                        lines = lines.map(line => {
-                            return formatLocalTime(line)
-                        });
-                    }
-
-                    if (revCheckbox.checked) {
-                        lines.reverse();
-                    }
-
-                    const newText = lines.join('\n');
-
-                    if (textarea.value !== newText) {
-                        textarea.value = newText;
-
-                        if (revCheckbox.checked) {
-                            textarea.scrollTop = oldScrollTop;
-                        } else if (isAtBottom) {
-                            textarea.scrollTop = textarea.scrollHeight;
-                        } else {
-                            textarea.scrollTop = oldScrollTop;
-                        }
-                    }
-
-                }).catch(() => {
-                    textarea.value = "";
-                });
             }
 
             const revCheckbox = createCheckbox(_('Reverse'), 'reverseCheck');
             const localCheckbox = createCheckbox(_('Local time'), 'localCheckbox');
 
-            const botWrap = E('div', {
-                style: 'padding:1rem 0 0 1rem;'
-            });
+            const updateLogDisplay = () => {
+                fs.exec('/usr/bin/tail', ['-n', '200', logPath]).then((res) => {
+                    const content = (res && res.stdout) ? res.stdout.trim() : "";
 
-            const botRow = E('div', {
-                style: 'display:flex; align-items:center; gap:1rem;'
-            });
-
-            botWrap.appendChild(botRow);
-            sectionNode.appendChild(botWrap);
-
-            function createButton(text, className, handler) {
-                return E('button', {
-                    'class': 'cbi-button ' + className,
-                    'click': ui.createHandlerFn(this, handler),
-                    'style': 'margin-right: 1rem ;margin-bottom: 1rem'
-                }, text);
-            }
-
-            const btnClear = createButton(_('Delete'), 'cbi-button-remove', function () {
-                L.resolveDefault(callClearLog(logPath), {}).then(function (res) {
-                    if (textarea) {
-                        textarea.value = "";
+                    if (content === this.lastLogContent) {
+                        return;
                     }
-                    updateLogDisplay()
-                });
-            });
 
-            const btnDown = createButton(_('Download'), 'cbi-button-apply', function () {
-                fs.read_direct(logPath, 'blob').then(function (res) {
-                    let blob;
-                    if (res instanceof Blob) {
-                        blob = res;
-                    } else if (res && res.data) {
-                        blob = new Blob([res.data], {type: "application/octet-stream"});
+                    const isAtBottom = logBox.scrollHeight - logBox.scrollTop <= logBox.clientHeight + 20;
+                    const lines = content.split('\n');
+
+                    if (revCheckbox.checked || this.lastLogContent === "") {
+                        logBox.innerHTML = '';
+                        const displayLines = revCheckbox.checked ? [...lines].reverse() : lines;
+                        displayLines.forEach(line => {
+                            const text = localCheckbox.checked ? formatLocalTime(line) : line;
+                            logBox.appendChild(E('div', { style: 'line-height:1.4rem;' }, text));
+                        });
                     } else {
-                        blob = new Blob([res], {type: "application/octet-stream"});
+                        const oldLines = this.lastLogContent.split('\n');
+                        const lastLineOfOld = oldLines[oldLines.length - 1];
+                        const lastIndexInNew = lines.lastIndexOf(lastLineOfOld);
+
+                        const newLines = (lastIndexInNew !== -1) ? lines.slice(lastIndexInNew + 1) : lines;
+
+                        newLines.forEach(line => {
+                            const text = localCheckbox.checked ? formatLocalTime(line) : line;
+                            logBox.appendChild(E('div', { style: 'line-height:1.4rem;' }, text));
+                        });
+
+                        while (logBox.childNodes.length > 300) {
+                            logBox.removeChild(logBox.firstChild);
+                        }
                     }
 
-                    const url = URL.createObjectURL(blob);
-                    const fileName = logPath.split('/').pop();
+                    this.lastLogContent = content;
 
-                    const a = document.createElement("a");
-                    a.href = url;
-                    a.download = fileName;
-                    document.body.appendChild(a);
-                    a.click();
-                    document.body.removeChild(a);
-
-                    setTimeout(function () {
-                        URL.revokeObjectURL(url);
-                    }, 200);
-
-                }).catch(function (err) {
-                    ui.addNotification(null, E('p', _('Failed to download, please check if the file exists')));
+                    if (isAtBottom && !revCheckbox.checked) {
+                        logBox.scrollTop = logBox.scrollHeight;
+                    }
+                }).catch(() => {
+                    logBox.innerHTML = '<div style="color:red;">Failed to load log.</div>';
                 });
-            });
+            };
 
-            botRow.appendChild(btnClear);
-            botRow.appendChild(btnDown);
+            const botRow = E('div', { style: 'padding:1rem; display:flex; gap:1rem;' });
+            sectionNode.appendChild(botRow);
 
-            revCheckbox.addEventListener('change', updateLogDisplay);
-            localCheckbox.addEventListener('change', updateLogDisplay);
+            botRow.appendChild(E('button', {
+                'class': 'cbi-button cbi-button-remove',
+                'click': () => {
+                    L.resolveDefault(callClearLog(logPath), {}).then(() => {
+                        logBox.innerHTML = '';
+                        this.lastLogContent = "";
+                        updateLogDisplay();
+                    });
+                }
+            }, _('Delete')));
+
+            botRow.appendChild(E('button', {
+                'class': 'cbi-button cbi-button-apply',
+                'click': () => {
+                    window.open(L.url('admin/system/log/download') + '?path=' + encodeURIComponent(logPath));
+                }
+            }, _('Download')));
+
+            revCheckbox.addEventListener('change', () => { this.lastLogContent = ""; updateLogDisplay(); });
+            localCheckbox.addEventListener('change', () => { this.lastLogContent = ""; updateLogDisplay(); });
 
             poll.add(updateLogDisplay, 3);
             updateLogDisplay();
 
             return mapNode;
-
         }, this));
     },
     handleSaveApply: null,

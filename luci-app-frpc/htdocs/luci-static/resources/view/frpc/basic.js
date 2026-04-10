@@ -318,17 +318,15 @@ return view.extend({
 
         // Logs
         const logOption = o.taboption('log', form.TextValue, '_contents', null);
-        logOption.rows = 30;
-        logOption.readonly = true;
-        logOption.monospace = true;
-        logOption.css = 'width:100%; padding:1rem; font-family:monospace; overflow:auto; white-space:pre;';
+        this.lastLogContent = "";
 
         logOption.render = function (sectionId) {
-            const textarea = E('textarea', {
+            const logBox = E('div', {
+                'id': 'log_content_box',
                 'class': 'cbi-input-textarea',
-                'style': this.css + '; width:100%; resize:none;',
-                'readonly': true,
-                'rows': this.rows
+                'style': 'width:100%; height:30rem; padding:1rem; \
+                          overflow-y:auto; white-space:pre-wrap; word-break:break-all; \
+                          display:block; resize:none; font-size:0.875rem;'
             });
 
             const topRow = E('div', {
@@ -339,22 +337,18 @@ return view.extend({
                 const wrapper = E('div', {
                     style: 'display:inline-flex; align-items:center; margin-right:1.5rem; cursor:pointer; line-height: 1;'
                 });
-
                 const checkbox = E('input', {
                     type: 'checkbox',
                     id: id,
                     style: 'margin: 0 0.5rem 0 0; cursor:pointer; width: 1rem; height: 1rem;'
                 });
-
                 const label = E('label', {
                     for: id,
                     style: 'margin:0; cursor:pointer; display: flex; align-items: center;'
                 }, labelText);
-
                 wrapper.appendChild(checkbox);
                 wrapper.appendChild(label);
                 topRow.appendChild(wrapper);
-
                 return checkbox;
             }
 
@@ -373,86 +367,75 @@ return view.extend({
                 }, text);
             }
 
-            const btnClear = createButton(_('Delete'), 'cbi-button-remove', function () {
-                L.resolveDefault(callClearLog(logPath), {}).then(function () {
-                    textarea.value = "";
+            const btnClear = createButton(_('Delete'), 'cbi-button-remove', () => {
+                L.resolveDefault(callClearLog(logPath), {}).then(() => {
+                    logBox.innerHTML = "";
+                    this.lastLogContent = "";
                     updateLogDisplay();
                 });
             });
 
             const btnDown = createButton(_('Download'), 'cbi-button-apply', function () {
                 fs.read_direct(logPath, 'blob').then(function (res) {
-                    let blob;
-
-                    if (res instanceof Blob) {
-                        blob = res;
-                    } else if (res && res.data) {
-                        blob = new Blob([res.data], {type: "application/octet-stream"});
-                    } else {
-                        blob = new Blob([res], {type: "application/octet-stream"});
-                    }
-
+                    let blob = (res instanceof Blob) ? res : new Blob([res.data || res], {type: "application/octet-stream"});
                     const url = URL.createObjectURL(blob);
-                    const fileName = logPath.split('/').pop();
-
                     const a = document.createElement("a");
-                    a.href = url;
-                    a.download = fileName;
-                    document.body.appendChild(a);
-                    a.click();
-                    document.body.removeChild(a);
-
+                    a.href = url; a.download = logPath.split('/').pop();
+                    document.body.appendChild(a); a.click(); document.body.removeChild(a);
                     setTimeout(() => URL.revokeObjectURL(url), 200);
-
-                }).catch(function () {
-                    ui.addNotification(null, E('p', _('Failed to download, please check if the file exists')));
                 });
             });
 
             botRow.appendChild(btnClear);
             botRow.appendChild(btnDown);
 
-            function updateLogDisplay() {
-                const isAtBottom = textarea.scrollHeight - textarea.scrollTop <= textarea.clientHeight + 10;
-                const oldScrollTop = textarea.scrollTop;
+            const updateLogDisplay = () => {
+                fs.exec('/usr/bin/tail', ['-n', '200', logPath]).then((res) => {
+                    const content = (res && res.stdout) ? res.stdout.trim() : "";
 
-                fs.exec('/usr/bin/tail', ['-n', '200', logPath]).then(function (res) {
-                    if (!res.stdout) {
-                        textarea.value = "";
+                    if (content === this.lastLogContent) {
                         return;
                     }
 
-                    let lines = res.stdout.trim().split('\n');
+                    const isAtBottom = logBox.scrollHeight - logBox.scrollTop <= logBox.clientHeight + 20;
+                    const lines = content.split('\n');
 
-                    if (localCheckbox.checked) {
-                        lines = lines.map(line => formatLocalTime(line));
-                    }
+                    if (revCheckbox.checked || this.lastLogContent === "") {
+                        logBox.innerHTML = '';
+                        const displayLines = revCheckbox.checked ? [...lines].reverse() : lines;
+                        displayLines.forEach(line => {
+                            const text = localCheckbox.checked ? formatLocalTime(line) : line;
+                            logBox.appendChild(E('div', { style: 'line-height:1.4rem;' }, text));
+                        });
+                    } else {
+                        const oldLines = this.lastLogContent.split('\n');
+                        const lastLineOfOld = oldLines[oldLines.length - 1];
+                        const lastIndexInNew = lines.lastIndexOf(lastLineOfOld);
 
-                    if (revCheckbox.checked) {
-                        lines.reverse();
-                    }
+                        const newLines = (lastIndexInNew !== -1) ? lines.slice(lastIndexInNew + 1) : lines;
 
-                    const newText = lines.join('\n');
+                        newLines.forEach(line => {
+                            const text = localCheckbox.checked ? formatLocalTime(line) : line;
+                            logBox.appendChild(E('div', { style: 'line-height:1.4rem;' }, text));
+                        });
 
-                    if (textarea.value !== newText) {
-                        textarea.value = newText;
-
-                        if (revCheckbox.checked) {
-                            textarea.scrollTop = oldScrollTop;
-                        } else if (isAtBottom) {
-                            textarea.scrollTop = textarea.scrollHeight;
-                        } else {
-                            textarea.scrollTop = oldScrollTop;
+                        while (logBox.childNodes.length > 300) {
+                            logBox.removeChild(logBox.firstChild);
                         }
                     }
 
-                }).catch(function () {
-                    textarea.value = "";
+                    this.lastLogContent = content;
+
+                    if (isAtBottom && !revCheckbox.checked) {
+                        logBox.scrollTop = logBox.scrollHeight;
+                    }
+                }).catch(() => {
+                    logBox.innerHTML = "";
                 });
             }
 
-            revCheckbox.addEventListener('change', updateLogDisplay);
-            localCheckbox.addEventListener('change', updateLogDisplay);
+            revCheckbox.addEventListener('change', () => { this.lastLogContent = ""; updateLogDisplay(); });
+            localCheckbox.addEventListener('change', () => { this.lastLogContent = ""; updateLogDisplay(); });
 
             poll.add(updateLogDisplay, 3);
             updateLogDisplay();
@@ -462,7 +445,7 @@ return view.extend({
                 'style': 'padding:1rem;'
             }, [
                 topRow,
-                textarea,
+                logBox,
                 botRow
             ]);
         };

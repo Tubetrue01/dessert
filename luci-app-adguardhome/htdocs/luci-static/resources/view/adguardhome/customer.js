@@ -191,7 +191,7 @@ return view.extend({
                 return fs.exec('/usr/share/adguardhome/adguardhome.uc', ['applyFromYaml']);
             })
             .then(() => {
-                return fs.exec('/etc/init.d/AdGuardHome', ['reload']);
+                return fs.exec('/etc/init.d/AdGuardHome', ['restart']);
             })
             .then(() => {
                 ui.changes.displayStatus(

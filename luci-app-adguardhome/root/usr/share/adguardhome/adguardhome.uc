@@ -298,7 +298,7 @@ function _clear_space_for_backup(workDir, backupDir) {
 
 /* ================= Main ================= */
 
-function apply_config_to_yaml() {
+function run_args() {
     const enabled = _uci_get("enabled");
     if (enabled === "0") {
         return "false";
@@ -362,12 +362,9 @@ function apply_config_to_yaml() {
 }
 
 function stop() {
-
-    const mode = _uci_get("redirect", "none");
-    const config_path = _uci_get("config_path");
     const backup_files = _uci_get("backup_files");
 
-    if (backup_files && type(backup_files) == "array" && length(backup_files) > 0) {
+    if (backup_files && type(backup_files) === "array" && length(backup_files) > 0) {
         const work_dir = _uci_get("work_dir");
         const work_dir_backup = _uci_get("work_dir_backup");
 
@@ -404,8 +401,8 @@ function apply_from_yaml() {
 /* ================= Entry Point ================= */
 const action = ARGV[0];
 
-if (action === "apply") {
-    print(apply_config_to_yaml());
+if (action === "run") {
+    print(run_args());
 } else if (action === "stop") {
    stop();
 } else if (action === "update") {

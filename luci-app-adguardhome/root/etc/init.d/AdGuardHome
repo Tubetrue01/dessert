@@ -13,7 +13,7 @@ service_triggers() {
 }
 
 start_service() {
-    local raw=$($ADG_HELPER apply | tr -d '\r' | sed 's/#$//' | xargs)
+    local raw=$($ADG_HELPER run | tr -d '\r' | sed 's/#$//' | xargs)
 
     if [ -z "$raw" ] || [ "$raw" = "false" ]; then
         logger -t ${SERVER_NAME} "Service disabled, cleaning up..."
