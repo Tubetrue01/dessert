@@ -294,7 +294,6 @@ return view.extend({
 
                             editor.on('change', cm => {
                                 textarea.value = cm.getValue();
-                                textarea.dispatchEvent(new Event('change', {bubbles: true}));
                             });
 
                             const wrapper = editor.getWrapperElement();
