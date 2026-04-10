@@ -25,7 +25,9 @@ const config_path = "/etc/frpc/frpc.yaml";
 /* ================= Base Tools ================= */
 function _exec_sys(cmd) {
     const p = popen(`sh -c '${cmd}' 2>&1`, "r");
-    if (!p) return {code: -1, data: ""};
+    if (!p) {
+        return {code: -1, data: ""};
+    }
 
     const stdout = p.read("all");
     const code = p.close();

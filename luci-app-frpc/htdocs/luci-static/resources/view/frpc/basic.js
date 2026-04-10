@@ -152,7 +152,7 @@ return view.extend({
         o = m.section(form.NamedSection, serviceName, serviceName);
         o.addremove = false;
 
-        o.tab('common', _('通用配置'));
+        o.tab('common', _('Common'));
         o.tab('log', _('Logs'));
 
         o.taboption('common', form.Flag, 'enabled', _('Enable')).default = 1;

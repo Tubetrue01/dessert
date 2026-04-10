@@ -10,6 +10,9 @@ msgstr "已停止"
 msgid "Loading..."
 msgstr "载入中..."
 
+msgid "Common"
+msgstr "通用配置"
+
 msgid "Enable"
 msgstr "开启"
 

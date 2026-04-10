@@ -30,7 +30,9 @@ const github_api = "https://api.github.com/repos/AdguardTeam/AdGuardHome/release
 /* ================= Base Tools ================= */
 function _exec_sys(cmd) {
     const p = popen(`sh -c '${cmd}' 2>&1`, "r");
-    if (!p) return { code: -1, data: "" };
+    if (!p) {
+        return { code: -1, data: "" };
+    }
 
     const stdout = p.read("all");
     const code = p.close();
@@ -178,7 +180,7 @@ function update_core(log_file) {
         if (upx_flag && upx_flag !== "0") {
             _log("Ready to upx it.", log_file);
             const rtn = _exec_sys(`/usr/bin/upx ${upx_flag} "${extracted}"`);
-            if (rtn.code != 0) {
+            if (rtn.code !== 0) {
                 _log(rtn.data, log_file);
             }
         }
