@@ -57,40 +57,21 @@ const callClearLog = rpc.declare({
 });
 
 async function loadCodeMirrorResources() {
-    const styles = [
-        '/luci-static/resources/view/adguardhome/codemirror5/codemirror.min.css',
-        '/luci-static/resources/view/adguardhome/codemirror5/theme/dracula.min.css',
-        '/luci-static/resources/view/adguardhome/codemirror5/addon/lint/lint.min.css',
-    ];
+    const bundlePath = '/luci-static/resources/view/frpc/codemirror6/cm6-yaml-editor.js';
 
-    const scripts = [
-        '/luci-static/resources/view/adguardhome/codemirror5/libs/js-yaml.min.js',
-        '/luci-static/resources/view/adguardhome/codemirror5/codemirror.min.js',
-        '/luci-static/resources/view/adguardhome/codemirror5/addon/display/autorefresh.min.js',
-        '/luci-static/resources/view/adguardhome/codemirror5/mode/yaml/yaml.min.js',
-        '/luci-static/resources/view/adguardhome/codemirror5/addon/lint/lint.min.js',
-        '/luci-static/resources/view/adguardhome/codemirror5/addon/lint/yaml-lint.min.js',
-    ];
-
-    for (const href of styles) {
-        if (!document.querySelector(`link[href="${href}"]`)) {
-            const link = document.createElement('link');
-            link.rel = 'stylesheet';
-            link.href = href;
-            document.head.appendChild(link);
-        }
+    if (window.CM6) {
+        return Promise.resolve();
     }
 
-    for (const src of scripts) {
-        if (!document.querySelector(`script[src="${src}"]`)) {
-            await new Promise(resolve => {
-                const script = document.createElement('script');
-                script.src = src;
-                script.onload = resolve;
-                document.head.appendChild(script);
-            });
-        }
-    }
+    return new Promise((resolve, reject) => {
+        const script = document.createElement('script');
+        script.src = bundlePath + '?v=' + (new Date().getTime());
+        script.onload = () => {
+            resolve();
+        };
+        script.onerror = () => reject(new Error("Failed to load CM6 bundle"));
+        document.head.appendChild(script);
+    });
 }
 
 const getServiceStatus = () => {
@@ -102,7 +83,6 @@ const getServiceStatus = () => {
         }
     });
 }
-
 
 const renderStatus = (running) => {
     const color = running ? 'green' : 'red';
@@ -242,75 +222,73 @@ return view.extend({
         // Yaml
         let logPath;
         let editor = null;
-
         yaml = o.taboption('common', form.TextValue, 'config', _('Yaml Editor'));
-        yaml.rows = 10;
 
-        yaml.cfgvalue = () =>
-            fs.read(configPath).then(c => {
+        yaml.cfgvalue = function (sid) {
+            return fs.read(configPath).then(c => {
                 const content = c || '';
                 try {
                     const cfg = jsyaml.load(content);
-                    if (cfg?.log?.to) logPath = cfg.log.to;
+                    if (cfg?.log?.to) {
+                        logPath = cfg.log.to;
+                    }
                 } catch (e) {
-                    console.error("YAML parse error:", e);
+                    console.error("YAML parse error in cfgvalue:", e);
                 }
                 return content;
             });
+        };
+
+        yaml.formvalue = function (section_id) {
+            if (editor && editor.state) {
+                return editor.state.doc.toString();
+            }
+            return this.super('formvalue', [section_id]);
+        };
 
         yaml.write = function (sid, val) {
-            const content = editor ? editor.getValue() : val;
+            const content = editor ? editor.state.doc.toString() : val;
             return fs.write(configPath, content.trim() + '\n');
         };
 
         yaml.validate = function (sid, val) {
-            const content = editor ? editor.getValue() : val;
+            const content = editor ? editor.state.doc.toString() : val;
 
-            if (!content.trim()) return true;
+            this.value = content;
+
+            if (!content || !content.trim()) {
+                return ""
+            }
 
             try {
-                jsyaml.load(content);
-                return true;
+                window.jsyaml.load(content);
             } catch (e) {
+                return ""
             }
+
+            return true;
         };
 
         yaml.render = function (sid) {
             return form.TextValue.prototype.render.apply(this, arguments)
                 .then(node => {
-
                     const textarea = node.querySelector('textarea');
+                    const initialValue = textarea.value;
+                    textarea.style.display = 'none';
 
-                    setTimeout(() => {
-                        if (window.CodeMirror) {
-                            editor = CodeMirror.fromTextArea(textarea, {
-                                mode: "yaml",
-                                theme: "dracula",
-                                lineNumbers: true,
-                                lineWrapping: true,
-                                lint: true,
-                                gutters: ['CodeMirror-lint-markers']
-                            });
+                    const container = document.createElement('div');
+                    container.className = 'cm6-container';
+                    textarea.parentNode.insertBefore(container, textarea);
 
-                            editor.on('change', cm => {
-                                textarea.value = cm.getValue();
-                            });
+                    if (window.CM6) {
+                        editor = window.CM6.create(container, initialValue, (content) => {
+                            textarea.value = content;
+                            textarea.setAttribute('value', content);
+                        });
 
-                            const wrapper = editor.getWrapperElement();
-
-                            wrapper.style.width = "30rem";
-                            wrapper.style.minWidth = "30rem";
-                            wrapper.style.maxWidth = "30rem";
-
-                            const scroller = editor.getScrollerElement();
-                            scroller.style.overflowX = "hidden";
-                            scroller.style.overflowY = "scroll";
-
-                            editor.setSize("30rem", "25rem");
-
-                            setTimeout(() => editor.refresh(), 0);
-                        }
-                    }, 100);
+                        const scroller = container.querySelector('.cm-scroller');
+                        if (scroller) scroller.style.height = "25rem";
+                    }
 
                     return node;
                 });
@@ -380,8 +358,11 @@ return view.extend({
                     let blob = (res instanceof Blob) ? res : new Blob([res.data || res], {type: "application/octet-stream"});
                     const url = URL.createObjectURL(blob);
                     const a = document.createElement("a");
-                    a.href = url; a.download = logPath.split('/').pop();
-                    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+                    a.href = url;
+                    a.download = logPath.split('/').pop();
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
                     setTimeout(() => URL.revokeObjectURL(url), 200);
                 });
             });
@@ -405,7 +386,7 @@ return view.extend({
                         const displayLines = revCheckbox.checked ? [...lines].reverse() : lines;
                         displayLines.forEach(line => {
                             const text = localCheckbox.checked ? formatLocalTime(line) : line;
-                            logBox.appendChild(E('div', { style: 'line-height:1.4rem;' }, text));
+                            logBox.appendChild(E('div', {style: 'line-height:1.4rem;'}, text));
                         });
                     } else {
                         const oldLines = this.lastLogContent.split('\n');
@@ -416,7 +397,7 @@ return view.extend({
 
                         newLines.forEach(line => {
                             const text = localCheckbox.checked ? formatLocalTime(line) : line;
-                            logBox.appendChild(E('div', { style: 'line-height:1.4rem;' }, text));
+                            logBox.appendChild(E('div', {style: 'line-height:1.4rem;'}, text));
                         });
 
                         while (logBox.childNodes.length > 300) {
@@ -434,8 +415,14 @@ return view.extend({
                 });
             }
 
-            revCheckbox.addEventListener('change', () => { this.lastLogContent = ""; updateLogDisplay(); });
-            localCheckbox.addEventListener('change', () => { this.lastLogContent = ""; updateLogDisplay(); });
+            revCheckbox.addEventListener('change', () => {
+                this.lastLogContent = "";
+                updateLogDisplay();
+            });
+            localCheckbox.addEventListener('change', () => {
+                this.lastLogContent = "";
+                updateLogDisplay();
+            });
 
             poll.add(updateLogDisplay, 3);
             updateLogDisplay();
@@ -554,31 +541,32 @@ return view.extend({
 
         return this.map.save().then(() => {
             return uci.save();
-        }).then(() => {
-            return uci.apply().catch(e => {
-                return Promise.resolve();
-            });
-        }).then(() => {
-            return fs.exec('/etc/init.d/frpc', ['restart']);
-        }).then(() => {
-            return ui.changes.init();
-        }).then(() => {
-            ui.changes.displayStatus(
-                'notice',
-                E('p', _('Configuration changes applied.'))
-            );
+        }).then(() => uci.changes())
+            .then((changes) => {
+                if (changes && Object.keys(changes).length > 0) {
+                    return uci.apply();
+                }
+            }).then(() => {
+                return fs.exec('/etc/init.d/frpc', ['restart']);
+            }).then(() => {
+                return ui.changes.init();
+            }).then(() => {
+                ui.changes.displayStatus(
+                    'notice',
+                    E('p', _('Configuration changes applied.'))
+                );
 
-            setTimeout(() => {
+                setTimeout(() => {
+                    ui.changes.displayStatus(false);
+                    window.location.reload();
+                }, 1500);
+            }).catch(e => {
                 ui.changes.displayStatus(false);
-                window.location.reload();
-            }, 1500);
-        }).catch(e => {
-            ui.changes.displayStatus(false);
-            ui.addNotification(
-                null,
-                E('p', _('Failed to apply: %s').format(e.message || e)),
-                'danger'
-            );
-        });
+                ui.addNotification(
+                    null,
+                    E('p', _('Failed to apply: %s').format(e.message || e)),
+                    'danger'
+                );
+            });
     }
 });
