@@ -258,8 +258,8 @@ return view.extend({
         o = s.option(form.Value, 'config_path', _('Configuration path'));
         o.description =_('AdGuard Home configuration file path');
         o.datatype = 'string';
-        o.default = '/etc/AdGuardHome.yaml';
-        o.placeholder = '/etc/AdGuardHome.yaml';
+        o.default = '/etc/adguardhome/AdGuardHome.yaml';
+        o.placeholder = '/etc/adguardhome/AdGuardHome.yaml';
 
         // Work dir
         o = s.option(form.Value, 'work_dir', _('Working directory'));
