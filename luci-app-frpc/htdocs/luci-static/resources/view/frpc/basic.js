@@ -278,6 +278,12 @@ return view.extend({
 
                     const container = document.createElement('div');
                     container.className = 'cm6-container';
+
+                    container.style.width = "30rem";
+                    container.style.maxWidth = "30rem";
+                    container.style.overflow = "hidden";
+                    container.style.display = "block";
+
                     textarea.parentNode.insertBefore(container, textarea);
 
                     if (window.CM6) {
@@ -286,8 +292,23 @@ return view.extend({
                             textarea.setAttribute('value', content);
                         });
 
+                        const editorEl = container.querySelector('.cm-editor');
+                        if (editorEl) {
+                            editorEl.style.width = "100%";
+                            editorEl.style.maxWidth = "100%";
+                        }
+
                         const scroller = container.querySelector('.cm-scroller');
-                        if (scroller) scroller.style.height = "25rem";
+                        if (scroller) {
+                            scroller.style.height = "25rem";
+                            scroller.style.overflow = "auto";
+                        }
+
+                        const contentEl = container.querySelector('.cm-content');
+                        if (contentEl) {
+                            contentEl.style.minWidth = "0";
+                            contentEl.style.overflowWrap = "break-word";
+                        }
                     }
 
                     return node;
