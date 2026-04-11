@@ -13,7 +13,7 @@ As OpenWrt evolves, many classic and beloved plugins have unfortunately stopped 
 
 ### 🚀 Currently Adapted Plugins
 We have successfully modernized and optimized the following packages:
-- 📂 **luci-app-filebrowser**: Reimagined file management with a sleek, responsive interface.
+- 📂 **luci-app-filemanager**: Reimagined file management with a sleek, responsive interface.
 - 🛡️ **luci-app-adguardhome**: Clean, powerful, and fully integrated network-wide ad-blocking.
 - 🔄 **luci-app-frpc**: High-performance intranet penetration, rewritten for stability.
 
