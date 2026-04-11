@@ -39,7 +39,7 @@ This project is structured as a standard **OpenWrt Feed** for seamless integrati
 
 **1. Add the feed to your `feeds.conf.default`:**
 ```bash
-src-git dessert https://github.com
+src-git dessert https://github.com/Tubetrue01/dessert.git
 ```
 
 **2. Update and install:**
@@ -55,3 +55,14 @@ For those who love automation, every plugin path includes a config directory. Th
 We believe that managing your router shouldn't be a chore—it should be a treat. We stay dedicated to the community by following every OpenWrt update, ensuring your "Dessert" is always sweet and never stale. 🍮✨ believe that managing your router shouldn't be a chore—it should be a treat. We stay dedicated to the community by following eve
 
 ### Enjoy your modern OpenWrt journey! 🚀
+
+### luci-app-filemanager
+![Image Alt Text](luci-app-filemanager/img/preview.png)
+
+### luci-app-adguardhome
+![Image Alt Text](luci-app-adguardhome/img/preview.png)
+![Image Alt Text](luci-app-adguardhome/img/preview-2.png)
+![Image Alt Text](luci-app-adguardhome/img/preview-3.png)
+
+### luci-app-fprc
+![Image Alt Text](luci-app-frpc/img/preview.png)
