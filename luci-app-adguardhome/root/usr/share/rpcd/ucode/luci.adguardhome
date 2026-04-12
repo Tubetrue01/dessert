@@ -47,8 +47,8 @@ const methods = {
                     logContent = "Log file not found.";
                 }
             }
+            return { code: 0, data: logContent}
         }
-        return { code: 0, data: logContent}
     },
 
     updateCore: {
