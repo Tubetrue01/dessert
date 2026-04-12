@@ -1,35 +1,26 @@
 'use strict';
 
-const fs = require('fs');
+import {popen, stat, writefile} from 'fs';
 
 const methods = {
     clearLog: {
-        args: { filename: "filename" },
-        call: function(req) {
+        args: {filename: "filename"},
+        call: function (req) {
             const filename = req.args.filename;
 
             if (!filename) {
-                return { code: 1, error: "No filename specified" };
+                return {code: 1, error: "No filename specified"};
             }
 
-            const fd = fs.open(filename, "w");
-
-            if (fd) {
-                fd.close();
-                return { code: 0, message: "File has been successfully cleared", path: filename };
-            } else {
-                return { code: 1, error: "Unable to open the file for writing", path: filename };
-            }
+            writefile(filename, "");
+            return {code: 0, message: "File has been successfully cleared", path: filename};
         }
     },
     updateCore: {
-        call: function() {
+        call: function () {
             const file_log = "/tmp/frpc_update.log";
 
-            const f = fs.open(file_log, "w");
-            if (f){
-                f.close();
-            }
+            writefile(file_log, "");
 
             const script_path = "/usr/share/frpc/frpc.uc";
             const cmd = `ucode ${script_path} update ${file_log} &`;
@@ -37,22 +28,22 @@ const methods = {
             const res = system(cmd);
 
             if (res === 0) {
-                return { code: 0, message: "success", command: cmd };
+                return {code: 0, message: "success", command: cmd};
             } else {
-                return { code: 1, error: "failed", exit_code: res };
+                return {code: 1, error: "failed", exit_code: res};
             }
         }
     },
     currentVersion: {
-        call: function() {
+        call: function () {
             try {
                 const bin_path = "/usr/bin/frpc";
 
-                if (!bin_path || !fs.stat(bin_path)) {
-                    return { "code": 1, "data": "missing" };
+                if (!bin_path || !stat(bin_path)) {
+                    return {"code": 1, "data": "missing"};
                 }
 
-                const p = fs.popen(`${bin_path} -v`);
+                const p = popen(`${bin_path} -v`);
                 const stdout = (p ? p.read("all") : "") || "";
 
                 if (p) {
@@ -69,4 +60,4 @@ const methods = {
     }
 };
 
-return { "luci.frpc": methods };
+return {"luci.frpc": methods};
