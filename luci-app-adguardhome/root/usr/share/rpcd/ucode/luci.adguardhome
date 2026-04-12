@@ -1,6 +1,6 @@
 'use strict';
 
-import {popen, stat, writefile} from 'fs';
+import {popen, stat} from 'fs';
 
 const uci = require("uci").cursor();
 
@@ -32,7 +32,7 @@ const methods = {
             }
 
             if (filename !== "syslog") {
-                writefile(filename, "");
+                _exec_sys(`echo > "${filename}"`);
             }
             return {code: 0, message: "File cleared", path: filename}
         }
@@ -63,7 +63,7 @@ const methods = {
         call: function () {
             const file_log = "/tmp/AdGuardHome_update.log";
 
-            writefile(file_log, "");
+            _exec_sys(`echo > "${file_log}"`);
 
             const script_path = "/usr/share/adguardhome/adguardhome.uc";
             const cmd = `ucode ${script_path} update ${file_log} &`;

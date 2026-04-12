@@ -1,6 +1,21 @@
 'use strict';
 
-import {popen, stat, writefile} from 'fs';
+import {popen, stat} from 'fs';
+
+function _exec_sys(cmd) {
+    const p = popen(`sh -c '${cmd}' 2>&1`, "r");
+    if (!p) {
+        return {code: -1, data: ""};
+    }
+
+    const stdout = p.read("all");
+    const code = p.close();
+
+    return {
+        code: code,
+        data: (type(stdout) === "string") ? trim(stdout) : ""
+    };
+}
 
 const methods = {
     clearLog: {
@@ -12,7 +27,8 @@ const methods = {
                 return {code: 1, error: "No filename specified"};
             }
 
-            writefile(filename, "");
+            _exec_sys(`echo > "${filename}"`);
+
             return {code: 0, message: "File has been successfully cleared", path: filename};
         }
     },
@@ -20,7 +36,7 @@ const methods = {
         call: function () {
             const file_log = "/tmp/frpc_update.log";
 
-            writefile(file_log, "");
+            _exec_sys(`echo > "${file_log}"`);
 
             const script_path = "/usr/share/frpc/frpc.uc";
             const cmd = `ucode ${script_path} update ${file_log} &`;
