@@ -402,7 +402,7 @@ return view.extend({
                     const isAtBottom = logBox.scrollHeight - logBox.scrollTop <= logBox.clientHeight + 20;
                     const lines = content.split('\n');
 
-                    if (revCheckbox.checked || this.lastLogContent === "") {
+                    if (revCheckbox.checked || logBox.childNodes.length === 0) {
                         logBox.innerHTML = '';
                         const displayLines = revCheckbox.checked ? [...lines].reverse() : lines;
                         displayLines.forEach(line => {
