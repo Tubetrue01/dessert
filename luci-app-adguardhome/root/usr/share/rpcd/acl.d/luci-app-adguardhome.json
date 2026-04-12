@@ -15,7 +15,8 @@
       },
       "ubus": {
         "luci.adguardhome": [
-          "currentVersion"
+          "currentVersion",
+          "readLog"
         ],
         "service": [ "list" ]
       }
@@ -35,8 +36,7 @@
             "write"
           ],
         "/usr/share/adguardhome/adguardhome.uc applyFromYaml": ["exec"],
-        "/etc/init.d/AdGuardHome restart": ["exec"],
-        "/usr/bin/tail": ["exec"]
+        "/etc/init.d/AdGuardHome restart": ["exec"]
         }
     }
   }

@@ -16,6 +16,13 @@ const callClearLog = rpc.declare({
     params: ['filename'],
 });
 
+const callReadLog = rpc.declare({
+    object: 'luci.adguardhome',
+    method: 'readLog',
+    params: ['filename', "count"],
+    expect: { '': {} }
+});
+
 const formatLocalTime = (text) => {
     return text.replace(/(\d{4})\/(\d{2})\/(\d{2})\s(\d{2}:\d{2}:\d{2})/g, function (match, y, m, d, time) {
         const utcstr = `${y}-${m}-${d}T${time}Z`;
@@ -91,8 +98,8 @@ return L.view.extend({
             const localCheckbox = createCheckbox(_('Local time'), 'localCheckbox');
 
             const updateLogDisplay = () => {
-                fs.exec('/usr/bin/tail', ['-n', '200', logPath]).then((res) => {
-                    const content = (res && res.stdout) ? res.stdout.trim() : "";
+                L.resolveDefault(callReadLog(logPath, '200'), {}).then((res) => {
+                    const content = (res && res.data) ? res.data.trim() : "";
 
                     if (content === this.lastLogContent) {
                         return;

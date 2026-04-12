@@ -25,6 +25,32 @@ const methods = {
             }
         }
     },
+
+    readLog: {
+        args: { filename: "filename", count: "count" },
+        call: function(req) {
+            const filename = req.args.filename;
+            const count = req.args.count || "200";
+
+            let logContent = "";
+
+            if (filename === "") {
+
+            } else if (filename === "syslog") {
+                 const res = fs.exec("/sbin/logread", ["-l", count, "-e", service_name]);
+                 logContent = res ? res.stdout : "";
+            }else {
+                if (fs.stat(filename)) {
+                    const res = fs.exec("/usr/bin/tail", ["-n", count, filename]);
+                    logContent = res ? res.stdout : "";
+                } else {
+                    logContent = "Log file not found.";
+                }
+            }
+        }
+        return { code: 0, data: logContent}
+    },
+
     updateCore: {
         call: function() {
             const file_log = "/tmp/AdGuardHome_update.log";
