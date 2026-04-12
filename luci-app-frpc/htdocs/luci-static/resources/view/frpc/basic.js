@@ -56,6 +56,13 @@ const callClearLog = rpc.declare({
     params: ['filename'],
 });
 
+const callReadLog = rpc.declare({
+    object: 'luci.frpc',
+    method: 'readLog',
+    params: ['filename', "count"],
+    expect: { '': {} }
+});
+
 async function loadCodeMirrorResources() {
     const bundlePath = '/luci-static/resources/view/frpc/codemirror6/cm6-yaml-editor.js';
 
@@ -392,8 +399,8 @@ return view.extend({
             botRow.appendChild(btnDown);
 
             const updateLogDisplay = () => {
-                fs.exec('/usr/bin/tail', ['-n', '200', logPath]).then((res) => {
-                    const content = (res && res.stdout) ? res.stdout.trim() : "";
+                L.resolveDefault(callReadLog(logPath, "200"), {}).then((res)  => {
+                    const content = (res && res.data) ? res.data.trim() : "";
 
                     if (content === this.lastLogContent) {
                         return;

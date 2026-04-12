@@ -15,7 +15,8 @@
       ],
       "ubus": {
         "luci.frpc": [
-          "currentVersion"
+          "currentVersion",
+          "readLog"
         ],
         "service": [
           "list"
@@ -29,8 +30,7 @@
         ],
         "/etc/init.d/frpc": [
           "exec"
-        ],
-        "/usr/bin/tail": ["exec"]
+        ]
       },
       "uci": [
         "frpc"
