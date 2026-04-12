@@ -142,13 +142,13 @@ function update_core(log_file) {
 
     const found = _exec_sys(`find ${tmp} -type f -name frpc`).data;
     if (!found) {
-        _log('frpc not found.', log_file);
+        _log('Frpc not found.', log_file);
         return false;
     }
 
     const extracted = split(found, "\n")[0];
     if (!stat(extracted)) {
-        _log(`stat failed: file=${extracted}, raw_find=${found}`, log_file);
+        _log(`Stat failed: file=${extracted}, raw_find=${found}`, log_file);
         return false;
     }
 

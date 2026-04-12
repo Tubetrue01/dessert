@@ -183,9 +183,9 @@ return view.extend({
                                     logData.splice(0, logData.length, ...lines);
                                     renderLog(logBox, reverseCheck);
 
-                                    const lastLine = lines[lines.length - 1] || "";
+                                    const lastLine = lines[lines.length - 1]?.toLowerCase() || "";
 
-                                    if (lastLine.includes("Success") || lastLine.includes("Failed")) {
+                                    if (lastLine.includes("success") || lastLine.includes("failed")) {
                                         L.Poll.remove(pollLogFn);
                                         L.resolveDefault(callCurrentVersion()).then((res) => {
                                             document.getElementById("bin_version_val").innerText = res.data;
