@@ -147,3 +147,9 @@ msgstr "自定义配置"
 
 msgid "Failed to apply: %s"
 msgstr "应用失败：%s"
+
+msgid "The syslog log file is not supported for delete."
+msgstr "syslog 不支持删除"
+
+msgid "The syslog log file is not supported for download."
+msgstr "syslog 不支持下载"

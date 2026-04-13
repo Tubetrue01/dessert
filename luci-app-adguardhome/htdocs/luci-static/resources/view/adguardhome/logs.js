@@ -148,6 +148,11 @@ return L.view.extend({
             botRow.appendChild(E('button', {
                 'class': 'cbi-button cbi-button-remove',
                 'click': () => {
+                    if (logPath === "syslog") {
+                        ui.addNotification(null, E('p', _('The syslog log file is not supported for delete.')), 'danger');
+                        return;
+                    }
+
                     L.resolveDefault(callClearLog(logPath), {}).then(() => {
                         logBox.innerHTML = '';
                         this.lastLogContent = "";
@@ -160,7 +165,7 @@ return L.view.extend({
                 'class': 'cbi-button cbi-button-apply',
                 'click': () => {
                     if (logPath === "syslog") {
-                        ui.addNotification(null, E('p', _('The syslog log file is not supported for download.').format(e.message)), 'danger');
+                        ui.addNotification(null, E('p', _('The syslog log file is not supported for download.')), 'danger');
                         return;
                     }
 

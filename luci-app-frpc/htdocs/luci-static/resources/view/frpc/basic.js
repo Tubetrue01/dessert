@@ -399,6 +399,10 @@ return view.extend({
             botRow.appendChild(btnDown);
 
             const updateLogDisplay = () => {
+                if (!logPath) {
+                    return;
+                }
+
                 L.resolveDefault(callReadLog(logPath, "200"), {}).then((res)  => {
                     const content = (res && res.data) ? res.data.trim() : "";
 

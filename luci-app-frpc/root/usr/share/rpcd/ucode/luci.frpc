@@ -2,21 +2,6 @@
 
 import {popen, stat, writefile} from 'fs';
 
-function _exec_sys(cmd) {
-    const p = popen(`sh -c '${cmd}' 2>&1`, "r");
-    if (!p) {
-        return {code: -1, data: ""};
-    }
-
-    const stdout = p.read("all");
-    const code = p.close();
-
-    return {
-        code: code,
-        data: (type(stdout) === "string") ? trim(stdout) : ""
-    };
-}
-
 const methods = {
     clearLog: {
         args: {filename: "filename"},
@@ -39,25 +24,27 @@ const methods = {
             const filename = req.args.filename;
             const count = req.args.count || "200";
 
-            if (!filename) return { code: 1, data: "No filename" };
-
-            if (!stat(filename)) {
-               return { code: 0, data: "" };
+            if (!filename) {
+               return { code: 1, data: "No filename" };
             }
 
-            const cmd = `tr -d '\\000' < "${filename}" | tail -n ${count}`;
-            const p = popen(cmd, "r");
+           if (!stat(filename)) {
+              return { code: 0, data: "" };
+           }
 
-            let content = "";
-            if (p) {
-                content = p.read("all");
-                p.close();
-            }
+           const cmd = `tr -d '\\000' < "${filename}" | tail -n ${count}`;
+           const p = popen(cmd, "r");
 
-            return {
-                code: 0,
-                data: (type(content) === "string") ? trim(content) : ""
-            };
+           let content = "";
+           if (p) {
+               content = p.read("all");
+               p.close();
+           }
+
+           return {
+               code: 0,
+               data: (type(content) === "string") ? trim(content) : ""
+           };
         }
     },
 
