@@ -94,13 +94,13 @@ return L.view.extend({
              [
                 E('label', {
                  'class': 'cbi-value',
-                 'style': 'display:inline-block; width: 130px; padding-bottom: 1rem',
+                 'style': 'display:inline-block; width: 8rem; padding-bottom: 1rem',
                  }, _('Select a file:')),
                
                 E('input', {
                         'type': 'file',
                         'class': 'cbi-input-file',
-                        'style': 'width: 400px',
+                        'style': 'width: 25rem',
                         'change': function(ev) {
                             fileInput = ev.target.files[0] 
                         }
@@ -152,14 +152,14 @@ return L.view.extend({
 
                 E('label', {
                  'class': 'cbi-value',
-                 'style': 'display:inline-block; width: 130px; padding-bottom: 1rem',
+                 'style': 'display:inline-block; width: 8rem; padding-bottom: 1rem',
                  }, _('Root directory:')),
 
 
                 E('input',{
                     'type': 'text',
                     'class': 'cbi-input-file',
-                    'style': 'width: 400px',
+                    'style': 'width: 25rem',
                     'change': function(ev) {
                         fileInput = ev.target.value;
                     }
@@ -240,7 +240,7 @@ return L.view.extend({
                     E('td', { 'class': 'td' }, [
                         E('button', {
                             'class': 'btn cbi-button-remove',
-                            'style': 'margin-left: 5px',
+                            'style': 'margin-left: 0.3rem',
                             'click': function() {
                                 return fs.remove(`${upload_path}/${file.name}`).then(() => fetchTableFiles());
                             }
