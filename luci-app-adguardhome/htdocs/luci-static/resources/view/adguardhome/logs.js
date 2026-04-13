@@ -20,7 +20,7 @@ const callReadLog = rpc.declare({
     object: 'luci.adguardhome',
     method: 'readLog',
     params: ['filename', "count"],
-    expect: { '': {} }
+    expect: {'': {}}
 });
 
 const formatLocalTime = (text) => {
@@ -64,7 +64,7 @@ return L.view.extend({
 
             const sectionNode = mapNode.querySelector('.cbi-section-node');
 
-            const topRow = E('div', { style: 'display:flex; align-items:center; padding:1rem;' });
+            const topRow = E('div', {style: 'display:flex; align-items:center; padding:1rem;'});
             sectionNode.prepend(topRow);
 
             const logBox = E('div', {
@@ -85,9 +85,9 @@ return L.view.extend({
             }
 
             function createCheckbox(labelText, id) {
-                const wrapper = E('div', { style: 'display:inline-flex; align-items:center; margin-right:1rem; cursor:pointer;' });
-                const checkbox = E('input', { type: 'checkbox', id: id, style: 'margin:0 0.5rem 0 0; cursor:pointer; width:1rem; height:1rem;' });
-                const label = E('label', { for: id, style: 'margin:0; cursor:pointer;' }, labelText);
+                const wrapper = E('div', {style: 'display:inline-flex; align-items:center; margin-right:1rem; cursor:pointer;'});
+                const checkbox = E('input', {type: 'checkbox', id: id, style: 'margin:0 0.5rem 0 0; cursor:pointer; width:1rem; height:1rem;'});
+                const label = E('label', {for: id, style: 'margin:0; cursor:pointer;'}, labelText);
                 wrapper.appendChild(checkbox);
                 wrapper.appendChild(label);
                 topRow.appendChild(wrapper);
@@ -113,7 +113,7 @@ return L.view.extend({
                         const displayLines = revCheckbox.checked ? [...lines].reverse() : lines;
                         displayLines.forEach(line => {
                             const text = localCheckbox.checked ? formatLocalTime(line) : line;
-                            logBox.appendChild(E('div', { style: 'line-height:1.4rem;' }, text));
+                            logBox.appendChild(E('div', {style: 'line-height:1.4rem;'}, text));
                         });
                     } else {
                         const oldLines = this.lastLogContent.split('\n');
@@ -124,7 +124,7 @@ return L.view.extend({
 
                         newLines.forEach(line => {
                             const text = localCheckbox.checked ? formatLocalTime(line) : line;
-                            logBox.appendChild(E('div', { style: 'line-height:1.4rem;' }, text));
+                            logBox.appendChild(E('div', {style: 'line-height:1.4rem;'}, text));
                         });
 
                         while (logBox.childNodes.length > 300) {
@@ -142,7 +142,7 @@ return L.view.extend({
                 });
             };
 
-            const botRow = E('div', { style: 'padding:1rem; display:flex; gap:1rem;' });
+            const botRow = E('div', {style: 'padding:1rem; display:flex; gap:1rem;'});
             sectionNode.appendChild(botRow);
 
             botRow.appendChild(E('button', {
@@ -159,12 +159,33 @@ return L.view.extend({
             botRow.appendChild(E('button', {
                 'class': 'cbi-button cbi-button-apply',
                 'click': () => {
-                    window.open(L.url('admin/system/log/download') + '?path=' + encodeURIComponent(logPath));
+                    if (logPath === "syslog") {
+                        ui.addNotification(null, E('p', _('The syslog log file is not supported for download.').format(e.message)), 'danger');
+                        return;
+                    }
+
+                    fs.read_direct(logPath, 'blob').then(function (res) {
+                        let blob = (res instanceof Blob) ? res : new Blob([res.data || res], {type: "application/octet-stream"});
+                        const url = URL.createObjectURL(blob);
+                        const a = document.createElement("a");
+                        a.href = url;
+                        a.download = logPath.split('/').pop();
+                        document.body.appendChild(a);
+                        a.click();
+                        document.body.removeChild(a);
+                        setTimeout(() => URL.revokeObjectURL(url), 200);
+                    });
                 }
             }, _('Download')));
 
-            revCheckbox.addEventListener('change', () => { this.lastLogContent = ""; updateLogDisplay(); });
-            localCheckbox.addEventListener('change', () => { this.lastLogContent = ""; updateLogDisplay(); });
+            revCheckbox.addEventListener('change', () => {
+                this.lastLogContent = "";
+                updateLogDisplay();
+            });
+            localCheckbox.addEventListener('change', () => {
+                this.lastLogContent = "";
+                updateLogDisplay();
+            });
 
             poll.add(updateLogDisplay, 3);
             updateLogDisplay();

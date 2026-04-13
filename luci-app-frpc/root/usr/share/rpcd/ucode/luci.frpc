@@ -35,15 +35,29 @@ const methods = {
 
     readLog: {
         args: {filename: "filename", count: "count"},
-        call: function (req) {
+        call: function(req) {
             const filename = req.args.filename;
             const count = req.args.count || "200";
 
-            let content = "";
-            if (filename && stat(filename)) {
-                content = _exec_sys(`/usr/bin/tail -n ${count} "${filename}"`).data;
+            if (!filename) return { code: 1, data: "No filename" };
+
+            if (!stat(filename)) {
+               return { code: 0, data: "" };
             }
-            return {code: 0, data: content};
+
+            const cmd = `tr -d '\\000' < "${filename}" | tail -n ${count}`;
+            const p = popen(cmd, "r");
+
+            let content = "";
+            if (p) {
+                content = p.read("all");
+                p.close();
+            }
+
+            return {
+                code: 0,
+                data: (type(content) === "string") ? trim(content) : ""
+            };
         }
     },
 

@@ -44,18 +44,32 @@ const methods = {
             const filename = req.args.filename;
             const count = req.args.count || "200";
 
-            let cmd;
             if (filename === "syslog") {
-                cmd = `/sbin/logread -l ${count} -e ${service_name}`;
+                const res = _exec_sys(`/sbin/logread -l ${count} -e ${service_name}`);
+                return {code: 0, data: res.data};
             } else {
-                if (!stat(filename)) {
-                    return {code: 0, data: "Log file not found."};
-                }
-                cmd = `/usr/bin/tail -n ${count} "${filename}"`;
-            }
+               if (!filename) {
+                  return { code: 1, data: "No filename" };
+               }
 
-            const res = _exec_sys(cmd);
-            return {code: 0, data: res.data};
+               if (!stat(filename)) {
+                  return { code: 0, data: "" };
+               }
+
+               const cmd = `tr -d '\\000' < "${filename}" | tail -n ${count}`;
+               const p = popen(cmd, "r");
+
+               let content = "";
+               if (p) {
+                   content = p.read("all");
+                   p.close();
+               }
+
+               return {
+                   code: 0,
+                   data: (type(content) === "string") ? trim(content) : ""
+               };
+            }
         }
     },
 
