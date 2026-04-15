@@ -79,7 +79,7 @@ const methods = {
 
             writefile(file_log, "");
 
-            const script_path = "/usr/share/adguardhome/adguardhome.uc";
+            const script_path = "/usr/share/AdGuardHome/AdGuardHome.uc";
             const cmd = `ucode ${script_path} update ${file_log} &`;
 
             const res = system(cmd);
@@ -121,7 +121,7 @@ const methods = {
 
     reload: {
      call: function () {
-           const script_path = "/usr/share/adguardhome/adguardhome.uc";
+           const script_path = "/usr/share/AdGuardHome/AdGuardHome.uc";
            let res = system(["ucode", script_path, "applyFromYaml"]);
 
            if (res === 0) {

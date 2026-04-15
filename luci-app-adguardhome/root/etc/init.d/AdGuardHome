@@ -6,7 +6,7 @@ STOP=01
 
 SERVER_NAME=AdGuardHome
 CONFIGURATION=${SERVER_NAME}
-ADG_HELPER="/usr/share/adguardhome/adguardhome.uc"
+ADG_HELPER="/usr/share/AdGuardHome/adguardhome.uc"
 
 service_triggers() {
     procd_add_reload_trigger "${SERVER_NAME}"

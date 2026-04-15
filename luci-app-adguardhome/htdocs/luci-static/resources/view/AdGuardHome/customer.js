@@ -18,7 +18,7 @@ const callReload = rpc.declare({
 });
 
 async function loadCodeMirrorResources() {
-    const bundlePath = '/luci-static/resources/view/adguardhome/codemirror6/cm6-yaml-editor.js';
+    const bundlePath = '/luci-static/resources/view/AdGuardHome/codemirror6/cm6-yaml-editor.js';
 
     if (window.CM6) {
         return Promise.resolve();
@@ -145,7 +145,7 @@ return view.extend({
         btn.inputstyle = 'apply';
 
         btn.onclick = function (ev) {
-            const templatePath = '/usr/share/adguardhome/AdGuardHome_template.yaml';
+            const templatePath = '/usr/share/AdGuardHome/AdGuardHome_template.yaml';
             return fs.read(templatePath).then(content => {
                 if (content && configEditor) {
                     configEditor.dispatch({

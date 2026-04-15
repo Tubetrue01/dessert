@@ -15,7 +15,7 @@
 		"order": 10,
 		"action": {
 			"type": "view",
-			"path": "adguardhome/basic"
+			"path": "AdGuardHome/basic"
 		}
 	},
 
@@ -24,7 +24,7 @@
 		"order": 15,
 		"action": {
 			"type": "view",
-			"path": "adguardhome/logs"
+			"path": "AdGuardHome/logs"
 		}
 	},
 
@@ -33,7 +33,7 @@
         "order": 20,
         "action": {
             "type": "view",
-            "path": "adguardhome/customer"
+            "path": "AdGuardHome/customer"
         }
 	}
 }
