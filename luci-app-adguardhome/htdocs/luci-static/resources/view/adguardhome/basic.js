@@ -258,22 +258,22 @@ return view.extend({
         o = s.option(form.Value, 'config_path', _('Configuration path'));
         o.description =_('AdGuard Home configuration file path');
         o.datatype = 'string';
-        o.default = '/etc/adguardhome/AdGuardHome.yaml';
-        o.placeholder = '/etc/adguardhome/AdGuardHome.yaml';
+        o.default = '/etc/AdGuardHome/AdGuardHome.yaml';
+        o.placeholder = '/etc/AdGuardHome/AdGuardHome.yaml';
 
         // Work dir
         o = s.option(form.Value, 'work_dir', _('Working directory'));
         o.description =_('AdGuard Home working directory, containing rules, audit logs, and database');
         o.datatype = 'string';
-        o.default = '/opt/data/AdGuardHome';
-        o.placeholder = '/opt/data/AdGuardHome';
+        o.default = '/tmp/AdGuardHome';
+        o.placeholder = '/tmp/AdGuardHome';
 
         // Logs path
         o = s.option(form.Value, 'log_file', _('Running log'));
         o.description =_('AdGuard Home running log. If set to syslog, logs will be written to the system log; if left empty, no logs will be recorded');
         o.datatype = 'string';
-        o.default = '/opt/data/AdGuardHome/log.log';
-        o.placeholder = '/opt/data/AdGuardHome/log.log';
+        o.default = '/tmp/AdGuardHome/AdGuardHome.log';
+        o.placeholder = '/tmp/AdGuardHome/AdGuardHome.log';
 
         // Detail log
         o = s.option(form.Flag, 'verbose', _('Verbose'));
@@ -327,8 +327,8 @@ return view.extend({
         // Work dir backup path
         o = s.option(form.Value, 'work_dir_backup', _('Backup path for the working directory'));
         o.datatype = 'string';
-        o.default = '/opt/data/AdGuardHome/backup';
-        o.placeholder = '/opt/data/AdGuardHome/backup';
+        o.default = '/tmp/AdGuardHome/backup';
+        o.placeholder = '/tmp/AdGuardHome/backup';
 
         // Version type to update
         s = m.section(form.NamedSection, 'UpdateLinks', 'AdGuardHome', null);

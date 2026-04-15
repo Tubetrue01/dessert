@@ -243,7 +243,7 @@ function _set_dns_mode(mode) {
     if (mode === "none") {
         _exec_sys("/etc/init.d/dnsmasq restart");
     } else if (mode === "upstream") {
-        const config_path = _uci_get("config_path", "/etc/adguardhome/AdGuardHome.yaml");
+        const config_path = _uci_get("config_path", "/etc/AdGuardHome/AdGuardHome.yaml");
         const port = _get_config(config_path, "dns.port");
         const addr = `127.0.0.1#${port}`;
 
@@ -306,8 +306,8 @@ function run_args() {
         return "false";
     }
 
-    const config_path = _uci_get("config_path", "/etc/adguardhome/AdGuardHome.yaml");
-    const work_dir = _uci_get("work_dir", "/opt/data/AdGuardHome");
+    const config_path = _uci_get("config_path", "/etc/AdGuardHome/AdGuardHome.yaml");
+    const work_dir = _uci_get("work_dir", "/tmp/AdGuardHome");
     const bin_path = _uci_get("bin_path", "/usr/bin/AdGuardHome");
     const http_port = _uci_get("http_port", "3000");
 
@@ -390,7 +390,7 @@ function stop() {
 }
 
 function apply_from_yaml() {
-    const config_path = _uci_get("config_path", "/etc/adguardhome/AdGuardHome.yaml");
+    const config_path = _uci_get("config_path", "/etc/AdGuardHome/AdGuardHome.yaml");
     const address = _get_config(config_path, "http.address");
 
     const parts = split(address || "", ":");
