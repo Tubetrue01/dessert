@@ -48,7 +48,6 @@ return L.view.extend({
     load: function () {
         return uci.load(serviceName);
     },
-
     render: function () {
         const logPath = uci.get(serviceName, serviceName, 'log_file');
         const m = new form.Map(serviceName, null);
@@ -56,119 +55,64 @@ return L.view.extend({
 
         const o = s.option(form.DummyValue, '_log_container');
 
-        return m.render().then(L.bind(function (mapNode) {
-            const h2 = mapNode.querySelector('h2');
-            if (h2) {
-                h2.style.display = 'none';
-            }
-
-            const sectionNode = mapNode.querySelector('.cbi-section-node');
-
-            const topRow = E('div', {style: 'display:flex; align-items:center; padding:1rem;'});
-            sectionNode.prepend(topRow);
-
+        o.render = L.bind(function (sectionId) {
             const logBox = E('div', {
                 id: 'log_content_box',
-                'class': 'cbi-input-textarea',
-                style: 'height:30rem; padding:1rem; \
-                        overflow-y:auto; \
-                        white-space:pre-wrap; \
-                        word-break:break-all; \
-                        margin:0 1rem; \
-                        font-size:0.875rem; \
-                        display:block;'
+                class: 'cbi-input-textarea',
+                style: 'width:100%; height:30rem; padding:1rem; \
+                          overflow-y:auto; overflow-x:hidden; \
+                          white-space:pre-wrap; word-break:break-all; \
+                          display:block; font-size:0.875rem;'
             });
 
-            const dummy = mapNode.querySelector('[id$="_log_container"]');
-            if (dummy) {
-                dummy.parentNode.replaceChild(logBox, dummy);
-            }
+            const topRow = E('div', {
+                style: 'display:flex; align-items:center; padding-bottom:1rem;'
+            });
 
-            function createCheckbox(labelText, id) {
-                const wrapper = E('div', {style: 'display:inline-flex; align-items:center; margin-right:1rem; cursor:pointer;'});
-                const checkbox = E('input', {type: 'checkbox', id: id, style: 'margin:0 0.5rem 0 0; cursor:pointer; width:1rem; height:1rem;'});
+            const createCheckbox = (labelText, id) => {
+                const wrapper = E('div', {
+                    style: 'display:inline-flex; align-items:center; margin-right:1.5rem; cursor:pointer;'
+                });
+                const checkbox = E('input', {
+                    type: 'checkbox', id: id,
+                    style: 'margin:0 0.5rem 0 0; cursor:pointer; width:1rem; height:1rem;'
+                });
                 const label = E('label', {for: id, style: 'margin:0; cursor:pointer;'}, labelText);
                 wrapper.appendChild(checkbox);
                 wrapper.appendChild(label);
                 topRow.appendChild(wrapper);
                 return checkbox;
-            }
+            };
 
             const revCheckbox = createCheckbox(_('Reverse'), 'reverseCheck');
             const localCheckbox = createCheckbox(_('Local time'), 'localCheckbox');
 
-            const updateLogDisplay = () => {
-                L.resolveDefault(callReadLog(logPath, '200'), {}).then((res) => {
-                    const content = (res && res.data) ? res.data.trim() : "";
+            const botRow = E('div', {
+                style: 'display:flex; align-items:center; gap:1rem; padding-top:1rem;'
+            });
 
-                    if (content === this.lastLogContent) {
-                        return;
-                    }
-
-                    const isAtBottom = logBox.scrollHeight - logBox.scrollTop <= logBox.clientHeight + 20;
-                    const lines = content.split('\n');
-
-                    if (revCheckbox.checked || logBox.childNodes.length === 0) {
-                        logBox.innerHTML = '';
-                        const displayLines = revCheckbox.checked ? [...lines].reverse() : lines;
-                        displayLines.forEach(line => {
-                            const text = localCheckbox.checked ? formatLocalTime(line) : line;
-                            logBox.appendChild(E('div', {style: 'line-height:1.4rem;'}, text));
-                        });
-                    } else {
-                        const oldLines = this.lastLogContent.split('\n');
-                        const lastLineOfOld = oldLines[oldLines.length - 1];
-                        const lastIndexInNew = lines.lastIndexOf(lastLineOfOld);
-
-                        const newLines = (lastIndexInNew !== -1) ? lines.slice(lastIndexInNew + 1) : lines;
-
-                        newLines.forEach(line => {
-                            const text = localCheckbox.checked ? formatLocalTime(line) : line;
-                            logBox.appendChild(E('div', {style: 'line-height:1.4rem;'}, text));
-                        });
-
-                        while (logBox.childNodes.length > 300) {
-                            logBox.removeChild(logBox.firstChild);
-                        }
-                    }
-
-                    this.lastLogContent = content;
-
-                    if (isAtBottom && !revCheckbox.checked) {
-                        logBox.scrollTop = logBox.scrollHeight;
-                    }
-                }).catch(() => {
-                    logBox.innerHTML = '<div style="color:red;">Failed to load log.</div>';
-                });
-            };
-
-            const botRow = E('div', {style: 'padding:1rem; display:flex; gap:1rem;'});
-            sectionNode.appendChild(botRow);
-
-            botRow.appendChild(E('button', {
-                'class': 'cbi-button cbi-button-remove',
-                'click': () => {
+            const btnClear = E('button', {
+                class: 'cbi-button cbi-button-remove',
+                click: () => {
                     if (logPath === "syslog") {
                         ui.addNotification(null, E('p', _('The syslog log file is not supported for delete.')), 'danger');
                         return;
                     }
-
                     L.resolveDefault(callClearLog(logPath), {}).then(() => {
                         logBox.innerHTML = '';
                         this.lastLogContent = "";
                         updateLogDisplay();
                     });
                 }
-            }, _('Delete')));
+            }, _('Delete'));
 
-            botRow.appendChild(E('button', {
-                'class': 'cbi-button cbi-button-apply',
-                'click': () => {
+            const btnDown = E('button', {
+                class: 'cbi-button cbi-button-apply',
+                click: () => {
                     if (logPath === "syslog") {
                         ui.addNotification(null, E('p', _('The syslog log file is not supported for download.')), 'danger');
                         return;
                     }
-
                     fs.read_direct(logPath, 'blob').then(function (res) {
                         let blob = (res instanceof Blob) ? res : new Blob([res.data || res], {type: "application/octet-stream"});
                         const url = URL.createObjectURL(blob);
@@ -181,7 +125,50 @@ return L.view.extend({
                         setTimeout(() => URL.revokeObjectURL(url), 200);
                     });
                 }
-            }, _('Download')));
+            }, _('Download'));
+
+            botRow.appendChild(btnClear);
+            botRow.appendChild(btnDown);
+
+            const updateLogDisplay = () => {
+                L.resolveDefault(callReadLog(logPath, '200'), {}).then((res) => {
+                    const content = (res && res.data) ? res.data.trim() : "";
+                    if (content === this.lastLogContent) return;
+
+                    const isAtBottom = logBox.scrollHeight - logBox.scrollTop <= logBox.clientHeight + 20;
+                    const lines = content.split('\n');
+
+                    if (revCheckbox.checked || logBox.childNodes.length === 0) {
+                        logBox.innerHTML = '';
+                        const displayLines = revCheckbox.checked ? [...lines].reverse() : lines;
+                        displayLines.forEach(line => {
+                            const text = localCheckbox.checked ? formatLocalTime(line) : line;
+                            logBox.appendChild(E('div', {style: 'line-height:1.4rem; word-break:break-all;'}, text));
+                        });
+                    } else {
+                        const oldLines = this.lastLogContent.split('\n');
+                        const lastLineOfOld = oldLines[oldLines.length - 1];
+                        const lastIndexInNew = lines.lastIndexOf(lastLineOfOld);
+                        const newLines = (lastIndexInNew !== -1) ? lines.slice(lastIndexInNew + 1) : lines;
+
+                        newLines.forEach(line => {
+                            const text = localCheckbox.checked ? formatLocalTime(line) : line;
+                            logBox.appendChild(E('div', {style: 'line-height:1.4rem; word-break:break-all;'}, text));
+                        });
+
+                        while (logBox.childNodes.length > 300) {
+                            logBox.removeChild(logBox.firstChild);
+                        }
+                    }
+
+                    this.lastLogContent = content;
+                    if (isAtBottom && !revCheckbox.checked) {
+                        logBox.scrollTop = logBox.scrollHeight;
+                    }
+                }).catch(() => {
+                    logBox.innerHTML = '';
+                });
+            };
 
             revCheckbox.addEventListener('change', () => {
                 this.lastLogContent = "";
@@ -195,9 +182,19 @@ return L.view.extend({
             poll.add(updateLogDisplay, 3);
             updateLogDisplay();
 
-            return mapNode;
-        }, this));
+            return E('div', {
+                class: 'cbi-section',
+                style: 'padding:1rem;'
+            }, [
+                topRow,
+                logBox,
+                botRow
+            ]);
+        }, this);
+
+        return m.render();
     },
+
     handleSaveApply: null,
     handleSave: null,
     handleReset: null
