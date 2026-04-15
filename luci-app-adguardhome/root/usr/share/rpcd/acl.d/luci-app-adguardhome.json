@@ -1,6 +1,6 @@
 {
   "luci-app-adguardhome": {
-    "description": "控制 AdGuardHome 插件的所有权限",
+    "description": "Grant UCI access for luci-app-adguardhome",
     "read": {
       "uci": [
         "AdGuardHome"
@@ -16,7 +16,8 @@
       "ubus": {
         "luci.adguardhome": [
           "currentVersion",
-          "readLog"
+          "readLog",
+          "reload"
         ],
         "service": [ "list" ]
       }
@@ -34,9 +35,7 @@
        "file":{
           "*.yaml":[
             "write"
-          ],
-        "/usr/share/adguardhome/adguardhome.uc applyFromYaml": ["exec"],
-        "/etc/init.d/AdGuardHome restart": ["exec"]
+          ]
         }
     }
   }

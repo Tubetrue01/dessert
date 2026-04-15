@@ -6,8 +6,16 @@
 'require uci';
 'require view';
 'require fs';
+'require rpc';
+
 
 const serviceName = "AdGuardHome";
+
+const callReload = rpc.declare({
+    object: 'luci.adguardhome',
+    method: 'reload',
+    expect: { '': {} }
+});
 
 async function loadCodeMirrorResources() {
     const bundlePath = '/luci-static/resources/view/adguardhome/codemirror6/cm6-yaml-editor.js';
@@ -176,10 +184,7 @@ return view.extend({
 
         return this.handleSave(ev)
             .then(() => {
-                return fs.exec('/usr/share/adguardhome/adguardhome.uc', ['applyFromYaml']);
-            })
-            .then(() => {
-                return fs.exec('/etc/init.d/AdGuardHome', ['restart']);
+                return callReload();
             })
             .then(() => {
                 ui.changes.displayStatus(

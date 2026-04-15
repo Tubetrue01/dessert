@@ -63,6 +63,12 @@ const callReadLog = rpc.declare({
     expect: { '': {} }
 });
 
+const callReload = rpc.declare({
+    object: 'luci.frpc',
+    method: 'reload',
+    expect: { '': {} }
+});
+
 async function loadCodeMirrorResources() {
     const bundlePath = '/luci-static/resources/view/frpc/codemirror6/cm6-yaml-editor.js';
 
@@ -579,7 +585,7 @@ return view.extend({
                     return uci.apply();
                 }
             }).then(() => {
-                return fs.exec('/etc/init.d/frpc', ['restart']);
+                return callReload();
             }).then(() => {
                 return ui.changes.init();
             }).then(() => {

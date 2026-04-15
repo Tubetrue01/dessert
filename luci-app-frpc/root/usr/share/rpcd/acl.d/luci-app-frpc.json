@@ -16,7 +16,8 @@
       "ubus": {
         "luci.frpc": [
           "currentVersion",
-          "readLog"
+          "readLog",
+          "reload"
         ],
         "service": [
           "list"
@@ -27,9 +28,6 @@
       "file": {
         "/etc/frpc/frpc.yaml": [
           "write"
-        ],
-        "/etc/init.d/frpc": [
-          "exec"
         ]
       },
       "uci": [

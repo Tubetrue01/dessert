@@ -83,13 +83,26 @@ const methods = {
                 }
 
                 return {
-                    "code": 0,
-                    "data": stdout ? trim(stdout) : "unknown"
+                    code: 0,
+                    data: stdout ? trim(stdout) : "unknown"
                 };
             } catch (e) {
             }
         }
-    }
+    },
+    reload: {
+     call: function () {
+            const cmd = "(sleep 2; /etc/init.d/frpc restart) >/dev/null 2>&1 &";
+            if (system(cmd) === 0) {
+                return {
+                    code: 0,
+                    data: "success"
+                };
+            }
+
+            return { code: 500, data: "error" };
+        }
+     }
 };
 
 return {"luci.frpc": methods};

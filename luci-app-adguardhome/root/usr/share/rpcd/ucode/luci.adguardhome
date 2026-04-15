@@ -117,7 +117,20 @@ const methods = {
             } catch (e) {
             }
         }
-    }
+    },
+
+    reload: {
+     call: function () {
+           const script_path = "/usr/share/adguardhome/adguardhome.uc";
+           let res = system(["ucode", script_path, "applyFromYaml"]);
+
+           if (res === 0) {
+               let restart_res = system("(/etc/init.d/AdGuardHome restart) >/dev/null 2>&1 &");
+               return { code: 0, data: "success" };
+           }
+           return { code: 500, data: "error" };
+        }
+     }
 };
 
 return {"luci.adguardhome": methods};
