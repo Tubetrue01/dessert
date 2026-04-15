@@ -597,7 +597,7 @@ return view.extend({
                 setTimeout(() => {
                     ui.changes.displayStatus(false);
                     window.location.reload();
-                }, 1500);
+                }, 2000);
             }).catch(e => {
                 ui.changes.displayStatus(false);
                 ui.addNotification(

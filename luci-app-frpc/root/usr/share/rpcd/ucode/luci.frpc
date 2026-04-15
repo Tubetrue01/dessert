@@ -92,7 +92,7 @@ const methods = {
     },
     reload: {
      call: function () {
-            const cmd = "(sleep 2; /etc/init.d/frpc restart) >/dev/null 2>&1 &";
+            const cmd = "(sleep 1; /etc/init.d/frpc restart) >/dev/null 2>&1 &";
             if (system(cmd) === 0) {
                 return {
                     code: 0,
