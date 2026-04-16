@@ -3,7 +3,7 @@ serverPort: 10086
 
 auth:
   method: "token"
-  token: "frpc-toekn"
+  token: "frpc-token"
   additionalScopes:
     - "HeartBeats"
     - "NewWorkConns"
