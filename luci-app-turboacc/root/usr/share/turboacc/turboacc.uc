@@ -26,24 +26,6 @@ function initial_conf() {
     }
 }
 
-function manage_sfe(enable) {
-    if (enable) {
-        if (fs.access(`${module_path}/shortcut-fe-cm.ko`)){
-            system(["modprobe", "shortcut-fe-cm"]);
-        }
-        if (fs.access(`${module_path}/fast-classifier.ko`)){
-            system(["modprobe", "fast-classifier"]);
-        }
-    } else {
-        if (fs.access("/sys/module/shortcut_fe_cm")) {
-            system(["rmmod", "shortcut_fe_cm"]);
-        }
-        if (fs.access("/sys/module/fast_classifier")){
-            system(["rmmod", "fast_classifier"]);
-        }
-    }
-}
-
 function manage_wed(enable) {
     const module_file = `${module_path}/mt7915e.ko`;
 
@@ -51,7 +33,6 @@ function manage_wed(enable) {
     if (!match(release_info, /mediatek/)){
         return;
     }
-
 
     if (!fs.access(module_file)){
         return;
@@ -70,7 +51,6 @@ function manage_wed(enable) {
         }
     }
     else {
-        /* 等价 unload_wed() */
         if (match(modules_conf, /mt7915e/)) {
             const updated = replace(modules_conf, /[^\n]*mt7915e[^\n]*\n?/g, "");
 
@@ -103,10 +83,6 @@ function start() {
     initial_conf();
     update_firewall();
 
-    if (conf.sw_flow !== "1" && conf.sfe_flow === "1") {
-        manage_sfe(true);
-    }
-
     if (conf.hw_flow === "1" && conf.hw_wed === "1") {
         manage_wed(true);
     }
@@ -114,7 +90,6 @@ function start() {
     const cca = (conf.bbr_cca === "1") ? "bbr" : "cubic";
     system(["sysctl", "-w", `net.ipv4.tcp_congestion_control=${cca}`]);
 
-    system("/etc/init.d/dnsmasq restart");
     system("/etc/init.d/firewall restart");
 }
 
@@ -126,9 +101,6 @@ function stop() {
         manage_wed(false);
     }
 
-    manage_sfe(false);
-
-    system("/etc/init.d/dnsmasq restart");
     system("/etc/init.d/firewall restart");
 }
 
