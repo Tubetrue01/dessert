@@ -53,7 +53,7 @@ return view.extend({
                         statusNodes[key].textContent = isRunning ? (key === 'sw_flow' ? res[key] : _('RUNNING')) : _('NOT RUNNING');
                     }
                 });
-            }, 5);
+            }, 2);
 
             return E('div', {class: 'cbi-section'}, [
                 E('div', {class: 'table cbi-section-table'}, rows)
