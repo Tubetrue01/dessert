@@ -7,19 +7,14 @@
       ],
       "ubus": {
         "luci.turboacc": [
-        ],
-        "service": [
-          "list"
+          "getStatus"
         ]
       }
     },
     "write": {
       "uci": [
         "turboacc"
-      ],
-      "ubus": {
-        "luci.turboacc": []
-      }
+      ]
     }
   }
 }
