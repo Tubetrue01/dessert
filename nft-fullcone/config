@@ -1,1 +1,1 @@
-CONFIG_PACKAGE_nft-fullcone
+CONFIG_PACKAGE_kmod-nft-fullcone=y
