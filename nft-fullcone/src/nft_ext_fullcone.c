@@ -40,7 +40,6 @@ int ct_event_notifier_registered = 0;
 int module_refer_count = 0;
 
 static void gc_worker(struct work_struct *work);
-static struct workqueue_struct *wq __read_mostly = NULL;
 static DECLARE_DELAYED_WORK(gc_worker_wk, gc_worker);
 
 static void gc_worker(struct work_struct *work)
@@ -61,7 +60,7 @@ static const struct nla_policy nft_fullcone_policy[NFTA_FULLCONE_MAX + 1] = {
 };
 
 /* conntrack destroy event callback function */
-if LINUX_VERSION_CODE >= KERNEL_VERSION(5, 15, 0)
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(5, 15, 0)
 static int ct_event_cb(unsigned int events, const struct nf_ct_event *item)
 {
 #else
@@ -144,7 +143,7 @@ static int nft_fullcone_init(const struct nft_ctx *ctx, const struct nft_expr *e
 	pr_debug("nft_fullcone_init(): module_refer_count is now %d\n", module_refer_count);
 
 	if (module_refer_count == 1) {
-if LINUX_VERSION_CODE >= KERNEL_VERSION(5, 15, 0)
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(5, 15, 0)
 		ct_event_notifier.ct_event = ct_event_cb;
 		ct_event_notifier.exp_event = exp_event_cb;
 #else
