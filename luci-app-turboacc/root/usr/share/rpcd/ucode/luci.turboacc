@@ -1,0 +1,37 @@
+#!/usr/bin/ucode
+
+const fs = require("fs");
+
+const methods = {
+    getStatus: {
+        call: function() {
+            let fp = "";
+            const ref_data = fs.readfile("/sys/module/nft_flow_offload/refcnt");
+            const ref_cnt = (ref_data != null) ? int(ref_data) : -1;
+
+            if (ref_cnt > 0) {
+                fp = "Flow Offloading";
+            } else if (ref_cnt == 0 && fs.stat("/sys/kernel/debug/hnat/hnat_version")) {
+                fp = "MediaTek HWNAT";
+            } else if (fs.stat("/sys/kernel/debug/ecm/ecm_nss_ipv4")) {
+                fp = "QCA-NSS-ECM";
+            } else if (fs.stat("/sys/kernel/debug/ecm/ecm_sfe_ipv4")) {
+                fp = "QCA-ECM-SFE";
+            } else if (fs.stat("/sys/module/fast_classifier")) {
+                fp = "Shortcut-FE";
+            } else if (fs.stat("/sys/module/shortcut_fe_cm")) {
+                fp = "Shortcut-FE ECM";
+            }
+
+            const fc_data = fs.readfile("/sys/module/nft_fullcone/refcnt");
+            const fc = (fc_data != null) ? int(fc_data) : -1;
+
+            const bbr_data = fs.readfile("/proc/sys/net/ipv4/tcp_congestion_control");
+            const bbr = (trim(bbr_data) === "bbr") ? 1 : 0;
+
+            return { sw_flow: fp, fullcone_nat: fc, bbr: bbr };
+        }
+    }
+};
+
+return {"luci.turboacc": methods};

@@ -6,14 +6,14 @@ STOP=01
 
 SERVER_NAME=frpc
 CONFIGURATION=${SERVER_NAME}
-ADG_HELPER="/usr/share/frpc/frpc.uc"
+FRPC_HELPER="/usr/share/frpc/frpc.uc"
 
 service_triggers() {
     procd_add_reload_trigger "${SERVER_NAME}"
 }
 
 start_service() {
-    local raw=$($ADG_HELPER run | tr -d '\r' | sed 's/#$//' | xargs)
+    local raw=$(FRPC_HELPER run | tr -d '\r' | sed 's/#$//' | xargs)
 
     if [ -z "$raw" ] || [ "$raw" = "false" ]; then
         logger -t ${SERVER_NAME} "Service disabled, cleaning up..."

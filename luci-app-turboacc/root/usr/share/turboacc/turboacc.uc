@@ -1,0 +1,139 @@
+#!/usr/bin/ucode
+
+const uci = require("uci").cursor();
+const fs = require("fs");
+
+const kernel_v = trim(`uname -r`);
+const module_path = `/lib/modules/${kernel_v}`;
+
+let conf = {};
+
+function initial_conf() {
+    uci.load("turboacc");
+    conf = uci.get_all("turboacc", "config") || {};
+
+    const keys = ["hw_wed", "hw_flow", "sw_flow", "sfe_flow", "bbr_cca", "fullcone_nat", "fullcone6"];
+    for (let k in keys) {
+        conf[k] = conf[k] || "0";
+    }
+
+    if (!fs.access(`${module_path}/nft_flow_offload.ko`)) {
+        conf.sw_flow = "0";
+        conf.hw_flow = "0";
+    }
+    if (!fs.access(`${module_path}/tcp_bbr.ko`)) {
+        conf.bbr_cca = "0";
+    }
+}
+
+function manage_sfe(enable) {
+    if (enable) {
+        if (fs.access(`${module_path}/shortcut-fe-cm.ko`)){
+            system(["modprobe", "shortcut-fe-cm"]);
+        }
+        if (fs.access(`${module_path}/fast-classifier.ko`)){
+            system(["modprobe", "fast-classifier"]);
+        }
+    } else {
+        if (fs.access("/sys/module/shortcut_fe_cm")) {
+            system(["rmmod", "shortcut_fe_cm"]);
+        }
+        if (fs.access("/sys/module/fast_classifier")){
+            system(["rmmod", "fast_classifier"]);
+        }
+    }
+}
+
+function manage_wed(enable) {
+    const module_file = `${module_path}/mt7915e.ko`;
+
+    const release_info = fs.readfile("/etc/openwrt_release") || "";
+    if (!match(release_info, /mediatek/)){
+        return;
+    }
+
+
+    if (!fs.access(module_file)){
+        return;
+    }
+
+
+    let modules_conf = fs.readfile("/etc/modules.conf") || "";
+
+    if (enable) {
+        if (!match(modules_conf, /mt7915e/)) {
+            fs.writefile(
+                "/etc/modules.conf",
+                modules_conf + "options mt7915e wed_enable=Y\n"
+            );
+            system("rmmod mt7915e >/dev/null 2>&1; sleep 1; modprobe mt7915e; wifi up");
+        }
+    }
+    else {
+        /* 等价 unload_wed() */
+        if (match(modules_conf, /mt7915e/)) {
+            const updated = replace(modules_conf, /[^\n]*mt7915e[^\n]*\n?/g, "");
+
+            fs.writefile("/etc/modules.conf", updated);
+
+            system("rmmod mt7915e >/dev/null 2>&1; sleep 1; modprobe mt7915e; wifi up");
+        }
+    }
+}
+
+
+function update_firewall() {
+    uci.load("firewall");
+
+    uci.set("firewall", "@defaults[0]", "flow_offloading", conf.sw_flow);
+    uci.set("firewall", "@defaults[0]", "flow_offloading_hw", conf.hw_flow);
+    uci.set("firewall", "@defaults[0]", "fullcone", conf.fullcone_nat);
+
+    uci.foreach("firewall", "zone", (s) => {
+        if (s["fullcone6"] !== undefined) {
+            uci.set("firewall", s[".name"], "fullcone6", conf.fullcone6);
+        }
+    });
+
+    uci.commit("firewall");
+}
+
+
+function start() {
+    initial_conf();
+    update_firewall();
+
+    if (conf.sw_flow !== "1" && conf.sfe_flow === "1") {
+        manage_sfe(true);
+    }
+
+    if (conf.hw_flow === "1" && conf.hw_wed === "1") {
+        manage_wed(true);
+    }
+
+    const cca = (conf.bbr_cca === "1") ? "bbr" : "cubic";
+    system(["sysctl", "-w", `net.ipv4.tcp_congestion_control=${cca}`]);
+
+    system("/etc/init.d/dnsmasq restart");
+    system("/etc/init.d/firewall restart");
+}
+
+function stop() {
+    initial_conf();
+    update_firewall();
+
+    if (conf.hw_wed === "0") {
+        manage_wed(false);
+    }
+
+    manage_sfe(false);
+
+    system("/etc/init.d/dnsmasq restart");
+    system("/etc/init.d/firewall restart");
+}
+
+switch (ARGV[0]) {
+    case "start": start(); break;
+    case "stop": stop(); break;
+    case "restart": stop(); start(); break;
+}

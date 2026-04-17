@@ -1,0 +1,17 @@
+{
+  "admin/network/turboacc": {
+    "title": "Turbo ACC Center",
+    "action": {
+      "type": "view",
+      "path": "turboacc/turboacc"
+    },
+    "depends": {
+      "acl": [
+        "luci-app-turboacc"
+      ],
+      "uci": {
+        "turboacc": true
+      }
+    }
+  }
+}
