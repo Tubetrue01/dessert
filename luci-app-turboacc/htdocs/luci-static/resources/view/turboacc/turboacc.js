@@ -37,7 +37,7 @@ return view.extend({
 
             const statusNodes = {};
             const rows = statusItems.map(item => {
-                statusNodes[item.key] = E('em', {style: 'color:red'}, _('NOT RUNNING'));
+                statusNodes[item.key] = E('em', {style: 'color:red; font-weight: bold;'}, _('NOT RUNNING'));
 
                 return E('div', {class: 'tr'}, [
                     E('div', {class: 'td', style: 'text-align:left; width:33%;'}, item.label),
