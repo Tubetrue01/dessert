@@ -10,8 +10,7 @@ LUCI_DEPENDS:= \
     +luci-base \
     +kmod-tcp-bbr \
     +kmod-nft-offload \
-    +kmod-nft-fullcone \
-    +PACKAGE_$(PKG_NAME)_INCLUDE_SHORTCUT_FE:kmod-shortcut-fe-cm
+    +kmod-nft-fullcone
 
 LUCI_PKGARCH:=all
 
