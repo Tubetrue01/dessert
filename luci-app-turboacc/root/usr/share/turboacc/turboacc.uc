@@ -3,31 +3,38 @@
 const uci = require("uci").cursor();
 const fs = require("fs");
 
-const kernel_v = trim(`uname -r`);
-const module_path = `/lib/modules/${kernel_v}`;
-
 let conf = {};
+
+function get_module_path() {
+    const p = fs.popen("uname -r");
+    const kernel_v = trim(p.read("all"));
+    p.close();
+
+    return `/lib/modules/${kernel_v}`;
+}
 
 function initial_conf() {
     uci.load("turboacc");
     conf = uci.get_all("turboacc", "config") || {};
+    conf.module_path = get_module_path();
 
     const keys = ["hw_wed", "hw_flow", "sw_flow", "bbr_cca", "fullcone_nat", "fullcone6"];
     for (let k in keys) {
         conf[k] = conf[k] || "0";
     }
 
-    if (!fs.access(`${module_path}/nft_flow_offload.ko`)) {
+    if (!fs.access(`${conf.module_path}/nft_flow_offload.ko`)) {
         conf.sw_flow = "0";
         conf.hw_flow = "0";
     }
-    if (!fs.access(`${module_path}/tcp_bbr.ko`)) {
+
+    if (!fs.access(`${conf.module_path}/tcp_bbr.ko`)) {
         conf.bbr_cca = "0";
     }
 }
 
 function manage_wed(enable) {
-    const module_file = `${module_path}/mt7915e.ko`;
+    const module_file = `${conf.module_path}/mt7915e.ko`;
 
     const release_info = fs.readfile("/etc/openwrt_release") || "";
     if (!match(release_info, /mediatek/)){
@@ -37,7 +44,6 @@ function manage_wed(enable) {
     if (!fs.access(module_file)){
         return;
     }
-
 
     let modules_conf = fs.readfile("/etc/modules.conf") || "";
 
@@ -61,7 +67,6 @@ function manage_wed(enable) {
     }
 }
 
-
 function update_firewall() {
     uci.load("firewall");
 
@@ -77,7 +82,6 @@ function update_firewall() {
 
     uci.commit("firewall");
 }
-
 
 function start() {
     initial_conf();
