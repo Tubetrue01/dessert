@@ -12,7 +12,7 @@ function initial_conf() {
     uci.load("turboacc");
     conf = uci.get_all("turboacc", "config") || {};
 
-    const keys = ["hw_wed", "hw_flow", "sw_flow", "sfe_flow", "bbr_cca", "fullcone_nat", "fullcone6"];
+    const keys = ["hw_wed", "hw_flow", "sw_flow", "bbr_cca", "fullcone_nat", "fullcone6"];
     for (let k in keys) {
         conf[k] = conf[k] || "0";
     }
