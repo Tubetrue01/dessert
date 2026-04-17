@@ -22,10 +22,6 @@
 #include <linux/kernel.h>
 #include <linux/jhash.h>
 
-#ifdef CONFIG_NF_CONNTRACK_CHAIN_EVENTS
-#include <linux/notifier.h>
-#endif
-
 #include <linux/netfilter.h>
 #include <linux/netfilter_ipv4.h>
 

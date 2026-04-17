@@ -33,11 +33,7 @@ static void nft_fullcone_set_regs(const struct nft_expr *expr, const struct nft_
 				  struct nf_nat_range *range);
 #endif
 
-#ifdef CONFIG_NF_CONNTRACK_CHAIN_EVENTS
-struct notifier_block ct_event_notifier;
-#else
 struct nf_ct_event_notifier ct_event_notifier;
-#endif
 static DEFINE_MUTEX(nf_ct_net_event_lock);
 int ct_event_notifier_registered = 0;
 
@@ -65,11 +61,7 @@ static const struct nla_policy nft_fullcone_policy[NFTA_FULLCONE_MAX + 1] = {
 };
 
 /* conntrack destroy event callback function */
-#ifdef CONFIG_NF_CONNTRACK_CHAIN_EVENTS
-static int ct_event_cb(struct notifier_block *this, unsigned long events, void *ptr)
-{
-	struct nf_ct_event *item = ptr;
-#elif LINUX_VERSION_CODE >= KERNEL_VERSION(5, 15, 0)
+if LINUX_VERSION_CODE >= KERNEL_VERSION(5, 15, 0)
 static int ct_event_cb(unsigned int events, const struct nf_ct_event *item)
 {
 #else
@@ -114,7 +106,7 @@ static int ct_event_cb(unsigned int events, struct nf_ct_event *item)
 	return 0;
 }
 
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(5, 15, 0) && !defined(CONFIG_NF_CONNTRACK_CHAIN_EVENTS)
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(5, 15, 0)
 static int exp_event_cb(unsigned int events, const struct nf_exp_event *item)
 {
 	return 0;
@@ -152,16 +144,14 @@ static int nft_fullcone_init(const struct nft_ctx *ctx, const struct nft_expr *e
 	pr_debug("nft_fullcone_init(): module_refer_count is now %d\n", module_refer_count);
 
 	if (module_refer_count == 1) {
-#ifdef CONFIG_NF_CONNTRACK_CHAIN_EVENTS
-		ct_event_notifier.notifier_call = ct_event_cb;
-#elif LINUX_VERSION_CODE >= KERNEL_VERSION(5, 15, 0)
+if LINUX_VERSION_CODE >= KERNEL_VERSION(5, 15, 0)
 		ct_event_notifier.ct_event = ct_event_cb;
 		ct_event_notifier.exp_event = exp_event_cb;
 #else
 		ct_event_notifier.fcn = ct_event_cb;
 #endif
 
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(5, 15, 0) && !defined(CONFIG_NF_CONNTRACK_CHAIN_EVENTS)
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(5, 15, 0)
 		if (!READ_ONCE(ctx->net->ct.nf_conntrack_event_cb)) {
 			nf_conntrack_register_notifier(ctx->net, &ct_event_notifier);
 		}
@@ -253,7 +243,7 @@ static void nft_fullcone_common_destory(const struct nft_ctx *ctx)
 
 	if (module_refer_count == 0) {
 		if (ct_event_notifier_registered) {
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(5, 15, 0) && !defined(CONFIG_NF_CONNTRACK_CHAIN_EVENTS)
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(5, 15, 0)
 			nf_conntrack_unregister_notifier(ctx->net);
 #else
 			nf_conntrack_unregister_notifier(ctx->net, &ct_event_notifier);
