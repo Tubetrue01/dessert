@@ -11,7 +11,6 @@
  *   Massively rewrite the whole module, split the original code into library and nftables 'fullcone' expression module
  */
 #define pr_fmt(fmt) "fullcone " KBUILD_MODNAME ": " fmt
-#define NF_FULLCONE_WORKQUEUE_NAME "fullcone " KBUILD_MODNAME ": wq"
 
 #include <linux/kernel.h>
 #include <linux/init.h>
@@ -98,9 +97,6 @@ static int ct_event_cb(unsigned int events, struct nf_ct_event *item)
 	memcpy(&(dying_tuple_item->tuple_reply), ct_tuple_reply, sizeof(struct nf_conntrack_tuple));
 
 	nf_nat_fullcone_dying_tuple_list_add(&(dying_tuple_item->list));
-
-	if (wq != NULL)
-		queue_delayed_work(wq, &gc_worker_wk, msecs_to_jiffies(100));
 
 	return 0;
 }
@@ -422,12 +418,6 @@ static int __init nft_fullcone_module_init(void)
 		nft_fullcone_module_exit_ipv6();
 		return ret;
 	}
-
-	wq = create_singlethread_workqueue(NF_FULLCONE_WORKQUEUE_NAME);
-	if (wq == NULL) {
-		pr_err("failed to create workqueue %s\n", NF_FULLCONE_WORKQUEUE_NAME);
-	}
-
 	return ret;
 }
 
@@ -436,12 +426,6 @@ static void __exit nft_fullcone_module_exit(void)
 	nft_fullcone_module_exit_ipv6();
 	nft_fullcone_module_exit_inet();
 	nft_unregister_expr(&nft_fullcone_ipv4_type);
-
-	if (wq) {
-		cancel_delayed_work_sync(&gc_worker_wk);
-		flush_workqueue(wq);
-		destroy_workqueue(wq);
-	}
 
 	nf_nat_fullcone_handle_dying_tuples();
 	nf_nat_fullcone_destroy_mappings();
