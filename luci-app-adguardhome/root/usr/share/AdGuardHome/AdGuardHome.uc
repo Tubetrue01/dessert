@@ -111,7 +111,9 @@ function _patch_config(file, key_path, value) {
     if (old === value){
         return false;
     }
-    const cmd = sprintf("yq -i '.%s = \\\"%s\\\"' %s", key_path, value, file);
+
+    const cmd = sprintf("yq -i \".%s = \\\"%s\\\"\" %s", key_path, value, file);
+
     return _exec_sys(cmd);
 }
 
