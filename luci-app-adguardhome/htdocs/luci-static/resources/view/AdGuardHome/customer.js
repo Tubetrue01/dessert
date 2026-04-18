@@ -154,7 +154,6 @@ return view.extend({
 
                 setTimeout(() => {
                     ui.changes.displayStatus(false);
-                    window.location.reload();
                 }, 2000);
             })
             .catch(e => {
