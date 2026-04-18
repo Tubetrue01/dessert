@@ -60,13 +60,13 @@ const callReadLog = rpc.declare({
     object: 'luci.frpc',
     method: 'readLog',
     params: ['filename', "count"],
-    expect: { '': {} }
+    expect: {'': {}}
 });
 
 const callReload = rpc.declare({
     object: 'luci.frpc',
     method: 'reload',
-    expect: { '': {} }
+    expect: {'': {}}
 });
 
 async function loadCodeMirrorResources() {
@@ -148,7 +148,9 @@ return view.extend({
         o.tab('common', _('Common'));
         o.tab('log', _('Logs'));
 
-        o.taboption('common', form.Flag, 'enabled', _('Enable')).default = 1;
+        const enableOpt = o.taboption('common', form.Flag, 'enabled', _('Enable'));
+        enableOpt.rmempty = false;
+        enableOpt.default = '0';
 
         // Update binary
         let logData = [];
@@ -234,98 +236,48 @@ return view.extend({
 
         // Yaml
         let logPath;
-        let editor = null;
-        yaml = o.taboption('common', form.TextValue, 'config', _('Yaml Editor'));
+        let editor;
 
-        yaml.cfgvalue = function (sid) {
-            return fs.read(configPath).then(c => {
-                const content = c || '';
-                try {
-                    const cfg = jsyaml.load(content);
-                    if (cfg?.log?.to) {
-                        logPath = cfg.log.to;
-                    }
-                } catch (e) {
-                    console.error("YAML parse error in cfgvalue:", e);
-                }
-                return content;
-            });
-        };
-
-        yaml.formvalue = function (section_id) {
-            if (editor && editor.state) {
-                return editor.state.doc.toString();
-            }
-            return this.super('formvalue', [section_id]);
-        };
-
-        yaml.write = function (sid, val) {
-            const content = editor ? editor.state.doc.toString() : val;
-            return fs.write(configPath, content.trim() + '\n');
-        };
-
-        yaml.validate = function (sid, val) {
-            const content = editor ? editor.state.doc.toString() : val;
-
-            this.value = content;
-
-            if (!content || !content.trim()) {
-                return ""
-            }
-
-            try {
-                window.jsyaml.load(content);
-            } catch (e) {
-                return ""
-            }
-
-            return true;
-        };
+        yaml = o.taboption('common', form.DummyValue, '_yaml_config', _('Yaml Editor'));
 
         yaml.render = function (sid) {
-            return form.TextValue.prototype.render.apply(this, arguments)
-                .then(node => {
-                    const textarea = node.querySelector('textarea');
-                    const initialValue = textarea.value;
-                    textarea.style.display = 'none';
+            const container = E('div', {'class': 'cm6-container'});
+            container.style.width = "30rem";
+            container.style.maxWidth = "30rem";
+            container.style.overflow = "hidden";
+            container.style.display = "block";
 
-                    const container = document.createElement('div');
-                    container.className = 'cm6-container';
+            fs.read(configPath).then(content => {
+                const initialValue = content || '';
 
-                    container.style.width = "30rem";
-                    container.style.maxWidth = "30rem";
-                    container.style.overflow = "hidden";
-                    container.style.display = "block";
+                try {
+                    const cfg = jsyaml.load(initialValue);
+                    if (cfg?.log?.to) logPath = cfg.log.to;
+                } catch (e) {
+                }
 
-                    textarea.parentNode.insertBefore(container, textarea);
+                if (window.CM6) {
+                    editor = window.CM6.create(container, initialValue);
 
-                    if (window.CM6) {
-                        editor = window.CM6.create(container, initialValue, (content) => {
-                            textarea.value = content;
-                            textarea.setAttribute('value', content);
-                        });
-
-                        const editorEl = container.querySelector('.cm-editor');
-                        if (editorEl) {
-                            editorEl.style.width = "100%";
-                            editorEl.style.maxWidth = "100%";
-                        }
-
-                        const scroller = container.querySelector('.cm-scroller');
-                        if (scroller) {
-                            scroller.style.height = "25rem";
-                            scroller.style.overflow = "auto";
-                        }
-
-                        const contentEl = container.querySelector('.cm-content');
-                        if (contentEl) {
-                            contentEl.style.minWidth = "0";
-                            contentEl.style.overflowWrap = "break-word";
-                        }
+                    const scroller = container.querySelector('.cm-scroller');
+                    if (scroller) {
+                        scroller.style.height = "25rem";
+                        scroller.style.overflow = "auto";
                     }
+                    const contentEl = container.querySelector('.cm-content');
+                    if (contentEl) {
+                        contentEl.style.minWidth = "0";
+                        contentEl.style.overflowWrap = "break-word";
+                    }
+                }
+            });
 
-                    return node;
-                });
+            return E('div', {'class': 'cbi-value'}, [
+                E('label', {'class': 'cbi-value-title'}, _('Yaml Editor')),
+                E('div', {'class': 'cbi-value-field', 'style': 'display:block'}, [
+                    container
+                ])
+            ]);
         };
 
         // Logs
@@ -409,7 +361,7 @@ return view.extend({
                     return;
                 }
 
-                L.resolveDefault(callReadLog(logPath, "200"), {}).then((res)  => {
+                L.resolveDefault(callReadLog(logPath, "200"), {}).then((res) => {
                     const content = (res && res.data) ? res.data.trim() : "";
 
                     if (content === this.lastLogContent) {
@@ -567,6 +519,23 @@ return view.extend({
                 ]);
             };
 
+            const originalParse = m.parse;
+            m.parse = function() {
+                if (editor && editor.state) {
+                    const content = editor.state.doc.toString().trim() + '\n';
+
+                    try {
+                        window.jsyaml.load(content);
+                    } catch (e) {
+                        return Promise.reject(e);
+                    }
+
+                    return fs.write(configPath, content).then(() => {
+                        return originalParse.apply(m, arguments);
+                    });
+                }
+                return originalParse.apply(m, arguments);
+            };
             return m.render();
         });
     },
@@ -577,9 +546,8 @@ return view.extend({
             E('p', _('Starting configuration apply…'))
         );
 
-        return this.map.save().then(() => {
-            return uci.save();
-        }).then(() => uci.changes())
+        return this.map.save()
+            .then(() => uci.changes())
             .then((changes) => {
                 if (changes && Object.keys(changes).length > 0) {
                     return uci.apply();

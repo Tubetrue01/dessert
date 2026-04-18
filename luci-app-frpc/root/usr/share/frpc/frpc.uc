@@ -38,8 +38,8 @@ function _exec_sys(cmd) {
     };
 }
 
-function _uci_get(setction_name, defaultVal) {
-    return uci.get(service_name, service_name, setction_name) || defaultVal;
+function _uci_get(section_name, defaultVal) {
+    return uci.get(service_name, service_name, section_name) || defaultVal;
 }
 
 function _log(msg, log_file) {
