@@ -127,8 +127,8 @@ msgstr "保存失败"
 msgid "Apply default template"
 msgstr "应用默认模版"
 
-msgid "Failed to read the template"
-msgstr "读取模版失败"
+msgid "Failed to read the template: %s"
+msgstr "读取模版失败：%s"
 
 msgid "Local time"
 msgstr "本地时间"
