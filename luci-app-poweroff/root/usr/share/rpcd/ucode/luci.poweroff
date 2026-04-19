@@ -1,0 +1,23 @@
+'use strict';
+
+const fs = require("fs");
+
+const methods = {
+    poweroff: {
+        call: function (req) {
+            const poweroff = "/sbin/poweroff";
+            const stat = fs.stat(poweroff);
+
+            if (stat) {
+               const res = system(poweroff);
+               return {code: 0}
+            } else {
+                return {
+                    code: -1
+                }
+            }
+        }
+    }
+};
+
+return {"luci.poweroff": methods};
