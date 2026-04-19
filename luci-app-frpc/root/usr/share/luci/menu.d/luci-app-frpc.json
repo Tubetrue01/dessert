@@ -3,7 +3,7 @@
     "title": "Frpc",
     "action": {
       "type": "view",
-      "path": "frpc/basic"
+      "path": "frpc/frpc"
     },
     "depends": {
       "acl": [

@@ -3,7 +3,7 @@
     "title": "FileManager",
     "action": {
       "type": "view",
-      "path": "filemanager"
+      "path": "filemanager/filemanager"
     },
     "depends": {
       "acl": [ "luci-app-filemanager" ]
