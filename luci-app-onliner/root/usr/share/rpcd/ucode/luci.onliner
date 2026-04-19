@@ -21,8 +21,9 @@ function get_online_devices() {
         f_h.close();
     }
 
-    const cmd_arp = "ip -4 neighbor show dev br-lan | grep -E 'REACHABLE|STALE' | awk '{for(i=1;i<=NF;i++) if($i==\"lladdr\") print $1, toupper($(i+1))}'";
+    const cmd_arp = "ip -4 neighbor show dev br-lan | grep -E 'REACHABLE|STALE' | sort -V | awk '{for(i=1;i<=NF;i++) if($i==\"lladdr\") print $1, toupper($(i+1))}'";
     const f_a = fs.popen(cmd_arp);
+
     if (f_a) {
         while (true) {
             const line = f_a.read("line");
@@ -68,4 +69,3 @@ const methods = {
 };
 
 return {"luci.onliner": methods};
-
