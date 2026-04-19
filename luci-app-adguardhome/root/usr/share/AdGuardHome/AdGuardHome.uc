@@ -75,7 +75,7 @@ function _log(msg, log_file) {
 function _arch_version_set() {
     const now = time();
 
-    let arch = _uci_get("arch", "auto");
+    const arch = _uci_get("arch", "auto");
 
     if (arch === "auto") {
         const uname = _exec_sys("uname -m").data;
@@ -119,7 +119,7 @@ function _patch_config(file, key_path, value) {
 
 /* ================= Core Download ================= */
 function update_core(log_file) {
-    let links = [];
+    const links = [];
     uci.foreach(service_name, service_name, (s) => {
             if (s[".name"] === "UpdateLinks" && s.url) {
                 if (type(s.url) === "array") {

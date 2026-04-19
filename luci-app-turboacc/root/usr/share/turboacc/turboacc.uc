@@ -45,7 +45,7 @@ function manage_wed(enable) {
         return;
     }
 
-    let modules_conf = fs.readfile("/etc/modules.conf") || "";
+    const modules_conf = fs.readfile("/etc/modules.conf") || "";
 
     if (enable) {
         if (!match(modules_conf, /mt7915e/)) {

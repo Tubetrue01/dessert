@@ -1,21 +1,19 @@
 'use strict';
 
-import { stat, mkdir, rename, chmod, popen } from 'fs';
+import { stat, mkdir, chmod, popen } from 'fs';
 
 function sanitize_path(path) {
-    if (!path || index(path || "", "..") != -1) {
-        return false;
-    }
-    return true;
+    return !(!path || index(path || "", "..") !== -1);
+
 }
 
 function run_cmd(command_array) {
-    if (type(system) == "function") {
+    if (type(system) === "function") {
         return system(command_array);
     }
 
-    let cmd_str = join(" ", command_array);
-    let p = popen(cmd_str);
+    const cmd_str = join(" ", command_array);
+    const p = popen(cmd_str);
 
     if (p) {
         return p.close();
@@ -28,22 +26,22 @@ const methods = {
     install: {
         args: { filename: "filename" },
         call: function(req) {
-            let ipk = req.args.filename;
+            const ipk = req.args.filename;
 
             if (!ipk || !stat(ipk)) {
                 return { code: 1, message: "File not found" };
             }
 
-            let rc = run_cmd(['opkg', 'install', ipk]);
-            return { code: rc, message: (rc == 0 ? "Installation successful" : "Installation failed") };
+            const rc = run_cmd(['opkg', 'install', ipk]);
+            return { code: rc, message: (rc === 0 ? "Installation successful" : "Installation failed") };
         }
     },
 
  rename: {
         args: { oldName: "oldName", newName: "newName" },
         call: function(req) {
-            let old_path = req.args.oldName;
-            let new_path = req.args.newName;
+            const old_path = req.args.oldName;
+            const new_path = req.args.newName;
 
             if (!sanitize_path(old_path) || !sanitize_path(new_path)) {
                 return { code: 255, message: "Security violation: Invalid path" };
@@ -53,7 +51,7 @@ const methods = {
                 return { code: 1, message: "Source file not found" };
             }
 
-            let rc = run_cmd(['mv', old_path, new_path]);
+            const rc = run_cmd(['mv', old_path, new_path]);
 
             if (rc === 0) {
                 chmod(new_path, 0o644);
@@ -66,7 +64,7 @@ const methods = {
     mkdirUpload: {
         args: { uploadPath: "uploadPath" },
         call: function(req) {
-            let up_path = req.args.uploadPath;
+            const up_path = req.args.uploadPath;
 
             if (up_path && mkdir(up_path, 0o755)) {
                 return { code: 0, message: "Directory created" };

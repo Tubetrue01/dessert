@@ -11,7 +11,7 @@ const methods = {
 
             if (ref_cnt > 0) {
                 fp = "Flow Offloading";
-            } else if (ref_cnt == 0 && fs.stat("/sys/kernel/debug/hnat/hnat_version")) {
+            } else if (ref_cnt === 0 && fs.stat("/sys/kernel/debug/hnat/hnat_version")) {
                 fp = "MediaTek HWNAT";
             } else if (fs.stat("/sys/kernel/debug/ecm/ecm_nss_ipv4")) {
                 fp = "QCA-NSS-ECM";

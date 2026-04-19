@@ -48,27 +48,27 @@ const methods = {
                 const res = _exec_sys(`/sbin/logread -l ${count} -e ${service_name}`);
                 return {code: 0, data: res.data};
             } else {
-               if (!filename) {
-                  return { code: 1, data: "No filename" };
-               }
+                if (!filename) {
+                    return {code: 1, data: "No filename"};
+                }
 
-               if (!stat(filename)) {
-                  return { code: 0, data: "" };
-               }
+                if (!stat(filename)) {
+                    return {code: 0, data: ""};
+                }
 
-               const cmd = `tr -d '\\000' < "${filename}" | tail -n ${count}`;
-               const p = popen(cmd, "r");
+                const cmd = `tr -d '\\000' < "${filename}" | tail -n ${count}`;
+                const p = popen(cmd, "r");
 
-               let content = "";
-               if (p) {
-                   content = p.read("all");
-                   p.close();
-               }
+                let content = "";
+                if (p) {
+                    content = p.read("all");
+                    p.close();
+                }
 
-               return {
-                   code: 0,
-                   data: (type(content) === "string") ? trim(content) : ""
-               };
+                return {
+                    code: 0,
+                    data: (type(content) === "string") ? trim(content) : ""
+                };
             }
         }
     },
@@ -94,21 +94,21 @@ const methods = {
     currentVersion: {
         call: function () {
             try {
-                let bin_path = uci.get(service_name, service_name, "bin_path");
+                const bin_path = uci.get(service_name, service_name, "bin_path");
 
                 if (!bin_path || !stat(bin_path)) {
                     return {"code": 1, "data": "missing"};
                 }
 
-                let p = popen(`${bin_path} --version`);
-                let stdout = (p ? p.read("all") : "") || "";
+                const p = popen(`${bin_path} --version`);
+                const stdout = (p ? p.read("all") : "") || "";
 
                 if (p) {
                     p.close();
                 }
 
-                let re = regexp("version\\s+([^\\s,]+)");
-                let m = match(stdout, re);
+                const re = regexp("version\\s+([^\\s,]+)");
+                const m = match(stdout, re);
 
                 return {
                     "code": 0,
@@ -120,17 +120,17 @@ const methods = {
     },
 
     reload: {
-     call: function () {
-           const script_path = "/usr/share/AdGuardHome/AdGuardHome.uc";
-           let res = system(["ucode", script_path, "applyFromYaml"]);
+        call: function () {
+            const script_path = "/usr/share/AdGuardHome/AdGuardHome.uc";
+            const res = system(["ucode", script_path, "applyFromYaml"]);
 
-           if (res === 0) {
-               let restart_res = system("(/etc/init.d/AdGuardHome restart) >/dev/null 2>&1 &");
-               return { code: 0, data: "success" };
-           }
-           return { code: 500, data: "error" };
+            if (res === 0) {
+                const restart_res = system("(/etc/init.d/AdGuardHome restart) >/dev/null 2>&1 &");
+                return {code: 0, data: "success"};
+            }
+            return {code: 500, data: "error"};
         }
-     }
+    }
 };
 
 return {"luci.adguardhome": methods};

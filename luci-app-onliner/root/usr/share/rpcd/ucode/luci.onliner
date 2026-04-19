@@ -9,7 +9,7 @@ function get_online_devices() {
     const f_h = fs.popen("awk '{print toupper($2), $4}' /tmp/dhcp.leases");
     if (f_h) {
         while (true) {
-            let line = f_h.read("line");
+            const line = f_h.read("line");
             if (!line) {
                 break;
             }
