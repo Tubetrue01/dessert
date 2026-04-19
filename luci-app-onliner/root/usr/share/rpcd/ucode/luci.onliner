@@ -1,0 +1,71 @@
+#!/usr/bin/ucode
+
+const fs = require("fs");
+
+function get_online_devices() {
+    const devices = [];
+
+    const hints = {};
+    const f_h = fs.popen("awk '{print toupper($2), $4}' /tmp/dhcp.leases");
+    if (f_h) {
+        while (true) {
+            let line = f_h.read("line");
+            if (!line) {
+                break;
+            }
+            const p = split(trim(line), " ");
+            if (length(p) >= 2) {
+                hints[p[0]] = p[1];
+            }
+        }
+        f_h.close();
+    }
+
+    const cmd_arp = "ip -4 neighbor show dev br-lan | grep -E 'REACHABLE|STALE' | awk '{for(i=1;i<=NF;i++) if($i==\"lladdr\") print $1, toupper($(i+1))}'";
+    const f_a = fs.popen(cmd_arp);
+    if (f_a) {
+        while (true) {
+            const line = f_a.read("line");
+            if (!line) {
+                break;
+            }
+
+            const p = split(trim(line), " ");
+            if (length(p) < 2) {
+                continue;
+            }
+
+            const ip = p[0];
+            const mac = p[1];
+
+            fs.popen(sprintf("ping -q -c 1 -W 1 %s &", ip));
+
+            const hostname = hints[mac] || "?";
+
+            if (hostname === "?") {
+                continue;
+            }
+
+            push(devices, {
+                "hostname": hostname,
+                "ipaddr": ip,
+                "macaddr": mac,
+                "device": "br-lan"
+            });
+        }
+        f_a.close();
+    }
+    return devices;
+}
+
+const methods = {
+    onliner: {
+        call: function () {
+            const data = get_online_devices();
+            return { code: 0, data: data };
+        }
+    }
+};
+
+return {"luci.onliner": methods};
+

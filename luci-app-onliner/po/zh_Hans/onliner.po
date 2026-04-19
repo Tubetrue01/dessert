@@ -1,11 +1,20 @@
 msgid "Online User"
 msgstr "在线用户"
 
-msgid "user online"
-msgstr "客户端"
+msgid "Status"
+msgstr "状态"
 
-msgid "Speed Monitor"
-msgstr "网速监控"
+msgid "Hostname"
+msgstr "主机名"
 
-msgid "There is no one online now."
+msgid "IP Address"
+msgstr "IP 地址"
+
+msgid "MAC Address"
+msgstr "MAC 地址"
+
+msgid "Interface"
+msgstr "接口"
+
+msgid "No devices online"
 msgstr "当前无任何设备在线"

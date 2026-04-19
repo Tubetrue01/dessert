@@ -1,0 +1,12 @@
+{
+  "luci-app-onliner": {
+    "description": "Grant UCI access for luci-app-onliner",
+    "read": {
+      "ubus": {
+        "luci.onliner": [
+          "onliner"
+        ]
+      }
+    }
+  }
+}

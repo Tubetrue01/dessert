@@ -6,20 +6,12 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=luci-app-onliner
-PKG_VERSION:=1.1
-PKG_RELEASE:=5
+PKG_VERSION:=1.0
+PKG_RELEASE:=1
 
 LUCI_TITLE:=LuCI support arp online
-LUCI_DEPENDS:= 
+LUCI_DEPENDS:=
 LUCI_PKGARCH:=all
-
-define Package/luci-app-onliner/postinst
-#!/bin/sh
-	rm -f /tmp/luci-indexcache
-	rm -f /tmp/luci-modulecache/*
-	chmod -R 755 /usr/share/onliner/*
-exit 0
-endef
 
 include $(TOPDIR)/feeds/luci/luci.mk
 
