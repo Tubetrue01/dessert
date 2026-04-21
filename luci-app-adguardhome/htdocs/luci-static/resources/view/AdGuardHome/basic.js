@@ -1,3 +1,5 @@
+// noinspection JSAnnotator
+
 'use strict';
 'require poll';
 'require rpc';
@@ -64,22 +66,20 @@ return view.extend({
 
         // status bar
         s = m.section(form.TypedSection, "status", null);
-
         s.anonymous = true;
+
         s.render = function () {
-            setTimeout(function () {
-                poll.add(function () {
-                    return L.resolveDefault(getServiceStatus())
-                        .then( (running) => {
-                            const view = document.getElementById('serviceStatus');
-                            if (view) {
-                                view.innerHTML = runningStatus(running);
-                            } else {
-                                console.error('Element #serviceStatus not found.');
-                            }
-                        });
-                });
-            }, 100);
+            poll.add(function () {
+                return L.resolveDefault(getServiceStatus())
+                    .then( (running) => {
+                        const view = document.getElementById('serviceStatus');
+                        if (view) {
+                            view.innerHTML = runningStatus(running);
+                        } else {
+                            console.error('Element #serviceStatus not found.');
+                        }
+                    });
+            });
 
             return E('div', { class: 'cbi-section', id: 'status_bar' }, [
                 E('p', { id: 'serviceStatus' }, _('Loading...'))

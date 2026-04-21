@@ -63,30 +63,34 @@ return view.extend({
             ]);
         }
 
-        s = m.section(form.TypedSection, 'irqbalance', _('Snapshot of current IRQs'));
-        s.anonymous = true;
-
         s = m.section(form.NamedSection);
         s.anonymous = true;
+
         s.render = function () {
-            const snapshot = new ui.Textarea(data.slice(0, -1), {
-                id: 'interrupt_snapshot',
+            const snapshot = new ui.Textarea(data.replace(/\n$/, ''), {
                 readonly: true,
                 monospace: true,
-                rows: 20,
+                rows: data.split('\n').length
             });
 
             const node = snapshot.render();
 
-            L.Poll.add(function () {
-                return interrupts().then(function (newData) {
-                    const textAreaEl = document.getElementById('interrupt_snapshot');
-                    if (textAreaEl && newData) {
-                        const realTextArea = textAreaEl.querySelector('textarea') || textAreaEl;
-                        realTextArea.value = newData.trim();
+            L.Poll.add(() => {
+                return interrupts().then(newData => {
+                    if (!newData) return;
+                    const formattedData = newData.replace(/\s+$/, '');
+
+                    snapshot.setValue(formattedData);
+
+                    const el = node.querySelector('textarea');
+                    if (el) {
+                        el.rows = formattedData.split('\n').length;
+                        el.style.whiteSpace = 'pre';
+                        el.style.wordBreak = 'normal';
+                        el.style.width = '100%';
                     }
                 });
-            }, 5);
+            });
 
             return node;
         }

@@ -136,7 +136,7 @@ return view.extend({
                 return getServiceStatus().then(running => {
                     el.innerHTML = renderStatus(running);
                 });
-            }, 2);
+            });
 
             return E('div', {class: 'cbi-section'}, [el]);
         };
