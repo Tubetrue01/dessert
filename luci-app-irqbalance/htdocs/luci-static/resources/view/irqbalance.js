@@ -70,6 +70,7 @@ return view.extend({
         s.anonymous = true;
         s.render = function () {
             const snapshot = new ui.Textarea(data.slice(0, -1), {
+                id: 'interrupt_snapshot',
                 readonly: true,
                 monospace: true,
                 rows: 20,
@@ -79,9 +80,10 @@ return view.extend({
 
             L.Poll.add(function () {
                 return interrupts().then(function (newData) {
-                    const textAreaEl = node.querySelector('textarea');
+                    const textAreaEl = document.getElementById('interrupt_snapshot');
                     if (textAreaEl && newData) {
-                        textAreaEl.value = newData.trim();
+                        const realTextArea = textAreaEl.querySelector('textarea') || textAreaEl;
+                        realTextArea.value = newData.trim();
                     }
                 });
             }, 5);
