@@ -1,0 +1,69 @@
+#: applications/luci-app-irqbalance/htdocs/luci-static/resources/view/irqbalance.js:82
+msgid "Cache level at which irqbalance partitions cache domains."
+msgstr "irqbalance 分区缓存域的缓存级别。"
+
+msgid "Deepest cache"
+msgstr "最深缓存"
+
+msgid "Enable"
+msgstr "启用"
+
+msgid "Exclude CPUs"
+msgstr "排除 CPU"
+
+msgid "Exclude IRQs"
+msgstr "排除中断请求"
+
+msgid "General settings"
+msgstr "常规设置"
+
+msgid "Grant UCI access for luci-app-irqbalance"
+msgstr "授予对 luci-app-irqbalance 的 UCI 权限"
+
+msgid "Interval"
+msgstr "间隔"
+
+msgid "Invalid"
+msgstr "无效"
+
+msgid ""
+"List of CPUs to ignore, can be an integer or integers separated by commas."
+msgstr "要忽略的 CPU 列表，可以是一个整数或用逗号分隔的整数。"
+
+msgid "List of IRQs to ignore."
+msgstr "要忽略的中断请求列表。"
+
+msgid "Loading..."
+msgstr "加载中..."
+
+msgid "NOT RUNNING"
+msgstr "未在运行"
+
+msgid "RUNNING"
+msgstr "运行中"
+
+msgid "Show debug output"
+msgstr "显示调试输出"
+
+msgid "Show debug output in system log."
+msgstr "在系统日志中显示调试输出。"
+
+msgid "Snapshot of current IRQs"
+msgstr "当前中断请求的快照"
+
+msgid ""
+"The purpose of irqbalance is to distribute hardware interrupts across "
+"processors/cores on a multiprocessor/multicore system in order to increase "
+"performance."
+msgstr ""
+"irqbalance 的目的是在多处理器/多核心系统上跨处理器/核心分配硬件中断，以此提高"
+"性能。"
+
+msgid "Valid values: %s."
+msgstr "有效值：%s。"
+
+msgid "Value in seconds."
+msgstr "单位为秒。"
+
+msgid "irqbalance"
+msgstr "中断均衡器"
