@@ -7,6 +7,8 @@
 'require ui';
 'require rpc';
 
+const serviceName = 'irqbalance'
+
 const callServiceList = rpc.declare({
     object: 'service',
     method: 'list',
@@ -15,9 +17,9 @@ const callServiceList = rpc.declare({
 });
 
 function getServiceStatus() {
-    return L.resolveDefault(callServiceList('irqbalance'), {}).then(function (res) {
+    return L.resolveDefault(callServiceList(serviceName), {}).then(function (res) {
         try {
-            return res['irqbalance']['instances']['irqbalance']['running'];
+            return res[serviceName]['instances'][serviceName]['running'];
         } catch (e) {
             return false;
         }
@@ -46,7 +48,7 @@ return view.extend({
             irqNum = data.match(/\b\d+(?=: )/g);
         let m, s, o;
 
-        m = new form.Map('irqbalance', _('irqbalance'), _('The purpose of irqbalance is to distribute hardware interrupts across processors/cores on a multiprocessor/multicore system in order to increase performance.'));
+        m = new form.Map(serviceName, _('irqbalance'), _('The purpose of irqbalance is to distribute hardware interrupts across processors/cores on a multiprocessor/multicore system in order to increase performance.'));
 
         s = m.section(form.NamedSection);
         s.anonymous = true;
@@ -95,7 +97,7 @@ return view.extend({
             return node;
         }
 
-        s = m.section(form.TypedSection, 'irqbalance', _('General settings'));
+        s = m.section(form.TypedSection, serviceName, _('General settings'));
         s.anonymous = true;
 
         o = s.option(form.Flag, 'enabled', _('Enable'));
