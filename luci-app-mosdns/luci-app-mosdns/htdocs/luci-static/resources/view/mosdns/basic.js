@@ -101,18 +101,16 @@ return view.extend({
 		s = m.section(form.TypedSection);
 		s.anonymous = true;
 		s.render = function () {
-			setTimeout(function () {
-				poll.add(function () {
-					return L.resolveDefault(getServiceStatus()).then(function (res) {
-						var view = document.getElementById('service_status');
-						if (view) {
-							view.innerHTML = renderStatus(res);
-						} else {
-							console.error('Element #service_status not found.');
-						}
-					});
-				});
-			}, 100);
+            poll.add(function () {
+                return L.resolveDefault(getServiceStatus()).then(function (res) {
+                    var view = document.getElementById('service_status');
+                    if (view) {
+                        view.innerHTML = renderStatus(res);
+                    } else {
+                        console.error('Element #service_status not found.');
+                    }
+                });
+            });
 
 			return E('div', { class: 'cbi-section', id: 'status_bar' }, [
 				E('p', { id: 'service_status' }, _('Collecting data...'))
