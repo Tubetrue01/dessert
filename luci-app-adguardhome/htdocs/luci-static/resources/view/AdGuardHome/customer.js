@@ -13,7 +13,7 @@ const serviceName = "AdGuardHome";
 const callReload = rpc.declare({
     object: 'luci.adguardhome',
     method: 'reload',
-    expect: { '': {} }
+    expect: {'': {}}
 });
 
 async function loadCodeMirrorResources() {
@@ -24,7 +24,7 @@ async function loadCodeMirrorResources() {
 
     return new Promise((resolve, reject) => {
         const script = document.createElement('script');
-        script.src = bundlePath + '?v=' + (new Date().getTime());
+        script.src = bundlePath;
         script.onload = () => resolve();
         script.onerror = () => reject(new Error("Failed to load CM6 bundle"));
         document.head.appendChild(script);
@@ -49,10 +49,10 @@ return view.extend({
         const o = s.option(form.DummyValue, '_yaml_config', _('YAML configuration content'));
 
         o.render = function (sectionId) {
-            const container = E('div', { 'class': 'cbi-value', 'style': 'display:flex; flex-direction:column; align-items:stretch;' }, [
-                E('label', { 'class': 'cbi-value-title', 'style': 'width:100%; text-align:left; font-weight:bold; margin-bottom:0.5rem;' }, _('YAML configuration content')),
-                E('div', { 'class': 'cbi-value-field', 'style': 'width:100%; padding:0; margin:0;' }, [
-                    E('div', { 'id': 'cm6-editor-holder', 'style': 'width:100%' })
+            const container = E('div', {'class': 'cbi-value', 'style': 'display:flex; flex-direction:column; align-items:stretch;'}, [
+                E('label', {'class': 'cbi-value-title', 'style': 'width:100%; text-align:left; font-weight:bold; margin-bottom:0.5rem;'}, _('YAML configuration content')),
+                E('div', {'class': 'cbi-value-field', 'style': 'width:100%; padding:0; margin:0;'}, [
+                    E('div', {'id': 'cm6-editor-holder', 'style': 'width:100%'})
                 ])
             ]);
 
@@ -109,7 +109,7 @@ return view.extend({
         };
 
         const originalParse = m.parse;
-        m.parse = function() {
+        m.parse = function () {
             if (configEditor && configEditor.state) {
                 const content = configEditor.state.doc.toString().trim() + '\n';
 
@@ -133,32 +133,30 @@ return view.extend({
     },
 
     handleSaveApply: function (ev, mode) {
-        ui.changes.displayStatus(
-            'notice spinning',
-            E('p', _('Starting configuration apply…'))
-        );
-
         return this.map.save()
             .then(() => uci.changes())
             .then(changes => {
                 if (changes && Object.keys(changes).length > 0) {
-                    return uci.apply();
-                }
-            })
-            .then(() => callReload())
-            .then(() => {
-                ui.changes.displayStatus(
-                    'notice',
-                    E('p', _('Configuration changes applied.'))
-                );
+                    return ui.changes.apply(mode === '0');
+                } else {
+                    ui.changes.displayStatus(
+                        'notice spinning',
+                        E('p', _('Starting configuration apply…'))
+                    );
 
-                setTimeout(() => {
-                    ui.changes.displayStatus(false);
-                }, 2000);
-            })
-            .catch(e => {
-                ui.changes.displayStatus(false);
-                ui.addNotification(null, E('p', _('Failed to apply: %s').format(e.message || e)), 'danger');
+                    return callReload().then(() => {
+                        ui.changes.displayStatus(
+                            'notice',
+                            E('p', _('Configuration changes applied.'))
+                        );
+
+                        setTimeout(() => {
+                            ui.changes.displayStatus(false);
+                        }, 1500);
+                    }).catch(e => {
+                        ui.changes.displayStatus(false);
+                    });
+                }
             });
     },
 });

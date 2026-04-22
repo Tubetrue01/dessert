@@ -78,7 +78,7 @@ async function loadCodeMirrorResources() {
 
     return new Promise((resolve, reject) => {
         const script = document.createElement('script');
-        script.src = bundlePath + '?v=' + (new Date().getTime());
+        script.src = bundlePath;
         script.onload = () => {
             resolve();
         };
@@ -541,38 +541,31 @@ return view.extend({
     },
 
     handleSaveApply: function (ev, mode) {
-        ui.changes.displayStatus(
-            'notice spinning',
-            E('p', _('Starting configuration apply…'))
-        );
-
         return this.map.save()
             .then(() => uci.changes())
-            .then((changes) => {
+            .then(changes => {
                 if (changes && Object.keys(changes).length > 0) {
-                    return uci.apply();
-                }
-            }).then(() => {
-                return callReload();
-            }).then(() => {
-                return ui.changes.init();
-            }).then(() => {
-                ui.changes.displayStatus(
-                    'notice',
-                    E('p', _('Configuration changes applied.'))
-                );
+                    return ui.changes.apply(mode === '0');
+                } else {
+                    ui.changes.displayStatus(
+                        'notice spinning',
+                        E('p', _('Starting configuration apply…'))
+                    );
 
-                setTimeout(() => {
-                    ui.changes.displayStatus(false);
-                    window.location.reload();
-                }, 2000);
-            }).catch(e => {
-                ui.changes.displayStatus(false);
-                ui.addNotification(
-                    null,
-                    E('p', _('Failed to apply: %s').format(e.message || e)),
-                    'danger'
-                );
+                    return callReload().then(() => {
+                        ui.changes.displayStatus(
+                            'notice',
+                            E('p', _('Configuration changes applied.'))
+                        );
+
+                        setTimeout(() => {
+                            ui.changes.displayStatus(false);
+                            window.location.reload();
+                        }, 2000);
+                    }).catch(e => {
+                        ui.changes.displayStatus(false);
+                    });
+                }
             });
-    }
+    },
 });
