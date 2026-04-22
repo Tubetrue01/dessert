@@ -133,7 +133,7 @@ return view.extend({
             const el = E('p', {id: 'serviceStatus'}, _('Loading...'));
 
             poll.add(() => {
-                return getServiceStatus().then(running => {
+                return L.resolveDefault(getServiceStatus(), false).then(running => {
                     el.innerHTML = renderStatus(running);
                 });
             });
@@ -273,7 +273,7 @@ return view.extend({
             });
 
             return E('div', {'class': 'cbi-value'}, [
-                E('label', {'class': 'cbi-value-title'}, [ this.title ]),
+                E('label', {'class': 'cbi-value-title'}, [this.title]),
                 E('div', {'class': 'cbi-value-field', 'style': 'display:block'}, [
                     container
                 ])
@@ -520,7 +520,7 @@ return view.extend({
             };
 
             const originalParse = m.parse;
-            m.parse = function() {
+            m.parse = function () {
                 if (editor && editor.state) {
                     const content = editor.state.doc.toString().trim() + '\n';
 

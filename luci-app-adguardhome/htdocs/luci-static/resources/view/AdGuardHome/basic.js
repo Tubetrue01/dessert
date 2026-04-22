@@ -69,21 +69,16 @@ return view.extend({
         s.anonymous = true;
 
         s.render = function () {
+            const el = E('p', {id: 'serviceStatus'}, _('Loading...'));
+
             poll.add(function () {
-                return L.resolveDefault(getServiceStatus())
+                return L.resolveDefault(getServiceStatus(), false)
                     .then( (running) => {
-                        const view = document.getElementById('serviceStatus');
-                        if (view) {
-                            view.innerHTML = runningStatus(running);
-                        } else {
-                            console.error('Element #serviceStatus not found.');
-                        }
+                        el.innerHTML = runningStatus(running);
                     });
             });
 
-            return E('div', { class: 'cbi-section', id: 'status_bar' }, [
-                E('p', { id: 'serviceStatus' }, _('Loading...'))
-            ]);
+            return E('div', { class: 'cbi-section', id: 'status_bar' }, [el]);
         }
 
         s = m.section(form.NamedSection, serviceName, serviceName);

@@ -101,20 +101,15 @@ return view.extend({
 		s = m.section(form.TypedSection);
 		s.anonymous = true;
 		s.render = function () {
+            const el = E('p', { id: 'service_status' }, _('Collecting data...'))
+
             poll.add(function () {
                 return L.resolveDefault(getServiceStatus()).then(function (res) {
-                    var view = document.getElementById('service_status');
-                    if (view) {
-                        view.innerHTML = renderStatus(res);
-                    } else {
-                        console.error('Element #service_status not found.');
-                    }
+                    el.innerHTML = renderStatus(res);
                 });
             });
 
-			return E('div', { class: 'cbi-section', id: 'status_bar' }, [
-				E('p', { id: 'service_status' }, _('Collecting data...'))
-			]);
+			return E('div', { class: 'cbi-section', id: 'status_bar' }, [el]);
 		}
 
 		s = m.section(form.NamedSection, 'config', 'mosdns');
