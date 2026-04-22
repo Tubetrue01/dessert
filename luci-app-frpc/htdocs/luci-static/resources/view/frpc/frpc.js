@@ -273,7 +273,7 @@ return view.extend({
             });
 
             return E('div', {'class': 'cbi-value'}, [
-                E('label', {'class': 'cbi-value-title'}, _('Yaml Editor')),
+                E('label', {'class': 'cbi-value-title'}, [ this.title ]),
                 E('div', {'class': 'cbi-value-field', 'style': 'display:block'}, [
                     container
                 ])
