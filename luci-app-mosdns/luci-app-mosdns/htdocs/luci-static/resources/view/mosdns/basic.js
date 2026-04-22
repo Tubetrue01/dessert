@@ -400,8 +400,9 @@ return view.extend({
             container.style.maxWidth = "40rem";
             container.style.overflow = "hidden";
             container.style.display = "block";
+            container.style.height = "28rem";
 
-            fs.read(configFile).then(content => {
+            return fs.read(configFile).then(content => {
                 const initialValue = content || '';
 
                 try {
@@ -413,7 +414,7 @@ return view.extend({
 
                     const scroller = container.querySelector('.cm-scroller');
                     if (scroller) {
-                        scroller.style.height = "25rem";
+                        scroller.style.height = "28rem";
                         scroller.style.overflow = "auto";
                     }
                     const contentEl = container.querySelector('.cm-content');
@@ -422,19 +423,19 @@ return view.extend({
                         contentEl.style.overflowWrap = "break-word";
                     }
                 }
-            });
 
-            return E('div', {'class': 'cbi-value'}, [
-                E('label', {'class': 'cbi-value-title'}, [ this.title ]),
-                E('div', {'class': 'cbi-value-field'}, [
-                    container,
-                    E('div', {'class': 'cbi-value-description',
-                        'style': 'margin-top: 0.5rem; max-width: 40rem; white-space: normal;'
-                    }, [
-                        _('This is the content of the file \'/etc/mosdns/config_custom.yaml\' from which your MosDNS configuration will be generated. Only accepts configuration content in yaml format.')
+                return E('div', {'class': 'cbi-value'}, [
+                    E('label', {'class': 'cbi-value-title'}, [ this.title ]),
+                    E('div', {'class': 'cbi-value-field'}, [
+                        container,
+                        E('div', {'class': 'cbi-value-description',
+                            'style': 'margin-top: 0.5rem; max-width: 40rem; white-space: normal;'
+                        }, [
+                            _('This is the content of the file \'/etc/mosdns/config_custom.yaml\' from which your MosDNS configuration will be generated. Only accepts configuration content in yaml format.')
+                        ])
                     ])
-                ])
-            ]);
+                ]);
+            });
         };
 
 		o = s.taboption('geodata', form.DynamicList, 'geosite_tags', _('GeoSite Tags'),

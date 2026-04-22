@@ -239,21 +239,22 @@ return view.extend({
         let editor;
 
         yaml = o.taboption('common', form.DummyValue, '_yaml_config', _('Yaml Editor'));
-
         yaml.render = function (sid) {
-            const container = E('div', {'class': 'cm6-container'});
+            const container = E('div', { 'class': 'cm6-container' });
             container.style.width = "30rem";
             container.style.maxWidth = "30rem";
             container.style.overflow = "hidden";
             container.style.display = "block";
+            container.style.height = "25rem";
 
-            fs.read(configPath).then(content => {
+            return fs.read(configPath).then(content => {
                 const initialValue = content || '';
 
                 try {
                     const cfg = jsyaml.load(initialValue);
                     if (cfg?.log?.to) logPath = cfg.log.to;
                 } catch (e) {
+                    console.error("YAML load error:", e);
                 }
 
                 if (window.CM6) {
@@ -270,15 +271,16 @@ return view.extend({
                         contentEl.style.overflowWrap = "break-word";
                     }
                 }
-            });
 
-            return E('div', {'class': 'cbi-value'}, [
-                E('label', {'class': 'cbi-value-title'}, [this.title]),
-                E('div', {'class': 'cbi-value-field', 'style': 'display:block'}, [
-                    container
-                ])
-            ]);
+                return E('div', { 'class': 'cbi-value' }, [
+                    E('label', { 'class': 'cbi-value-title' }, [this.title]),
+                    E('div', { 'class': 'cbi-value-field', 'style': 'display:block' }, [
+                        container
+                    ])
+                ]);
+            }).catch(e => {});
         };
+
 
         // Logs
         const logOption = o.taboption('log', form.TextValue, '_contents', null);
@@ -552,19 +554,21 @@ return view.extend({
                         E('p', _('Starting configuration apply…'))
                     );
 
-                    return callReload().then(() => {
-                        ui.changes.displayStatus(
-                            'notice',
-                            E('p', _('Configuration changes applied.'))
-                        );
+                    return callReload()
+                        .then(() => new Promise(resolve => setTimeout(resolve, 1500)))
+                        .then(() => {
+                            ui.changes.displayStatus(
+                                'notice',
+                                E('p', _('Configuration changes applied.'))
+                            );
 
-                        setTimeout(() => {
+                            setTimeout(() => {
+                                ui.changes.displayStatus(false);
+                                window.location.reload();
+                            }, 1500);
+                        }).catch(e => {
                             ui.changes.displayStatus(false);
-                            window.location.reload();
-                        }, 2000);
-                    }).catch(e => {
-                        ui.changes.displayStatus(false);
-                    });
+                        });
                 }
             });
     },

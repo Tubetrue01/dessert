@@ -52,11 +52,11 @@ return view.extend({
             const container = E('div', {'class': 'cbi-value', 'style': 'display:flex; flex-direction:column; align-items:stretch;'}, [
                 E('label', {'class': 'cbi-value-title', 'style': 'width:100%; text-align:left; font-weight:bold; margin-bottom:0.5rem;'}, _('YAML configuration content')),
                 E('div', {'class': 'cbi-value-field', 'style': 'width:100%; padding:0; margin:0;'}, [
-                    E('div', {'id': 'cm6-editor-holder', 'style': 'width:100%'})
+                    E('div', {'id': 'cm6-editor-holder', 'style': 'width:100%; min-height:40rem'})
                 ])
             ]);
 
-            fs.read(configPath).then(content => {
+            return fs.read(configPath).then(content => {
                 const initialValue = content || '';
                 const editorHolder = container.querySelector('#cm6-editor-holder');
 
@@ -72,9 +72,8 @@ return view.extend({
                         scroller.style.width = "100%";
                     }
                 }
+                return container;
             });
-
-            return container;
         };
 
         const btn = s.option(form.Button, '_apply_template');
