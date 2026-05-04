@@ -1,5 +1,3 @@
-// noinspection JSAnnotator
-
 'use strict';
 'require form';
 'require fs';
@@ -9,7 +7,7 @@
 'require ui';
 'require view';
 
-var callServiceList = rpc.declare({
+const callServiceList = rpc.declare({
 	object: 'service',
 	method: 'list',
 	params: ['name'],
@@ -17,8 +15,8 @@ var callServiceList = rpc.declare({
 });
 
 function getServiceStatus() {
-	return L.resolveDefault(callServiceList('mosdns'), {}).then(function (res) {
-		var isRunning = false;
+	return L.resolveDefault(callServiceList('mosdns'), {}).then(res => {
+		let isRunning = false;
 		try {
 			isRunning = res['mosdns']['instances']['mosdns']['running'];
 		} catch (e) { }
@@ -27,8 +25,8 @@ function getServiceStatus() {
 }
 
 function renderStatus(isRunning) {
-	var spanTemp = '<em><span style="color:%s"><strong>%s %s</strong></span></em>';
-	var renderHTML;
+	const spanTemp = '<em><span style="color:%s"><strong>%s %s</strong></span></em>';
+	let renderHTML;
 	if (isRunning) {
 		renderHTML = spanTemp.format('green', _('MosDNS'), _('RUNNING'));
 	} else {
@@ -39,45 +37,45 @@ function renderStatus(isRunning) {
 }
 
 async function loadCodeMirrorResources() {
-    const bundlePath = '/luci-static/resources/view/mosdns/codemirror6/cm6-yaml-editor.js';
+	const bundlePath = '/luci-static/resources/view/mosdns/codemirror6/cm6-yaml-editor.js';
 
-    if (window.CM6) {
-        return Promise.resolve();
-    }
+	if (window.CM6) {
+		return Promise.resolve();
+	}
 
-    return new Promise((resolve, reject) => {
-        const script = document.createElement('script');
-        script.src = bundlePath;
-        script.onload = () => {
-            resolve();
-        };
-        script.onerror = () => reject(new Error("Failed to load CM6 bundle"));
-        document.head.appendChild(script);
-    });
+	return new Promise((resolve, reject) => {
+		const script = document.createElement('script');
+		script.src = bundlePath;
+		script.onload = () => {
+			resolve();
+		};
+		script.onerror = () => reject(new Error("Failed to load CM6 bundle"));
+		document.head.appendChild(script);
+	});
 }
 
-var callMosdns = rpc.declare({
+const callMosdns = rpc.declare({
 	object: 'luci.mosdns',
 	method: 'get_version',
 	expect: { '': {} }
 });
 
-var callFlushCache = rpc.declare({
+const callFlushCache = rpc.declare({
 	object: 'luci.mosdns',
 	method: 'flush_cache',
 	expect: { '': {} }
 });
 
 return view.extend({
-	load: function () {
+	load() {
 		return Promise.all([
-            loadCodeMirrorResources(),
+			loadCodeMirrorResources(),
 			L.resolveDefault(callMosdns(), null),
 		]);
 	},
 
-	handleFlushCache: function () {
-		return callFlushCache().then(function(res) {
+	handleFlushCache() {
+		return callFlushCache().then(res => {
 			if (res.success) {
 				ui.addNotification(null, E('p', _('Flushing DNS Cache Success.')), 'info');
 			} else {
@@ -86,28 +84,23 @@ return view.extend({
 		});
 	},
 
-		render: function (data) {
-		var m, s, o, v;
-		v = '';
+	render(data) {
+		let m, s, o;
 
-		var version = (data[1] && data[1].version) ? data[1].version : null;
-		if (version) {
-			v = version;
-		}
-		m = new form.Map('mosdns', _('MosDNS') + '&#160;' + v,
+		const version = (data[1] && data[1].version) ? data[1].version : '';
+		m = new form.Map('mosdns', _('MosDNS') + ' ' + version,
 			_('MosDNS is a plugin-based DNS forwarder/traffic splitter.'));
 
-        this.map = m;
 		s = m.section(form.TypedSection);
 		s.anonymous = true;
 		s.render = function () {
-            const el = E('p', { id: 'service_status' }, _('Collecting data...'))
+			const el = E('p', { id: 'service_status' }, _('Collecting data...'))
 
-            poll.add(function () {
-                return L.resolveDefault(getServiceStatus()).then(function (res) {
-                    el.innerHTML = renderStatus(res);
-                });
-            });
+			poll.add(function () {
+				return L.resolveDefault(getServiceStatus()).then(function (res) {
+					el.innerHTML = renderStatus(res);
+				});
+			});
 
 			return E('div', { class: 'cbi-section', id: 'status_bar' }, [el]);
 		}
@@ -115,9 +108,9 @@ return view.extend({
 		s = m.section(form.NamedSection, 'config', 'mosdns');
 
 		s.tab('basic', _('Basic Options'));
-		s.tab("advanced", _("Advanced Options"));
-		s.tab("cloudflare", _("Cloudflare Options"));
-		s.tab("api", _("API Options"));
+		s.tab('advanced', _('Advanced Options'));
+		s.tab('cloudflare', _('Cloudflare Options'));
+		s.tab('api', _('API Options'));
 		s.tab('geodata', _('GeoData Export'));
 
 		/* basic */
@@ -249,13 +242,13 @@ return view.extend({
 		o.depends('configfile', '/var/etc/mosdns.json');
 
 		o = s.taboption('advanced', form.Value, 'idle_timeout', _('Idle Timeout'),
-			_('DoH/TCP/DoT Connection Multiplexing idle timeout (default 30 seconds)'))
+			_('DoH/TCP/DoT Connection Multiplexing idle timeout (default 30 seconds)'));
 		o.datatype = 'and(uinteger,min(1))';
 		o.default = '30';
 		o.depends('configfile', '/var/etc/mosdns.json');
 
 		o = s.taboption('advanced', form.Flag, 'enable_pipeline', _('TCP/DoT Connection Multiplexing'),
-			_('Enable TCP/DoT RFC 7766 new Query Pipelining connection multiplexing mode'))
+			_('Enable TCP/DoT RFC 7766 new Query Pipelining connection multiplexing mode'));
 		o.rmempty = false;
 		o.default = false;
 		o.depends('configfile', '/var/etc/mosdns.json');
@@ -334,15 +327,15 @@ return view.extend({
 		o.default = false;
 
 		o = s.taboption('advanced', form.DynamicList, 'ad_source', _('ADblock Source'),
-			_('When using custom rule sources, please use rule types supported by MosDNS (domain lists).') +
+			_('When using custom rule sources, please use rule types supported by MosDNS (domain list or AdGuardHome rules).') +
 			'<br>' +
 			_('Support for local files, such as: file:///var/mosdns/example.txt'));
 		o.depends('adblock', '1');
 		o.default = 'geosite.dat';
 		o.value('geosite.dat', 'v2ray-geosite');
-		o.value('https://raw.githubusercontent.com/privacy-protection-tools/anti-AD/master/anti-ad-domains.txt', 'anti-AD')
-		o.value('https://raw.githubusercontent.com/Cats-Team/AdRules/main/mosdns_adrules.txt', 'Cats-Team/AdRules')
-		o.value('https://raw.githubusercontent.com/neodevpro/neodevhost/master/domain', 'NEO DEV HOST')
+		o.value('https://raw.githubusercontent.com/privacy-protection-tools/anti-AD/master/anti-ad-domains.txt', 'anti-AD');
+		o.value('https://raw.githubusercontent.com/Cats-Team/AdRules/main/mosdns_adrules.txt', 'Cats-Team/AdRules');
+		o.value('https://raw.githubusercontent.com/neodevpro/neodevhost/master/domain', 'NEO DEV HOST');
 
 		/* cloudflare */
 		o = s.taboption('cloudflare', form.Flag, 'cloudflare', _('Enabled'),
@@ -361,12 +354,10 @@ return view.extend({
 			_('IPv4 CIDR: <a href="https://www.cloudflare.com/ips-v4" target="_blank">https://www.cloudflare.com/ips-v4</a> <br /> IPv6 CIDR: <a href="https://www.cloudflare.com/ips-v6" target="_blank">https://www.cloudflare.com/ips-v6</a>'));
 		o.rows = 15;
 		o.depends('configfile', '/var/etc/mosdns.json');
-		o.cfgvalue = function (section_id) {
-			return fs.trimmed('/etc/mosdns/rule/cloudflare-cidr.txt');
-		};
-		o.write = function (section_id, formvalue) {
-			return this.cfgvalue(section_id).then(function (value) {
-				if (value == formvalue) {
+		o.cfgvalue = section_id => fs.trimmed('/etc/mosdns/rule/cloudflare-cidr.txt');
+		o.write = function(section_id, formvalue) {
+			return this.cfgvalue(section_id).then(value => {
+				if (value === formvalue) {
 					return;
 				}
 				return fs.write('/etc/mosdns/rule/cloudflare-cidr.txt', formvalue.trim().replace(/\r\n/g, '\n') + '\n');
@@ -389,54 +380,54 @@ return view.extend({
 
 		/* configuration */
 		let editor;
-        const configFile = "/etc/mosdns/config_custom.yaml"
+		const configFile = "/etc/mosdns/config_custom.yaml"
 		o = s.taboption('basic', form.DummyValue, '_custom', _('Configuration Editor'));
 		o.rows = 30;
 		o.depends('configfile', configFile);
 
-        o.render = function (sid) {
-            const container = E('div', {'class': 'cm6-container'});
-            container.style.width = "40rem";
-            container.style.maxWidth = "40rem";
-            container.style.overflow = "hidden";
-            container.style.display = "block";
-            container.style.height = "28rem";
+		o.render = function (sid) {
+			const container = E('div', {'class': 'cm6-container'});
+			container.style.width = "40rem";
+			container.style.maxWidth = "40rem";
+			container.style.overflow = "hidden";
+			container.style.display = "block";
+			container.style.height = "28rem";
 
-            return fs.read(configFile).then(content => {
-                const initialValue = content || '';
+			return fs.read(configFile).then(content => {
+				const initialValue = content || '';
 
-                try {
-                    jsyaml.load(initialValue);
-                } catch (e) {}
+				try {
+					jsyaml.load(initialValue);
+				} catch (e) {}
 
-                if (window.CM6) {
-                    editor = window.CM6.create(container, initialValue);
+				if (window.CM6) {
+					editor = window.CM6.create(container, initialValue);
 
-                    const scroller = container.querySelector('.cm-scroller');
-                    if (scroller) {
-                        scroller.style.height = "28rem";
-                        scroller.style.overflow = "auto";
-                    }
-                    const contentEl = container.querySelector('.cm-content');
-                    if (contentEl) {
-                        contentEl.style.minWidth = "0";
-                        contentEl.style.overflowWrap = "break-word";
-                    }
-                }
+					const scroller = container.querySelector('.cm-scroller');
+					if (scroller) {
+						scroller.style.height = "28rem";
+						scroller.style.overflow = "auto";
+					}
+					const contentEl = container.querySelector('.cm-content');
+					if (contentEl) {
+						contentEl.style.minWidth = "0";
+						contentEl.style.overflowWrap = "break-word";
+					}
+				}
 
-                return E('div', {'class': 'cbi-value'}, [
-                    E('label', {'class': 'cbi-value-title'}, [ this.title ]),
-                    E('div', {'class': 'cbi-value-field'}, [
-                        container,
-                        E('div', {'class': 'cbi-value-description',
-                            'style': 'margin-top: 0.5rem; max-width: 40rem; white-space: normal;'
-                        }, [
-                            _('This is the content of the file \'/etc/mosdns/config_custom.yaml\' from which your MosDNS configuration will be generated. Only accepts configuration content in yaml format.')
-                        ])
-                    ])
-                ]);
-            });
-        };
+				return E('div', {'class': 'cbi-value'}, [
+					E('label', {'class': 'cbi-value-title'}, [ this.title ]),
+					E('div', {'class': 'cbi-value-field'}, [
+						container,
+						E('div', {'class': 'cbi-value-description',
+							'style': 'margin-top: 0.5rem; max-width: 40rem; white-space: normal;'
+						}, [
+							_('This is the content of the file \'/etc/mosdns/config_custom.yaml\' from which your MosDNS configuration will be generated. Only accepts configuration content in yaml format.')
+						])
+					])
+				]);
+			});
+		};
 
 		o = s.taboption('geodata', form.DynamicList, 'geosite_tags', _('GeoSite Tags'),
 			_('Enter the GeoSite.dat category to be exported, Allow add multiple tags'),
@@ -448,54 +439,53 @@ return view.extend({
 			_('Export directory: /var/mosdns'));
 		o.depends('configfile', '/etc/mosdns/config_custom.yaml');
 
+		const originalParse = m.parse;
+		m.parse = function() {
+			if (editor && editor.state) {
+				const content = editor.state.doc.toString().trim() + '\n';
 
-        const originalParse = m.parse;
-        m.parse = function() {
-            if (editor && editor.state) {
-                const content = editor.state.doc.toString().trim() + '\n';
+				try {
+					window.jsyaml.load(content);
+				} catch (e) {
+					return Promise.reject(e);
+				}
 
-                try {
-                    window.jsyaml.load(content);
-                } catch (e) {
-                    return Promise.reject(e);
-                }
-
-                return fs.write(configFile, content).then(() => {
-                    return originalParse.apply(m, arguments);
-                });
-            }
-            return originalParse.apply(m, arguments);
-        };
+				return fs.write(configFile, content).then(() => {
+					return originalParse.apply(m, arguments);
+				});
+			}
+			return originalParse.apply(m, arguments);
+		};
 
 		return m.render();
 	},
 
-    handleSaveApply: function (ev, mode) {
-        return this.map.save()
-            .then(() => uci.changes())
-            .then((changes) => {
-                if (changes && Object.keys(changes).length > 0) {
-                    return ui.changes.apply(mode === '0');
-                } else {
-                    ui.changes.displayStatus(
-                        'notice spinning',
-                        E('p', _('Starting configuration apply…'))
-                    );
-                    return fs.exec('/etc/init.d/mosdns', ['restart'])
-                        .then(() => {
-                            ui.changes.displayStatus(
-                                'notice',
-                                E('p', _('Configuration changes applied.'))
-                            );
+	handleSaveApply(ev, mode) {
+		return this.map.save()
+			.then(() => uci.changes())
+			.then((changes) => {
+				if (changes && Object.keys(changes).length > 0) {
+					return ui.changes.apply(mode === '0');
+				} else {
+					ui.changes.displayStatus(
+						'notice spinning',
+						E('p', _('Starting configuration apply…'))
+					);
+					return fs.exec('/etc/init.d/mosdns', ['restart'])
+						.then(() => {
+							ui.changes.displayStatus(
+								'notice',
+								E('p', _('Configuration changes applied.'))
+							);
 
-                            setTimeout(() => {
-                                ui.changes.displayStatus(false);
-                                window.location.reload();
-                            }, 1500);
-                        }).catch(e => {
-                            ui.changes.displayStatus(false);
-                        });
-                }
-            })
-    }
+							setTimeout(() => {
+								ui.changes.displayStatus(false);
+								window.location.reload();
+							}, 1500);
+						}).catch(e => {
+							ui.changes.displayStatus(false);
+						});
+				}
+			})
+	}
 });
