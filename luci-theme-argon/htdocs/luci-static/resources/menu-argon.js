@@ -1,3 +1,5 @@
+// noinspection JSAnnotator
+
 'use strict';
 'require baseclass';
 'require ui';
@@ -27,7 +29,7 @@ const SlideAnimations = {
 	 * @param {string|number} duration - Animation duration ('fast', 'normal', 'slow' or milliseconds)
 	 * @param {function} callback - Optional callback function when animation completes
 	 */
-	slideDown: function(element, duration, callback) {
+	slideDown(element, duration, callback) {
 		if (!element) {
 			console.warn('SlideAnimations.slideDown: No element provided');
 			return;
@@ -93,7 +95,7 @@ const SlideAnimations = {
 	 * @param {string|number} duration - Animation duration ('fast', 'normal', 'slow' or milliseconds)
 	 * @param {function} callback - Optional callback function when animation completes
 	 */
-	slideUp: function(element, duration, callback) {
+	slideUp(element, duration, callback) {
 		if (!element) {
 			console.warn('SlideAnimations.slideUp: No element provided');
 			return;
@@ -157,7 +159,7 @@ const SlideAnimations = {
 	 * Stop all running animations on an element
 	 * @param {Element} element - DOM element to stop animations on
 	 */
-	stop: function(element) {
+	stop(element) {
 		if (!element) return;
 		
 		const animationData = this.runningAnimations.get(element);
@@ -181,7 +183,7 @@ const SlideAnimations = {
 	 * @param {Element} element - DOM element to check
 	 * @returns {boolean} - True if element has running animation
 	 */
-	isAnimating: function(element) {
+	isAnimating(element) {
 		return this.runningAnimations.has(element);
 	}
 };
@@ -203,15 +205,15 @@ return baseclass.extend({
 	 * Main render function for the menu system
 	 * @param {Object} tree - Menu tree structure from LuCI
 	 */
-	render: function (tree) {
-		var node = tree;
-		var url = '';
+	render(tree) {
+        let node = tree;
+        let url = '';
 
-		this.renderModeMenu(node);
+        this.renderModeMenu(node);
 
 		// Render tab menu if we're deep enough in the navigation hierarchy
 		if (L.env.dispatchpath.length >= 3) {
-			for (var i = 0; i < 3 && node; i++) {
+			for (let i = 0; i < 3 && node; i++) {
 				node = node.children[L.env.dispatchpath[i]];
 				url = url + (url ? '/' : '') + L.env.dispatchpath[i];
 			}
@@ -222,10 +224,10 @@ return baseclass.extend({
 		}
 
 		// Attach event listeners for sidebar toggle functionality
-		var sidebarToggle = document.querySelector('a.showSide');
-		var darkMask = document.querySelector('.darkMask');
-		
-		if (sidebarToggle) {
+        const sidebarToggle = document.querySelector('a.showSide');
+        const darkMask = document.querySelector('.darkMask');
+
+        if (sidebarToggle) {
 			sidebarToggle.addEventListener('click', ui.createHandlerFn(this, 'handleSidebarToggle'));
 		}
 		if (darkMask) {
@@ -238,15 +240,15 @@ return baseclass.extend({
 	 * Manages the sliding animation and active states of menu items
 	 * @param {Event} ev - Click event from menu item
 	 */
-	handleMenuExpand: function (ev) {
-		var target = ev.target;
-		var slide = target.parentNode;
-		var slideMenu = target.nextElementSibling;
-		var shouldCollapse = false;
+	handleMenuExpand(ev) {
+        const target = ev.target;
+        const slide = target.parentNode;
+        const slideMenu = target.nextElementSibling;
+        let shouldCollapse = false;
 
-		// Close all currently active submenus
-		var activeMenus = document.querySelectorAll('.main .main-left .nav > li > ul.active');
-		activeMenus.forEach(function (ul) {
+        // Close all currently active submenus
+        const activeMenus = document.querySelectorAll('.main .main-left .nav > li > ul.active');
+        activeMenus.forEach(function (ul) {
 			// Stop any running animations and slide up
 			SlideAnimations.stop(ul);
 			// Remove active classes immediately when starting slideUp animation
@@ -268,8 +270,8 @@ return baseclass.extend({
 		// Open the submenu if it's not already open
 		if (!shouldCollapse) {
 			// Find the slide menu within the slide element
-			var slideMenuElement = slide.querySelector(".slide-menu");
-			if (slideMenuElement) {
+            const slideMenuElement = slide.querySelector(".slide-menu");
+            if (slideMenuElement) {
 				// Add active classes immediately when starting slideDown animation
 				slideMenu.classList.add('active');
 				target.classList.add('active');
@@ -291,56 +293,56 @@ return baseclass.extend({
 	 * @param {number} level - Current nesting level (0-based)
 	 * @returns {Element} - Generated menu element
 	 */
-	renderMainMenu: function (tree, url, level) {
-		var currentLevel = (level || 0) + 1;
-		var menuContainer = E('ul', { 'class': level ? 'slide-menu' : 'nav' });
-		var children = ui.menu.getChildren(tree);
+	renderMainMenu(tree, url, level) {
+        const currentLevel = (level || 0) + 1;
+        const menuContainer = E('ul', {'class': level ? 'slide-menu' : 'nav'});
+        const children = ui.menu.getChildren(tree);
 
-		// Don't render empty menus or menus deeper than 2 levels
+        // Don't render empty menus or menus deeper than 2 levels
 		if (children.length === 0 || currentLevel > 2) {
 			return E([]);
 		}
 
 		// Generate menu items for each child
-		for (var i = 0; i < children.length; i++) {
-			var child = children[i];
-			var isActive = (
-				(L.env.dispatchpath[currentLevel] === child.name) && 
-				(L.env.dispatchpath[currentLevel - 1] === tree.name)
-			);
-			
-			// Recursively render submenu
-			var submenu = this.renderMainMenu(child, url + '/' + child.name, currentLevel);
-			var hasChildren = submenu.children.length > 0;
-			
-			// Determine CSS classes based on state
-			var slideClass = hasChildren ? 'slide' : null;
-			var menuClass = hasChildren ? 'menu' : 'food';
-			
-			if (isActive) {
+		for (let i = 0; i < children.length; i++) {
+            const child = children[i];
+            const isActive = (
+                (L.env.dispatchpath[currentLevel] === child.name) &&
+                (L.env.dispatchpath[currentLevel - 1] === tree.name)
+            );
+
+            // Recursively render submenu
+            const submenu = this.renderMainMenu(child, url + '/' + child.name, currentLevel);
+            const hasChildren = submenu.children.length > 0;
+
+            // Determine CSS classes based on state
+            let slideClass = hasChildren ? 'slide' : null;
+            let menuClass = hasChildren ? 'menu' : 'food';
+
+            if (isActive) {
 				menuContainer.classList.add('active');
 				slideClass += " active";
 				menuClass += " active";
 			}
 
 			// Create menu item with link and submenu
-			var menuItem = E('li', { 'class': slideClass }, [
-				E('a', {
-					'href': L.url(url, child.name),
-					'click': (currentLevel === 1) ? ui.createHandlerFn(this, 'handleMenuExpand') : null,
-					'class': menuClass,
-					'data-title': child.title.replace(/ /g, "_"), // More robust space replacement
-				}, [_(child.title)]),
-				submenu
-			]);
-			
-			menuContainer.appendChild(menuItem);
+            const menuItem = E('li', {'class': slideClass}, [
+                E('a', {
+                    'href': L.url(url, child.name),
+                    'click': (currentLevel === 1) ? ui.createHandlerFn(this, 'handleMenuExpand') : null,
+                    'class': menuClass,
+                    'data-title': child.title.replace(/ /g, "_"), // More robust space replacement
+                }, [_(child.title)]),
+                submenu
+            ]);
+
+            menuContainer.appendChild(menuItem);
 		}
 
 		// Append to main menu container if this is the top level
 		if (currentLevel === 1) {
-			var mainMenuElement = document.querySelector('#mainmenu');
-			if (mainMenuElement) {
+            const mainMenuElement = document.querySelector('#mainmenu');
+            if (mainMenuElement) {
 				mainMenuElement.appendChild(menuContainer);
 				mainMenuElement.style.display = '';
 			}
@@ -349,13 +351,13 @@ return baseclass.extend({
 		return menuContainer;
 	},
 
-	renderModeMenu: function (tree) {
-		var menu = document.querySelector('#modemenu');
-		var children = ui.menu.getChildren(tree);
+	renderModeMenu(tree) {
+        const menu = document.querySelector('#modemenu');
+        const children = ui.menu.getChildren(tree);
 
-		for (var i = 0; i < children.length; i++) {
-			var isActive = (L.env.requestpath.length ? children[i].name == L.env.requestpath[0] : i == 0);
-			if (i > 0)
+        for (let i = 0; i < children.length; i++) {
+            const isActive = (L.env.requestpath.length ? children[i].name == L.env.requestpath[0] : i == 0);
+            if (i > 0)
 				menu.appendChild(E([], ['\u00a0|\u00a0']));
 			menu.appendChild(E('li', {}, [
 				E('a', {
@@ -378,30 +380,30 @@ return baseclass.extend({
 	 * @param {number} level - Current nesting level (0-based)
 	 * @returns {Element} - Generated tab menu element
 	 */
-	renderTabMenu: function (tree, url, level) {
-		var container = document.querySelector('#tabmenu');
-		var currentLevel = (level || 0) + 1;
-		var tabContainer = E('ul', { 'class': 'tabs' });
-		var children = ui.menu.getChildren(tree);
-		var activeNode = null;
+	renderTabMenu(tree, url, level) {
+        const container = document.querySelector('#tabmenu');
+        const currentLevel = (level || 0) + 1;
+        const tabContainer = E('ul', {'class': 'tabs'});
+        const children = ui.menu.getChildren(tree);
+        let activeNode = null;
 
-		// Don't render empty tab menus
+        // Don't render empty tab menus
 		if (children.length === 0) {
 			return E([]);
 		}
 
 		// Generate tab items for each child
-		for (var i = 0; i < children.length; i++) {
-			var child = children[i];
-			var isActive = (L.env.dispatchpath[currentLevel + 2] === child.name);
-			var activeClass = isActive ? ' active' : '';
-			var className = 'tabmenu-item-%s %s'.format(child.name, activeClass);
+		for (let i = 0; i < children.length; i++) {
+            const child = children[i];
+            const isActive = (L.env.dispatchpath[currentLevel + 2] === child.name);
+            const activeClass = isActive ? ' active' : '';
+            const className = 'tabmenu-item-%s %s'.format(child.name, activeClass);
 
-			var tabItem = E('li', { 'class': className }, [
-				E('a', { 'href': L.url(url, child.name) }, [_(child.title)])
-			]);
-			
-			tabContainer.appendChild(tabItem);
+            const tabItem = E('li', {'class': className}, [
+                E('a', {'href': L.url(url, child.name)}, [_(child.title)])
+            ]);
+
+            tabContainer.appendChild(tabItem);
 
 			// Store reference to active node for recursive rendering
 			if (isActive) {
@@ -416,8 +418,8 @@ return baseclass.extend({
 
 			// Recursively render nested tab menus if there's an active node
 			if (activeNode) {
-				var nestedTabs = this.renderTabMenu(activeNode, url + '/' + activeNode.name, currentLevel);
-				if (nestedTabs.children.length > 0) {
+                const nestedTabs = this.renderTabMenu(activeNode, url + '/' + activeNode.name, currentLevel);
+                if (nestedTabs.children.length > 0) {
 					container.appendChild(nestedTabs);
 				}
 			}
@@ -431,13 +433,13 @@ return baseclass.extend({
 	 * Toggles the mobile/responsive sidebar menu visibility
 	 * @param {Event} ev - Click event from sidebar toggle button or dark mask
 	 */
-	handleSidebarToggle: function (ev) {
-		var showSideButton = document.querySelector('a.showSide');
-		var sidebar = document.querySelector('#mainmenu');
-		var darkMask = document.querySelector('.darkMask');
-		var scrollbarArea = document.querySelector('.main-right');
+	handleSidebarToggle(ev) {
+        const showSideButton = document.querySelector('a.showSide');
+        const sidebar = document.querySelector('#mainmenu');
+        const darkMask = document.querySelector('.darkMask');
+        const scrollbarArea = document.querySelector('.main-right');
 
-		// Check if any required elements are missing
+        // Check if any required elements are missing
 		if (!showSideButton || !sidebar || !darkMask || !scrollbarArea) {
 			console.warn('Sidebar toggle elements not found');
 			return;

@@ -1,3 +1,5 @@
+// noinspection JSAnnotator
+
 'use strict';
 
 'require ui';
@@ -65,13 +67,13 @@ const upload_path="/tmp/upload"
 const tmp_file="upload_tmp.tmp"
 
 return L.view.extend({
-    load: function() {
+    load() {
         return Promise.all([
             L.resolveDefault(callMkdir(upload_path), {}),
         ]);
     },
 
-    render: function(data) {
+    render(data) {
         const _this = this;
 
         _this.handleSaveApply = null;

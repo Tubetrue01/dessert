@@ -22,7 +22,7 @@ let confirmedOnce = false;
 
 return L.view.extend({
 
-    render: function () {
+    render() {
         return E('div', {'class': 'cbi-map'}, [
             E('h2', _('PowerOff')),
             E('hr'),
@@ -34,13 +34,13 @@ return L.view.extend({
             E('div', {'class': 'cbi-page-actions'}, [
                 E('button', {
                     'class': 'cbi-button cbi-button-reset important',
-                    'click': ui.createHandlerFn(this, 'handlePoweroff')
+                    'click': ui.createHandlerFn(this, 'handlePowerOff')
                 }, [_('Proceed')])
             ])
         ]);
     },
 
-    handlePoweroff: function (ev) {
+    handlePowerOff(ev) {
         return getChanges().then(changes => {
             if (!confirmedOnce && changes && Object.keys(changes).length > 0) {
                 ui.addNotification(null, E('p', _('Warning: There are unsaved changes that will get lost on poweroff!')), 'danger');

@@ -45,10 +45,10 @@ const formatLocalTime = (text) => {
 return L.view.extend({
     lastLogContent: "",
 
-    load: function () {
+    load() {
         return uci.load(serviceName);
     },
-    render: function () {
+    render() {
         const logPath = uci.get(serviceName, serviceName, 'log_file');
         const m = new form.Map(serviceName, null);
         const s = m.section(form.NamedSection, serviceName, serviceName);

@@ -14,7 +14,7 @@ const callOnliner = rpc.declare({
 });
 
 return view.extend({
-    render: function () {
+    render() {
         const table = E('table', { 'class': 'table cbi-section-table', 'id': 'onliner_table' }, [
             E('tr', { 'class': 'tr cbi-section-table-titles' }, [
                 E('th', { 'class': 'th' }, _('Hostname')),

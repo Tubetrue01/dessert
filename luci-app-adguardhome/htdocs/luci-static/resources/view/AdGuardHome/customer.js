@@ -32,14 +32,14 @@ async function loadCodeMirrorResources() {
 }
 
 return view.extend({
-    load: function () {
+    load() {
         return Promise.all([
             loadCodeMirrorResources(),
             uci.load(serviceName)
         ]);
     },
 
-    render: function (data) {
+    render(data) {
         const configPath = uci.get(serviceName, serviceName, 'config_path');
         const m = new form.Map(serviceName, null);
         const s = m.section(form.NamedSection, serviceName, serviceName);
@@ -131,7 +131,7 @@ return view.extend({
         return m.render();
     },
 
-    handleSaveApply: function (ev, mode) {
+    handleSaveApply(ev, mode) {
         return this.map.save()
             .then(() => uci.changes())
             .then(changes => {

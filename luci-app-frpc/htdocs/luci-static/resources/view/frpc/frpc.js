@@ -109,7 +109,7 @@ const renderStatus = (running) => {
 
 return view.extend({
 
-    load: function () {
+    load() {
         return Promise.all([
             loadCodeMirrorResources(),
             uci.load(serviceName),
@@ -117,7 +117,7 @@ return view.extend({
         ]);
     },
 
-    render: function (data) {
+    render(data) {
         const currentVersion = data[2]?.data || "unknown";
         let m, s, o, yaml;
 
@@ -542,7 +542,7 @@ return view.extend({
         });
     },
 
-    handleSaveApply: function (ev, mode) {
+    handleSaveApply(ev, mode) {
         return this.map.save()
             .then(() => uci.changes())
             .then(changes => {

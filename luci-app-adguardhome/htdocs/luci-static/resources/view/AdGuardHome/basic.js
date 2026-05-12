@@ -51,13 +51,13 @@ const runningStatus = (isRunning) => {
 }
 
 return view.extend({
-    load: function () {
+    load() {
         return Promise.all([
             L.resolveDefault(callCurrentVersion(), {})
         ]);
     },
 
-    render: function (data) {
+    render(data) {
         const currentVersion = data[0].data;
         let m, s, o, v;
 

@@ -1,3 +1,5 @@
+// noinspection JSAnnotator
+
 'use strict';
 'require form';
 'require fs';
@@ -6,32 +8,32 @@
 'require ui';
 'require view';
 
-var callAvailSpace = rpc.declare({
+const callAvailSpace = rpc.declare({
 	object: 'luci.argon',
 	method: 'avail'
 });
 
-var callRemoveArgon = rpc.declare({
+const callRemoveArgon = rpc.declare({
 	object: 'luci.argon',
 	method: 'remove',
 	params: ['filename'],
 	expect: { '': {} }
 });
 
-var callRenameArgon = rpc.declare({
+const callRenameArgon = rpc.declare({
 	object: 'luci.argon',
 	method: 'rename',
 	params: ['newname'],
 	expect: { '': {} }
 });
 
-var bg_path = '/www/luci-static/argon/background/';
+const bg_path = '/www/luci-static/argon/background/';
 
-var trans_set = [0, 0.1, 0.2, 0.3, 0.4,
+const trans_set = [0, 0.1, 0.2, 0.3, 0.4,
 	0.5, 0.6, 0.7, 0.8, 0.9, 1 ];
 
 return view.extend({
-	load: function() {
+	load() {
 		return Promise.all([
 			uci.load('argon'),
 			L.resolveDefault(callAvailSpace(), {}),
@@ -39,8 +41,9 @@ return view.extend({
 		]);
 	},
 
-	render: function(data) {
-		var m, s, o;
+	render(data) {
+		let i;
+        let m, s, o;
 
 		m = new form.Map('argon', _('Argon theme configuration'),
 			_('Here you can set the blur and transparency of the login page of argon theme, and manage the background pictures and videos. Chrome is recommended.'));
@@ -76,7 +79,7 @@ return view.extend({
 
 		o = s.option(form.ListValue, 'transparency', _('[Light mode] Transparency'),
 			_('0 transparent - 1 opaque (suggest: transparent: 0 or translucent preset: 0.5).'));
-		for (var i of trans_set)
+		for (i of trans_set)
 			o.value(i);
 		o.default = '0.5';
 		o.rmempty = false;
@@ -100,7 +103,7 @@ return view.extend({
 
 		o = s.option(form.ListValue, 'transparency_dark', _('[Dark mode] Transparency'),
 			_('0 transparent - 1 opaque (suggest: black translucent preset: 0.5).'));
-		for (var i of trans_set)
+		for (i of trans_set)
 			o.value(i);
 		o.default = '0.5';
 		o.rmempty = false;
@@ -130,8 +133,8 @@ return view.extend({
 		o.inputstyle = 'action';
 		o.inputtitle = _('Upload...');
 		o.onclick = function(ev, section_id) {
-			var file = '/tmp/argon_background.tmp';
-			return ui.uploadFile(file, ev.target).then(function(res) {
+            const file = '/tmp/argon_background.tmp';
+            return ui.uploadFile(file, ev.target).then(function(res) {
 				return L.resolveDefault(callRenameArgon(res.name), {}).then(function(ret) {
 					if (ret.result === 0)
 						return location.reload();
@@ -147,16 +150,16 @@ return view.extend({
 
 		s = m.section(form.TableSection);
 		s.render = function() {
-			var tbl = E('table', { 'class': 'table cbi-section-table' },
-				E('tr', { 'class': 'tr table-titles' }, [
-					E('th', { 'class': 'th' }, [ _('Filename') ]),
-					E('th', { 'class': 'th' }, [ _('Modified date') ]),
-					E('th', { 'class': 'th' }, [ _('Size') ]),
-					E('th', { 'class': 'th' }, [ _('Action') ])
-				])
-			);
+            const tbl = E('table', {'class': 'table cbi-section-table'},
+                E('tr', {'class': 'tr table-titles'}, [
+                    E('th', {'class': 'th'}, [_('Filename')]),
+                    E('th', {'class': 'th'}, [_('Modified date')]),
+                    E('th', {'class': 'th'}, [_('Size')]),
+                    E('th', {'class': 'th'}, [_('Action')])
+                ])
+            );
 
-			cbi_update_table(tbl, data[2].map(L.bind(function(file) {
+            cbi_update_table(tbl, data[2].map(L.bind(function(file) {
 				return [
 					file.name,
 					new Date(file.mtime * 1000).toLocaleString(),

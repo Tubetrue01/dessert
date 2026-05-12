@@ -126,7 +126,7 @@ return view.extend({
             return true;
         }
 
-        o = s.option(form.DynamicList, 'banirq', _('Exclude IRQs'), _('List of IRQs to ignore.') + '<br />' + _('Valid values: %s.').format(irqNum.join(', ')));
+        o = s.option(form.DynamicList, 'banirq', _('Exclude IRQs'), _('List of IRQs to ignore.') + '<br>' + _('Valid values: %s.').format(irqNum.join(', ')));
         o.placeholder = '36';
         o.datatype = 'uinteger';
         o.optional = true;
