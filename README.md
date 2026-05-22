@@ -57,12 +57,12 @@ We believe that managing your router shouldn't be a chore—it should be a treat
 ### Enjoy your modern OpenWrt journey! 🚀
 
 ### luci-app-filemanager
-![Image Alt Text](luci-app-filemanager/img/preview.png)
+![Image Alt Text](applications/luci-app-filemanager/img/preview.png)
 
 ### luci-app-adguardhome
-![Image Alt Text](luci-app-adguardhome/img/preview.png)
-![Image Alt Text](luci-app-adguardhome/img/preview-2.png)
-![Image Alt Text](luci-app-adguardhome/img/preview-3.png)
+![Image Alt Text](applications/luci-app-adguardhome/img/preview.png)
+![Image Alt Text](applications/luci-app-adguardhome/img/preview-2.png)
+![Image Alt Text](applications/luci-app-adguardhome/img/preview-3.png)
 
 ### luci-app-fprc
-![Image Alt Text](luci-app-frpc/img/preview.png)
+![Image Alt Text](applications/luci-app-frpc/img/preview.png)
