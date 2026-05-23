@@ -74,12 +74,12 @@ return L.view.extend({
     render(data) {
         const body = E('div', {'class': 'cbi-map'}, []);
 
-        const updateTitle = E("h2", _('Upload'));
+        const updateTitle = E("h2", {}, [_('Upload')]);
 
         let fileInput = null;
 
         const uploadSection = E('div', {'class': 'cbi-section'}, [
-            E('div', {'class': 'cbi-section-descr'}, _('Support uploading and installation of files in the /tmp directory')),
+            E('div', {'class': 'cbi-section-descr'}, [_('Support uploading and installation of files in the /tmp directory')]),
 
             E('div',
                 {
@@ -90,20 +90,20 @@ return L.view.extend({
                     E('label', {
                         'class': 'cbi-value',
                         'style': 'display:inline-block; width: 8rem; padding-bottom: 1rem',
-                    }, _('Select a file:')),
+                    }, [_('Select a file:')]),
 
                     E('input', {
                         'type': 'file',
                         'class': 'cbi-input-file',
                         'style': 'width: 25rem',
                         'change': function (ev) {
-                            fileInput = ev.target.files[0]
+                            fileInput = ev.target.files[0];
                         }
                     }),
 
                     E('button', {
-                        class: 'cbi-button cbi-input-apply',
-                        click: function () {
+                        'class': 'cbi-button cbi-input-apply',
+                        'click': function () {
                             if (!fileInput) {
                                 return;
                             }
@@ -121,24 +121,26 @@ return L.view.extend({
                                         `${upload_path}/${tmp_file}`, `${upload_path}/${fileInput.name}`)
                                     , {}).then(function (ret) {
                                     if (ret.code === 0) {
-                                        ui.addNotification(null, E('p', _('Upload Success')));
+                                        ui.addNotification(null, E('p', [_('Upload Success')]));
                                         fetchTableFiles();
                                     } else {
-                                        ui.addNotification(null, E('p', _('Failed to upload file')));
+                                        ui.addNotification(null, E('p', [_('Failed to upload file')]));
                                     }
                                 });
                             }).catch(function (err) {
-                                ui.addNotification(null, E('p', err.message));
+                                ui.addNotification(null, E('p', [err.message]));
                             });
                         }
-                    }, _('Upload'))
+                    }, [_('Upload')])
                 ]),
         ]);
 
-        const downloadTitle = E('h2', _('Download'));
+        const downloadTitle = E('h2', {}, [_('Download')]);
+
+        let downloadInput = null;
 
         const downloadSection = E('div', {'class': 'cbi-section'}, [
-            E('div', {'class': 'cbi-section-descr'}, _('Download File')),
+            E('div', {'class': 'cbi-section-descr'}, [_('Download File')]),
 
             E('div', {
                 'class': 'cbi-section-node',
@@ -148,15 +150,14 @@ return L.view.extend({
                 E('label', {
                     'class': 'cbi-value',
                     'style': 'display:inline-block; width: 8rem; padding-bottom: 1rem',
-                }, _('Root directory:')),
-
+                }, [_('Root directory:')]),
 
                 E('input', {
                     'type': 'text',
-                    'class': 'cbi-input-file',
+                    'class': 'cbi-input-text',
                     'style': 'width: 25rem',
                     'change': function (ev) {
-                        fileInput = ev.target.value;
+                        downloadInput = ev.target.value;
                     }
                 }),
 
@@ -165,11 +166,11 @@ return L.view.extend({
                     'class': 'cbi-button cbi-input-apply',
                     'value': _('Download'),
                     'click': function (ev) {
-                        if (!fileInput) {
+                        if (!downloadInput) {
                             return;
                         }
 
-                        fs.read_direct(fileInput, 'blob').then(function (res) {
+                        fs.read_direct(downloadInput, 'blob').then(function (res) {
                             let blob;
                             if (res instanceof Blob) {
                                 blob = res;
@@ -180,7 +181,7 @@ return L.view.extend({
                             }
 
                             const url = URL.createObjectURL(blob);
-                            const fileName = fileInput.split('/').pop();
+                            const fileName = downloadInput.split('/').pop();
 
                             const a = document.createElement("a");
                             a.href = url;
@@ -194,69 +195,62 @@ return L.view.extend({
                             }, 200);
 
                         }).catch(function (err) {
-                            ui.addNotification(null, E('p', _('Failed to download, please check if the file exists')));
+                            ui.addNotification(null, E('p', [_('Failed to download, please check if the file exists')]));
                         });
                     }
                 })
             ]),
         ]);
 
-        let tableBody;
-        const table = E('table', {'class': 'table cbi-section-table'}, [
-            E('tr', {'class': 'tr cbi-section-table-titles'}, [
-                E('th', {'class': 'th'}, _('FileName')),
-                E('th', {'class': 'th'}, _('FileSize')),
-                E('th', {'class': 'th'}, _('ModifyTime')),
-                E('th', {'class': 'th'}, _('FileAttrs')),
-                E('th', {'class': 'th'}, _('Remove')),
-                E('th', {'class': 'th'}, _('Install'))
-            ]),
-            tableBody = E('tbody')
+        const fileTable = E('table', {'class': 'table'}, [
+            E('tr', {'class': 'tr table-titles'}, [
+                E('th', {'class': 'th'}, [_('FileName')]),
+                E('th', {'class': 'th'}, [_('FileSize')]),
+                E('th', {'class': 'th'}, [_('ModifyTime')]),
+                E('th', {'class': 'th'}, [_('FileAttrs')]),
+                E('th', {'class': 'th'}, [_('Remove')]),
+                E('th', {'class': 'th'}, [_('Install')])
+            ])
         ]);
 
-        const tableSection = E('div', {'class': 'cbi-section'}, [
-            E('h3', _('FileList')),
-            table
+        const tableSection = E('div', {'class': 'cbi-section cbi-tblsection'}, [
+            E('h3', {}, [_('FileList')]),
+            fileTable
         ]);
 
         const fetchTableFiles = () => fs.list(upload_path).then(function (files) {
-            tableBody.innerHTML = '';
+            const tableData = files
+                .filter(file => file.type === 'file')
+                .map(file => {
+                    const removeBtn = E('button', {
+                        'class': 'cbi-button cbi-button-remove',
+                        'click': function () {
+                            return fs.remove(`${upload_path}/${file.name}`).then(() => fetchTableFiles());
+                        }
+                    }, [_('Remove')]);
 
-            files.forEach(function (file) {
-                if (file.type !== 'file') {
-                    return;
-                }
+                    const installBtn = /\.(ipk|apk)$/i.test(file.name) ? E('button', {
+                        'class': 'cbi-button cbi-button-action',
+                        'click': function () {
+                            ui.showModal(_('Installing...'), [E('p', {'class': 'spinning'}, [_('Please wait a moment...')])]);
+                            L.resolveDefault(callInstall(`${upload_path}/${file.name}`), {}).then(function (res) {
+                                ui.hideModal();
+                                ui.addNotification(null, E('pre', [res.stdout || res.stderr || _('Finished')]), 'info');
+                            });
+                        }
+                    }, [_('Install')]) : '-';
 
-                tableBody.appendChild(E('tr', {'class': 'tr'}, [
-                    E('td', {'class': 'td'}, file.name),
-                    E('td', {'class': 'td'}, (file.size / 1024).toFixed(2) + ' KB'),
-                    E('td', {'class': 'td'}, timeFormater(file.mtime)),
-                    E('td', {'class': 'td'}, formatMode(file.mode)),
-                    E('td', {'class': 'td'}, [
-                        E('button', {
-                            'class': 'btn cbi-button-remove',
-                            'style': 'margin-left: 0.3rem',
-                            'click': function () {
-                                return fs.remove(`${upload_path}/${file.name}`).then(() => fetchTableFiles());
-                            }
-                        }, _('Remove'))
-                    ]),
+                    return [
+                        file.name,
+                        (file.size / 1024).toFixed(2) + ' KB',
+                        timeFormater(file.mtime),
+                        formatMode(file.mode),
+                        removeBtn,
+                        installBtn
+                    ];
+                });
 
-                    E('td', {'class': 'td'}, [
-                        file.name.endsWith('.ipk') ? E('button', {
-                            'class': 'btn cbi-button-action',
-                            'click': function () {
-                                ui.showModal(_('Installing...'), [E('p', {'class': 'spinning'}, _('Please wait a moment...'))]);
-                                L.resolveDefault(callInstall(`${upload_path}/${file.name}`), {}).then(function (res) {
-                                    ui.hideModal();
-                                    ui.addNotification(null, E('pre', res.stdout || res.stderr || _('Finished')), 'info');
-                                });
-                            }
-                        }, _('Install')) : '',
-
-                    ])
-                ]));
-            });
+            cbi_update_table(fileTable, tableData, E('em', {}, [_('No entries available')]));
         });
 
         fetchTableFiles();

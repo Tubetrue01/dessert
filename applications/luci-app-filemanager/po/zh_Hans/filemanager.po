@@ -67,7 +67,8 @@ msgstr "上传成功"
 msgid "Upload Failed"
 msgstr "上传失败"
 
-
+msgid "No entries available"
+msgstr "没有可用的条目"
 
 
 
