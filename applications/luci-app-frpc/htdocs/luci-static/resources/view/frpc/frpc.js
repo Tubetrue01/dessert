@@ -443,39 +443,40 @@ return view.extend({
             // Server
             o = m.section(form.TypedSection, null);
             o.render = function () {
-                const configRow = yamlData.serverAddr ? E('tr', {'class': 'tr cbi-section-table-row'}, [
-                    E('td', {'class': 'td cbi-section-table-cell'}, [yamlData.serverAddr || '-']),
-                    E('td', {'class': 'td cbi-section-table-cell'}, [yamlData.serverPort || '-']),
-                    E('td', {'class': 'td cbi-section-table-cell'}, [yamlData.auth?.method || '-']),
-                    E('td', {'class': 'td cbi-section-table-cell'}, [yamlData.log?.level || '-']),
-                    E('td', {'class': 'td cbi-section-table-cell'}, [yamlData.log?.to || '-']),
-                    E('td', {'class': 'td cbi-section-table-cell'}, [yamlData.transport?.protocol || '-']),
-                    E('td', {'class': 'td cbi-section-table-cell'}, [yamlData.transport?.poolCount || '-']),
-                    E('td', {'class': 'td cbi-section-table-cell'}, [renderBool(yamlData.transport?.tcpMux)]),
-                    E('td', {'class': 'td cbi-section-table-cell'}, [renderBool(yamlData.transport?.tls?.enable)]),
-                    E('td', {'class': 'td cbi-section-table-cell'}, [renderBool(yamlData.loginFailExit)]),
-                ]) : E('tr', {'class': 'tr cbi-section-table-row placeholder'}, [
-                    E('td', {'class': 'td', 'colspan': '10'}, [E('em', {}, [_('No configurations yet')])])
+                const serverTable = E('table', {'class': 'table'}, [
+                    E('tr', {'class': 'tr table-titles'}, [
+                        E('th', {'class': 'th'}, [_('address')]),
+                        E('th', {'class': 'th'}, [_('port')]),
+                        E('th', {'class': 'th'}, [_('auth')]),
+                        E('th', {'class': 'th'}, [_('log level')]),
+                        E('th', {'class': 'th'}, [_('log path')]),
+                        E('th', {'class': 'th'}, [_('transport protocol')]),
+                        E('th', {'class': 'th'}, [_('pool count')]),
+                        E('th', {'class': 'th'}, [_('tcpMux')]),
+                        E('th', {'class': 'th'}, [_('tls')]),
+                        E('th', {'class': 'th'}, [_('login fail exit')]),
+                    ])
                 ]);
 
-                return E('div', {'class': 'cbi-section cbi-tblsection', 'style': 'margin-top: 1rem;'}, [
+                const tableData = yamlData.serverAddr ? [[
+                    yamlData.serverAddr || '-',
+                    yamlData.serverPort || '-',
+                    yamlData.auth?.method || '-',
+                    yamlData.log?.level || '-',
+                    yamlData.log?.to || '-',
+                    yamlData.transport?.protocol || '-',
+                    yamlData.transport?.poolCount || '-',
+                    renderBool(yamlData.transport?.tcpMux),
+                    renderBool(yamlData.transport?.tls?.enable),
+                    renderBool(yamlData.loginFailExit)
+                ]] : [];
+
+                cbi_update_table(serverTable, tableData, E('em', {}, [_('No configurations yet')]));
+
+                return E('div', {'class': 'cbi-section'}, [
                     E('h3', {}, [_('Server')]),
-                    E('table', {'class': 'table cbi-section-table'}, [
-                        E('thead', {'class': 'thead cbi-section-thead'}, [
-                            E('tr', {'class': 'tr cbi-section-table-titles'}, [
-                                E('th', {'class': 'th'}, [_('address')]),
-                                E('th', {'class': 'th'}, [_('port')]),
-                                E('th', {'class': 'th'}, [_('auth')]),
-                                E('th', {'class': 'th'}, [_('log level')]),
-                                E('th', {'class': 'th'}, [_('log path')]),
-                                E('th', {'class': 'th'}, [_('transport protocol')]),
-                                E('th', {'class': 'th'}, [_('pool count')]),
-                                E('th', {'class': 'th'}, [_('tcpMux')]),
-                                E('th', {'class': 'th'}, [_('tls')]),
-                                E('th', {'class': 'th'}, [_('login fail exit')]),
-                            ])
-                        ]),
-                        E('tbody', {'class': 'tbody cbi-section-tbody'}, [configRow])
+                    E('div', {'style': 'width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; margin-bottom: 1rem;'}, [
+                        serverTable
                     ])
                 ]);
             };
@@ -484,39 +485,41 @@ return view.extend({
             o = m.section(form.TypedSection, null);
             o.render = function () {
                 const proxies = yamlData.proxies || [];
-                let rows = proxies.length === 0
-                    ? [E('tr', {'class': 'tr cbi-section-table-row placeholder'}, [
-                        E('td', {'class': 'td', 'colspan': '9'}, [E('em', {}, [_('No configurations yet')])])
-                    ])]
-                    : proxies.map(p => E('tr', {'class': 'tr cbi-section-table-row'}, [
-                        E('td', {'class': 'td cbi-section-table-cell'}, [p.name || '-']),
-                        E('td', {'class': 'td cbi-section-table-cell'}, [p.type || '-']),
-                        E('td', {'class': 'td cbi-section-table-cell'}, [p.customDomains?.[0] || yamlData.serverAddr || '-']),
-                        E('td', {'class': 'td cbi-section-table-cell'}, [p.subdomain || '-']),
-                        E('td', {'class': 'td cbi-section-table-cell'}, [p.remotePort || yamlData.serverPort || '-']),
-                        E('td', {'class': 'td cbi-section-table-cell'}, [p.localIP || '-']),
-                        E('td', {'class': 'td cbi-section-table-cell'}, [p.localPort || '-']),
-                        E('td', {'class': 'td cbi-section-table-cell'}, [renderBool(p.transport?.useEncryption)]),
-                        E('td', {'class': 'td cbi-section-table-cell'}, [renderBool(p.transport?.useCompression)]),
-                    ]));
 
-                return E('div', {'class': 'cbi-section cbi-tblsection', 'style': 'margin-top: 1rem;'}, [
+                const proxyTable = E('table', {'class': 'table'}, [
+                    E('tr', {'class': 'tr table-titles'}, [
+                        E('th', {'class': 'th'}, [_('name')]),
+                        E('th', {'class': 'th'}, [_('protocol type')]),
+                        E('th', {'class': 'th'}, [_('domain')]),
+                        E('th', {'class': 'th'}, [_('subdomain')]),
+                        E('th', {'class': 'th'}, [_('remote port')]),
+                        E('th', {'class': 'th'}, [_('local ip')]),
+                        E('th', {'class': 'th'}, [_('local port')]),
+                        E('th', {'class': 'th'}, [_('use encryption')]),
+                        E('th', {'class': 'th'}, [_('use compression')])
+                    ])
+                ]);
+
+                const tableData = proxies.map(p => {
+                    return [
+                        p.name || '-',
+                        p.type || '-',
+                        p.customDomains?.[0] || yamlData.serverAddr || '-',
+                        p.subdomain || '-',
+                        p.remotePort || yamlData.serverPort || '-',
+                        p.localIP || '-',
+                        p.localPort || '-',
+                        renderBool(p.transport?.useEncryption),
+                        renderBool(p.transport?.useCompression)
+                    ];
+                });
+
+                cbi_update_table(proxyTable, tableData, E('em', {}, [_('No configurations yet')]));
+
+                return E('div', {'class': 'cbi-section', 'style': 'margin-top: 1rem;'}, [
                     E('h3', {}, [_('Server Lists')]),
-                    E('table', {'class': 'table cbi-section-table'}, [
-                        E('thead', {'class': 'thead cbi-section-thead'}, [
-                            E('tr', {'class': 'tr cbi-section-table-titles'}, [
-                                E('th', {'class': 'th'}, [_('name')]),
-                                E('th', {'class': 'th'}, [_('protocol type')]),
-                                E('th', {'class': 'th'}, [_('domain')]),
-                                E('th', {'class': 'th'}, [_('subdomain')]),
-                                E('th', {'class': 'th'}, [_('remote port')]),
-                                E('th', {'class': 'th'}, [_('local ip')]),
-                                E('th', {'class': 'th'}, [_('local port')]),
-                                E('th', {'class': 'th'}, [_('use encryption')]),
-                                E('th', {'class': 'th'}, [_('use compression')])
-                            ])
-                        ]),
-                        E('tbody', {'class': 'tbody cbi-section-tbody'}, rows)
+                    E('div', {'style': 'width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; margin-bottom: 1rem;'}, [
+                        proxyTable
                     ])
                 ]);
             };
