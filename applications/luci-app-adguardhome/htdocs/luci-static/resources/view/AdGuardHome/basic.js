@@ -59,7 +59,7 @@ return view.extend({
 
     render(data) {
         const currentVersion = data[0].data;
-        let m, s, o, v;
+        let m, s, o;
 
         m = new form.Map(serviceName, _('AdGuard Home'),
             _('A free, open-source, and powerful DNS server that blocks network-wide ads and tracking.'));
