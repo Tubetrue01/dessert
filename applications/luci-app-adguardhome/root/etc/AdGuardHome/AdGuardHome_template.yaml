@@ -17,7 +17,7 @@ dns:
     - 0.0.0.0
   port: 53
   anonymize_client_ip: false
-  ratelimit: 20
+  ratelimit: 0
   ratelimit_subnet_len_ipv4: 24
   ratelimit_subnet_len_ipv6: 56
   ratelimit_whitelist: []
@@ -26,6 +26,8 @@ dns:
     - 127.0.0.1:5335
   upstream_dns_file: ""
   bootstrap_dns:
+    - 223.5.5.5
+    - 119.29.29.29
     - 9.9.9.10
     - 149.112.112.10
     - 2620:fe::10
@@ -70,9 +72,8 @@ dns:
   bootstrap_prefer_ipv6: false
   upstream_timeout: 10s
   private_networks: []
-  use_private_ptr_resolvers: true
-  local_ptr_upstreams:
-    - 127.0.0.1:5335
+  use_private_ptr_resolvers: false
+  local_ptr_upstreams: []
   use_dns64: false
   dns64_prefixes: []
   serve_http3: false
@@ -119,7 +120,8 @@ filters:
     id: 1740852817
 whitelist_filters: []
 user_rules:
-  - ""
+  - "||lan^$dnsrewrite=NXDOMAIN;;"
+  - "||in-addr.arpa^$dnsrewrite=NXDOMAIN;;"
 dhcp:
   enabled: false
   interface_name: ""
