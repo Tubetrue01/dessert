@@ -91,6 +91,8 @@ return view.extend({
 		m = new form.Map('mosdns', _('MosDNS') + ' ' + version,
 			_('MosDNS is a plugin-based DNS forwarder/traffic splitter.'));
 
+        this.map = m;
+
 		s = m.section(form.TypedSection);
 		s.anonymous = true;
 		s.render = function () {
