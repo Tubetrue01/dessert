@@ -67,8 +67,8 @@ return view.extend({
 		o.default = 'normal';
 		o.rmempty = false;
 
-		o = s.option(form.Value, 'primary', _('[Light mode] Primary Color'), _('A HEX color (default: #5e72e4).'))
-		o.default = '#5e72e4';
+		o = s.option(form.Value, 'primary', _('[Light mode] Primary Color'), _('A HEX color (default: #212121).'))
+		o.default = '#212121';
 		o.rmempty = false;
 		o.validate = function(section_id, value) {
 			if (section_id)
