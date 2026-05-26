@@ -26,8 +26,8 @@ msgid "A HEX Color (default: #483d8b)."
 msgstr "十六进制颜色值（预设为：#483d8b）。"
 
 #: applications/luci-app-argon-config/htdocs/luci-static/resources/view/argon-config.js:67
-msgid "A HEX color (default: #5e72e4)."
-msgstr "十六进制颜色值（预设为：#5e72e4）。"
+msgid "A HEX color (default: #212121)."
+msgstr "十六进制颜色值（预设为：#212121）。"
 
 #: applications/luci-app-argon-config/htdocs/luci-static/resources/view/argon-config.js:155
 msgid "Action"
@@ -91,7 +91,7 @@ msgid ""
 "Here you can set the blur and transparency of the login page of argon theme, "
 "and manage the background pictures and videos. Chrome is recommended."
 msgstr ""
-"在这里你可以设置argon 主题的登录页面的模糊和透明度，并管理背景图片与视频。推"
+"在这里你可以设置 argon 主题的登录页面的模糊和透明度，并管理背景图片与视频，推"
 "荐使用 Chrome。"
 
 #: applications/luci-app-argon-config/htdocs/luci-static/resources/view/argon-config.js:85

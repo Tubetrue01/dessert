@@ -33,7 +33,7 @@
     --green: #2dce89;
     --teal: #11cdef;
     --cyan: #2bffc6;
-    --gray: #8898aa;
+    --gray: #696969;
     --gray-dark: #32325d;
     --light: #ced4da;
     --lighter: #e9ecef;
@@ -41,7 +41,6 @@
     --info: #11cdef;
     --warning: #fb6340;
     --danger: #f5365c;
-    --light: #adb5bd;
     --dark: #212529;
     --default: #525461;
     --white: #fff;
@@ -3702,7 +3701,7 @@ span[data-tooltip] .label {
     text-transform: uppercase;
     color: #fff !important;
     border-radius: 3px;
-    background-color: #bfbfbf;
+    background-color: var(--primary);
     text-shadow: none;
 }
 
