@@ -89,7 +89,7 @@ return L.view.extend({
                 [
                     E('label', {
                         'class': 'cbi-value',
-                        'style': 'display:inline-block; width: 8rem; padding-bottom: 1rem',
+                        'style': 'display:inline-block; width: 8rem;',
                     }, [_('Select a file:')]),
 
                     E('input', {
@@ -102,7 +102,7 @@ return L.view.extend({
                     }),
 
                     E('button', {
-                        'class': 'cbi-button cbi-input-apply',
+                        'class': 'btn cbi-button-action',
                         'click': function () {
                             if (!fileInput) {
                                 return;
@@ -149,7 +149,7 @@ return L.view.extend({
 
                 E('label', {
                     'class': 'cbi-value',
-                    'style': 'display:inline-block; width: 8rem; padding-bottom: 1rem',
+                    'style': 'display:inline-block; width: 8rem;',
                 }, [_('Root directory:')]),
 
                 E('input', {
@@ -163,7 +163,7 @@ return L.view.extend({
 
                 E('input', {
                     'type': 'submit',
-                    'class': 'cbi-button cbi-input-apply',
+                    'class': 'btn cbi-button-action',
                     'value': _('Download'),
                     'click': function (ev) {
                         if (!downloadInput) {
