@@ -1,3 +1,4 @@
+
 'use strict';
 
 import { stat, mkdir, chmod, popen } from 'fs';
@@ -26,14 +27,27 @@ const methods = {
     install: {
         args: { filename: "filename" },
         call: function(req) {
-            const ipk = req.args.filename;
+            const file = req.args.filename;
 
-            if (!ipk || !stat(ipk)) {
+            if (!file || !stat(file)) {
                 return { code: 1, message: "File not found" };
             }
 
-            const rc = run_cmd(['opkg', 'install', ipk]);
-            return { code: rc, message: (rc === 0 ? "Installation successful" : "Installation failed") };
+            let rc;
+            const suffix = substr(file, -4);
+
+            if (suffix == ".ipk") {
+                rc = system(['opkg', 'install', file]);
+            }
+
+            if (suffix == ".apk") {
+                rc = system(['apk', 'add', '--allow-untrusted', file]);
+            }
+
+            return {
+               code: rc,
+               message: rc === 0 ? "Installation successful" : "Installation failed"
+            };
         }
     },
 
