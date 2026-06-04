@@ -389,11 +389,13 @@ return view.extend({
 
 		o.render = function (sid) {
 			const container = E('div', {'class': 'cm6-container'});
-			container.style.width = "40rem";
-			container.style.maxWidth = "40rem";
-			container.style.overflow = "hidden";
-			container.style.display = "block";
-			container.style.height = "28rem";
+            container.style.minWidth = '0';
+            container.style.width = "100%";
+            container.style.maxWidth = "40rem";
+            container.style.boxSizing = "border-box";
+
+            container.style.overflow = "hidden";
+            container.style.height = "28rem";
 
 			return fs.read(configFile).then(content => {
 				const initialValue = content || '';
@@ -407,7 +409,6 @@ return view.extend({
 
 					const scroller = container.querySelector('.cm-scroller');
 					if (scroller) {
-						scroller.style.height = "28rem";
 						scroller.style.overflow = "auto";
 					}
 					const contentEl = container.querySelector('.cm-content');
@@ -419,7 +420,7 @@ return view.extend({
 
 				return E('div', {'class': 'cbi-value'}, [
 					E('label', {'class': 'cbi-value-title'}, [ this.title ]),
-					E('div', {'class': 'cbi-value-field'}, [
+					E('div', {'class': 'cbi-value-field', 'style': 'display:flex; flex-direction:column;min-width:0;'}, [
 						container,
 						E('div', {'class': 'cbi-value-description',
 							'style': 'margin-top: 0.5rem; max-width: 40rem; white-space: normal;'

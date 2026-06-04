@@ -241,10 +241,12 @@ return view.extend({
         yaml = o.taboption('common', form.DummyValue, '_yaml_config', _('Yaml Editor'));
         yaml.render = function (sid) {
             const container = E('div', { 'class': 'cm6-container' });
-            container.style.width = "40rem";
+            container.style.minWidth = '0';
+            container.style.width = "100%";
             container.style.maxWidth = "40rem";
+            container.style.boxSizing = "border-box";
+
             container.style.overflow = "hidden";
-            container.style.display = "block";
             container.style.height = "28rem";
 
             return fs.read(configPath).then(content => {
@@ -262,7 +264,6 @@ return view.extend({
 
                     const scroller = container.querySelector('.cm-scroller');
                     if (scroller) {
-                        scroller.style.height = "28rem";
                         scroller.style.overflow = "auto";
                     }
                     const contentEl = container.querySelector('.cm-content');
@@ -274,7 +275,7 @@ return view.extend({
 
                 return E('div', { 'class': 'cbi-value' }, [
                     E('label', { 'class': 'cbi-value-title' }, [this.title]),
-                    E('div', { 'class': 'cbi-value-field', 'style': 'display:block' }, [
+                    E('div', { 'class': 'cbi-value-field', 'style': 'display:flex; flex-direction:column;min-width:0;'}, [
                         container
                     ])
                 ]);
