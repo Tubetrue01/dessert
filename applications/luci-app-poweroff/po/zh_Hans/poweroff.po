@@ -10,6 +10,9 @@ msgstr "关机，走你～"
 msgid "WARNING: May cause a reboot on a device that does not support power off."
 msgstr "吹灯拔蜡，关机回家"
 
+msgid "Confirm"
+msgstr "关机确认"
+
 msgid "Warning: There are unsaved changes that will get lost on poweroff!"
 msgstr "警告：没保存的改动在关机的时候都会丢失！别惊讶，要么保存，要么放弃！"
 
