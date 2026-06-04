@@ -264,6 +264,7 @@ return view.extend({
 
                     const scroller = container.querySelector('.cm-scroller');
                     if (scroller) {
+                        scroller.style.height = "28rem";
                         scroller.style.overflow = "auto";
                     }
                     const contentEl = container.querySelector('.cm-content');
