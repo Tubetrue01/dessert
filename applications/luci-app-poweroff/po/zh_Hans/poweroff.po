@@ -1,8 +1,11 @@
-msgid "Device is shutting down..."
-msgstr "正在关机，说啥也不好使了..."
-
 msgid "PowerOff"
 msgstr "关机"
+
+msgid "Shutting down…"
+msgstr "正在关机…"
+
+msgid "Device is shutting down…"
+msgstr "关机中，说啥也不好使了…"
 
 msgid "Proceed"
 msgstr "关机，走你～"

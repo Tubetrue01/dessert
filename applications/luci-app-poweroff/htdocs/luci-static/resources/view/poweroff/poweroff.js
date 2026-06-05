@@ -44,10 +44,9 @@ return view.extend({
     },
 
     handlePowerOff(ev) {
-        ui.changes.displayStatus(
-            'notice spinning',
-            E('p', {'class': 'spinning'}, _('Device is shutting down...'))
-        );
+        ui.showModal(_('Shutting down…'), [
+            E('p', { 'class': 'spinning' }, _('Device is shutting down…'))
+        ]);
 
         return callPoweroff().then(res => {
             if (res && res.code === 0) {
