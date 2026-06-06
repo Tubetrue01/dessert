@@ -1,3 +1,5 @@
+// noinspection JSAnnotator
+
 'use strict';
 'require form';
 'require fs';
@@ -8,387 +10,389 @@
 'require view';
 
 const callServiceList = rpc.declare({
-	object: 'service',
-	method: 'list',
-	params: ['name'],
-	expect: { '': {} }
+    object: 'service',
+    method: 'list',
+    params: ['name'],
+    expect: {'': {}}
 });
 
 function getServiceStatus() {
-	return L.resolveDefault(callServiceList('mosdns'), {}).then(res => {
-		let isRunning = false;
-		try {
-			isRunning = res['mosdns']['instances']['mosdns']['running'];
-		} catch (e) { }
-		return isRunning;
-	});
+    return L.resolveDefault(callServiceList('mosdns'), {}).then(res => {
+        let isRunning = false;
+        try {
+            isRunning = res['mosdns']['instances']['mosdns']['running'];
+        } catch (e) {}
+        return isRunning;
+    });
 }
 
 function renderStatus(isRunning) {
-	const spanTemp = '<em><span style="color:%s"><strong>%s %s</strong></span></em>';
-	let renderHTML;
-	if (isRunning) {
-		renderHTML = spanTemp.format('green', _('MosDNS'), _('RUNNING'));
-	} else {
-		renderHTML = spanTemp.format('red', _('MosDNS'), _('NOT RUNNING'));
-	}
+    const spanTemp = '<em><span style="color:%s"><strong>%s %s</strong></span></em>';
+    let renderHTML;
+    if (isRunning) {
+        renderHTML = spanTemp.format('green', _('MosDNS'), _('RUNNING'));
+    } else {
+        renderHTML = spanTemp.format('red', _('MosDNS'), _('NOT RUNNING'));
+    }
 
-	return renderHTML;
+    return renderHTML;
 }
 
 async function loadCodeMirrorResources() {
-	const bundlePath = '/luci-static/resources/view/mosdns/codemirror6/cm6-yaml-editor.js';
+    const bundlePath = '/luci-static/resources/view/mosdns/codemirror6/cm6-yaml-editor.js';
 
-	if (window.CM6) {
-		return Promise.resolve();
-	}
+    if (window.CM6) {
+        return Promise.resolve();
+    }
 
-	return new Promise((resolve, reject) => {
-		const script = document.createElement('script');
-		script.src = bundlePath;
-		script.onload = () => {
-			resolve();
-		};
-		script.onerror = () => reject(new Error("Failed to load CM6 bundle"));
-		document.head.appendChild(script);
-	});
+    return new Promise((resolve, reject) => {
+        const script = document.createElement('script');
+        script.src = bundlePath;
+        script.onload = () => {
+            resolve();
+        };
+        script.onerror = () => reject(new Error("Failed to load CM6 bundle"));
+        document.head.appendChild(script);
+    });
 }
 
 const callMosdns = rpc.declare({
-	object: 'luci.mosdns',
-	method: 'get_version',
-	expect: { '': {} }
+    object: 'luci.mosdns',
+    method: 'get_version',
+    expect: {'': {}}
 });
 
 const callFlushCache = rpc.declare({
-	object: 'luci.mosdns',
-	method: 'flush_cache',
-	expect: { '': {} }
+    object: 'luci.mosdns',
+    method: 'flush_cache',
+    expect: {'': {}}
 });
 
 return view.extend({
-	load() {
-		return Promise.all([
-			loadCodeMirrorResources(),
-			L.resolveDefault(callMosdns(), null),
-		]);
-	},
+    load() {
+        return Promise.all([
+            loadCodeMirrorResources(),
+            L.resolveDefault(callMosdns(), null),
+        ]);
+    },
 
-	handleFlushCache() {
-		return callFlushCache().then(res => {
-			if (res.success) {
-				ui.addNotification(null, E('p', _('Flushing DNS Cache Success.')), 'info');
-			} else {
-				ui.addNotification(null, E('p', _('Flushing DNS Cache Failed, Please check if MosDNS is running.') + (res.error ? ': ' + res.error : '')), 'error');
-			}
-		});
-	},
+    handleFlushCache() {
+        return callFlushCache().then(res => {
+            if (res.success) {
+                ui.addNotification(null, E('p', _('Flushing DNS Cache Success.')), 'info');
+            } else {
+                ui.addNotification(null, E('p', _('Flushing DNS Cache Failed, Please check if MosDNS is running.') + (res.error ? ': ' + res.error : '')), 'error');
+            }
+        });
+    },
 
-	render(data) {
-		let m, s, o;
+    render(data) {
+        let m, s, o;
 
-		const version = (data[1] && data[1].version) ? data[1].version : '';
-		m = new form.Map('mosdns', _('MosDNS') + ' ' + version,
-			_('MosDNS is a plugin-based DNS forwarder/traffic splitter.'));
+        const version = (data[1] && data[1].version) ? data[1].version : '';
+        m = new form.Map('mosdns', _('MosDNS') + ' ' + version,
+            _('MosDNS is a plugin-based DNS forwarder/traffic splitter.'));
 
         this.map = m;
 
-		s = m.section(form.TypedSection);
-		s.anonymous = true;
-		s.render = function () {
-			const el = E('p', { id: 'service_status' }, _('Collecting data...'))
+        s = m.section(form.TypedSection);
+        s.anonymous = true;
+        s.render = function () {
+            const el = E('p', {id: 'service_status'}, _('Collecting data...'))
 
-			poll.add(function () {
-				return L.resolveDefault(getServiceStatus()).then(function (res) {
-					el.innerHTML = renderStatus(res);
-				});
-			});
+            poll.add(function () {
+                return L.resolveDefault(getServiceStatus()).then(function (res) {
+                    el.innerHTML = renderStatus(res);
+                });
+            });
 
-			return E('div', { class: 'cbi-section', id: 'status_bar' }, [el]);
-		}
+            return E('div', {class: 'cbi-section', id: 'status_bar'}, [el]);
+        }
 
-		s = m.section(form.NamedSection, 'config', 'mosdns');
+        s = m.section(form.NamedSection, 'config', 'mosdns');
 
-		s.tab('basic', _('Basic Options'));
-		s.tab('advanced', _('Advanced Options'));
-		s.tab('cloudflare', _('Cloudflare Options'));
-		s.tab('api', _('API Options'));
-		s.tab('geodata', _('GeoData Export'));
+        s.tab('basic', _('Basic Options'));
+        s.tab('advanced', _('Advanced Options'));
+        s.tab('cloudflare', _('Cloudflare Options'));
+        s.tab('api', _('API Options'));
+        s.tab('geodata', _('GeoData Export'));
 
-		/* basic */
-		o = s.taboption('basic', form.Flag, 'enabled', _('Enabled'));
-		o.default = o.disabled;
-		o.rmempty = false;
+        /* basic */
+        o = s.taboption('basic', form.Flag, 'enabled', _('Enabled'));
+        o.default = o.disabled;
+        o.rmempty = false;
 
-		o = s.taboption('basic', form.ListValue, 'configfile', _('Config File'));
-		o.value('/var/etc/mosdns.json', _('Default Config'));
-		o.value('/etc/mosdns/config_custom.yaml', _('Custom Config'));
-		o.default = '/var/etc/mosdns.json';
+        o = s.taboption('basic', form.ListValue, 'configfile', _('Config File'));
+        o.value('/var/etc/mosdns.json', _('Default Config'));
+        o.value('/etc/mosdns/config_custom.yaml', _('Custom Config'));
+        o.default = '/var/etc/mosdns.json';
+        o.rmempty = false;
 
-		o = s.taboption('basic', form.Value, 'listen_port', _('Listen Port'));
-		o.default = '5335';
-		o.datatype = 'port';
-		o.depends('configfile', '/var/etc/mosdns.json');
+        o = s.taboption('basic', form.Value, 'listen_port', _('Listen Port'));
+        o.default = '5335';
+        o.datatype = 'port';
+        o.depends('configfile', '/var/etc/mosdns.json');
 
-		o = s.taboption('basic', form.Value, 'listen_address', _('Listen Address'));
-		o.default = '0.0.0.0';
-		o.depends('configfile', '/var/etc/mosdns.json');
+        o = s.taboption('basic', form.Value, 'listen_address', _('Listen Address'));
+        o.default = '0.0.0.0';
+        o.depends('configfile', '/var/etc/mosdns.json');
 
-		o = s.taboption('basic', form.ListValue, 'log_level', _('Log Level'));
-		o.value('debug', _('Debug'));
-		o.value('info', _('Info'));
-		o.value('warn', _('Warning'));
-		o.value('error', _('Error'));
-		o.default = 'info';
-		o.depends('configfile', '/var/etc/mosdns.json');
+        o = s.taboption('basic', form.ListValue, 'log_level', _('Log Level'));
+        o.value('debug', _('Debug'));
+        o.value('info', _('Info'));
+        o.value('warn', _('Warning'));
+        o.value('error', _('Error'));
+        o.default = 'info';
+        o.depends('configfile', '/var/etc/mosdns.json');
 
-		o = s.taboption('basic', form.Value, 'log_file', _('Log File'));
-		o.placeholder = '/var/log/mosdns.log';
-		o.default = '/var/log/mosdns.log';
-		o.depends('configfile', '/var/etc/mosdns.json');
+        o = s.taboption('basic', form.Value, 'log_file', _('Log File'));
+        o.placeholder = '/var/log/mosdns.log';
+        o.default = '/var/log/mosdns.log';
+        o.depends('configfile', '/var/etc/mosdns.json');
+        o.rmempty = false;
 
-		o = s.taboption('basic', form.Flag, 'redirect', _('DNS Forward'), _('Forward Dnsmasq Domain Name resolution requests to MosDNS'));
-		o.default = false;
+        o = s.taboption('basic', form.Flag, 'redirect', _('DNS Forward'), _('Forward Dnsmasq Domain Name resolution requests to MosDNS'));
+        o.default = false;
 
-		if (L.hasSystemFeature('firewall4')) {
-			o = s.taboption('basic', form.Flag, 'local_dns_redirect', _('DNS redirect'), _('Force redirect all local DNS queries to MosDNS, a.k.a. DNS Hijacking'));
-			o.default = false;
-			o.depends('redirect', '1');
-		}
+        if (L.hasSystemFeature('firewall4')) {
+            o = s.taboption('basic', form.Flag, 'local_dns_redirect', _('DNS redirect'), _('Force redirect all local DNS queries to MosDNS, a.k.a. DNS Hijacking'));
+            o.default = false;
+            o.depends('redirect', '1');
+        }
 
-		o = s.taboption('basic', form.Flag, 'prefer_ipv4_cn', _('China DNS prefer IPv4'),
-			_('IPv4 is preferred for China DNS resolution of dual-stack addresses, and is not affected when the destination is IPv6 only'));
-		o.depends('configfile', '/var/etc/mosdns.json');
-		o.default = false;
+        o = s.taboption('basic', form.Flag, 'prefer_ipv4_cn', _('China DNS prefer IPv4'),
+            _('IPv4 is preferred for China DNS resolution of dual-stack addresses, and is not affected when the destination is IPv6 only'));
+        o.depends('configfile', '/var/etc/mosdns.json');
+        o.default = false;
 
-		o = s.taboption('basic', form.Flag, 'prefer_ipv4', _('Remote DNS prefer IPv4'),
-			_('IPv4 is preferred for Remote / Streaming Media DNS resolution of dual-stack addresses, and is not affected when the destination is IPv6 only'));
-		o.depends('configfile', '/var/etc/mosdns.json');
-		o.default = false;
+        o = s.taboption('basic', form.Flag, 'prefer_ipv4', _('Remote DNS prefer IPv4'),
+            _('IPv4 is preferred for Remote / Streaming Media DNS resolution of dual-stack addresses, and is not affected when the destination is IPv6 only'));
+        o.depends('configfile', '/var/etc/mosdns.json');
+        o.default = false;
 
-		o = s.taboption('basic', form.Flag, 'custom_local_dns', _('Custom China DNS'), _('Follow WAN interface DNS if not enabled'));
-		o.depends('configfile', '/var/etc/mosdns.json');
-		o.default = false;
+        o = s.taboption('basic', form.Flag, 'custom_local_dns', _('Custom China DNS'), _('Follow WAN interface DNS if not enabled'));
+        o.depends('configfile', '/var/etc/mosdns.json');
+        o.default = false;
 
-		o = s.taboption('basic', form.Flag, 'apple_optimization', _('Apple domains optimization'),
-			_('For Apple domains equipped with Chinese mainland CDN, always responsive to Chinese CDN IP addresses'));
-		o.depends('custom_local_dns', '1');
-		o.default = false;
+        o = s.taboption('basic', form.Flag, 'apple_optimization', _('Apple domains optimization'),
+            _('For Apple domains equipped with Chinese mainland CDN, always responsive to Chinese CDN IP addresses'));
+        o.depends('custom_local_dns', '1');
+        o.default = false;
 
-		o = s.taboption('basic', form.DynamicList, 'local_dns', _('China DNS server'));
-		o.value('119.29.29.29', _('Tencent Public DNS (119.29.29.29)'));
-		o.value('119.28.28.28', _('Tencent Public DNS (119.28.28.28)'));
-		o.value('223.5.5.5', _('Aliyun Public DNS (223.5.5.5)'));
-		o.value('223.6.6.6', _('Aliyun Public DNS (223.6.6.6)'));
-		o.value('180.184.1.1', _('TrafficRoute Public DNS (180.184.1.1)'));
-		o.value('180.184.2.2', _('TrafficRoute Public DNS (180.184.2.2)'));
-		o.value('114.114.114.114', _('Xinfeng Public DNS (114.114.114.114)'));
-		o.value('114.114.115.115', _('Xinfeng Public DNS (114.114.115.115)'));
-		o.value('180.76.76.76', _('Baidu Public DNS (180.76.76.76)'));
-		o.value('https://doh.pub/dns-query', _('Tencent Public DNS (DNS over HTTPS)'));
-		o.value('quic://dns.alidns.com', _('Aliyun Public DNS (DNS over QUIC)'));
-		o.value('https://dns.alidns.com/dns-query', _('Aliyun Public DNS (DNS over HTTPS)'));
-		o.value('h3://dns.alidns.com/dns-query', _('Aliyun Public DNS (DNS over HTTP/3)'));
-		o.value('https://doh.360.cn/dns-query', _('360 Public DNS (DNS over HTTPS)'));
-		o.default = '119.29.29.29';
-		o.depends('custom_local_dns', '1');
+        o = s.taboption('basic', form.DynamicList, 'local_dns', _('China DNS server'));
+        o.value('119.29.29.29', _('Tencent Public DNS (119.29.29.29)'));
+        o.value('119.28.28.28', _('Tencent Public DNS (119.28.28.28)'));
+        o.value('223.5.5.5', _('Aliyun Public DNS (223.5.5.5)'));
+        o.value('223.6.6.6', _('Aliyun Public DNS (223.6.6.6)'));
+        o.value('180.184.1.1', _('TrafficRoute Public DNS (180.184.1.1)'));
+        o.value('180.184.2.2', _('TrafficRoute Public DNS (180.184.2.2)'));
+        o.value('114.114.114.114', _('Xinfeng Public DNS (114.114.114.114)'));
+        o.value('114.114.115.115', _('Xinfeng Public DNS (114.114.115.115)'));
+        o.value('180.76.76.76', _('Baidu Public DNS (180.76.76.76)'));
+        o.value('https://doh.pub/dns-query', _('Tencent Public DNS (DNS over HTTPS)'));
+        o.value('quic://dns.alidns.com', _('Aliyun Public DNS (DNS over QUIC)'));
+        o.value('https://dns.alidns.com/dns-query', _('Aliyun Public DNS (DNS over HTTPS)'));
+        o.value('h3://dns.alidns.com/dns-query', _('Aliyun Public DNS (DNS over HTTP/3)'));
+        o.value('https://doh.360.cn/dns-query', _('360 Public DNS (DNS over HTTPS)'));
+        o.default = '119.29.29.29';
+        o.depends('custom_local_dns', '1');
 
-		o = s.taboption('basic', form.DynamicList, 'remote_dns', _('Remote DNS server'));
-		o.value('tls://1.1.1.1', _('CloudFlare Public DNS (1.1.1.1)'));
-		o.value('tls://1.0.0.1', _('CloudFlare Public DNS (1.0.0.1)'));
-		o.value('tls://8.8.8.8', _('Google Public DNS (8.8.8.8)'));
-		o.value('tls://8.8.4.4', _('Google Public DNS (8.8.4.4)'));
-		o.value('tls://9.9.9.9', _('Quad9 Public DNS (9.9.9.9)'));
-		o.value('tls://149.112.112.112', _('Quad9 Public DNS (149.112.112.112)'));
-		o.value('tls://208.67.222.222', _('Cisco Public DNS (208.67.222.222)'));
-		o.value('tls://208.67.220.220', _('Cisco Public DNS (208.67.220.220)'));
-		o.default = 'tls://8.8.8.8';
-		o.depends('configfile', '/var/etc/mosdns.json');
+        o = s.taboption('basic', form.DynamicList, 'remote_dns', _('Remote DNS server'));
+        o.value('tls://1.1.1.1', _('CloudFlare Public DNS (1.1.1.1)'));
+        o.value('tls://1.0.0.1', _('CloudFlare Public DNS (1.0.0.1)'));
+        o.value('tls://8.8.8.8', _('Google Public DNS (8.8.8.8)'));
+        o.value('tls://8.8.4.4', _('Google Public DNS (8.8.4.4)'));
+        o.value('tls://9.9.9.9', _('Quad9 Public DNS (9.9.9.9)'));
+        o.value('tls://149.112.112.112', _('Quad9 Public DNS (149.112.112.112)'));
+        o.value('tls://208.67.222.222', _('Cisco Public DNS (208.67.222.222)'));
+        o.value('tls://208.67.220.220', _('Cisco Public DNS (208.67.220.220)'));
+        o.default = 'tls://8.8.8.8';
+        o.depends('configfile', '/var/etc/mosdns.json');
 
-		o = s.taboption('basic', form.Flag, 'custom_stream_media_dns', _('Custom Stream Media DNS'),
-			_('Netflix, Disney+, Hulu and streaming media rules list will use this DNS'));
-		o.depends('configfile', '/var/etc/mosdns.json');
-		o.default = false;
+        o = s.taboption('basic', form.Flag, 'custom_stream_media_dns', _('Custom Stream Media DNS'),
+            _('Netflix, Disney+, Hulu and streaming media rules list will use this DNS'));
+        o.depends('configfile', '/var/etc/mosdns.json');
+        o.default = false;
 
-		o = s.taboption('basic', form.DynamicList, 'stream_media_dns', _('Streaming Media DNS server'));
-		o.value('tls://1.1.1.1', _('CloudFlare Public DNS (1.1.1.1)'));
-		o.value('tls://1.0.0.1', _('CloudFlare Public DNS (1.0.0.1)'));
-		o.value('tls://8.8.8.8', _('Google Public DNS (8.8.8.8)'));
-		o.value('tls://8.8.4.4', _('Google Public DNS (8.8.4.4)'));
-		o.value('tls://9.9.9.9', _('Quad9 Public DNS (9.9.9.9)'));
-		o.value('tls://149.112.112.112', _('Quad9 Public DNS (149.112.112.112)'));
-		o.value('tls://208.67.222.222', _('Cisco Public DNS (208.67.222.222)'));
-		o.value('tls://208.67.220.220', _('Cisco Public DNS (208.67.220.220)'));
-		o.default = 'tls://8.8.8.8';
-		o.depends('custom_stream_media_dns', '1');
+        o = s.taboption('basic', form.DynamicList, 'stream_media_dns', _('Streaming Media DNS server'));
+        o.value('tls://1.1.1.1', _('CloudFlare Public DNS (1.1.1.1)'));
+        o.value('tls://1.0.0.1', _('CloudFlare Public DNS (1.0.0.1)'));
+        o.value('tls://8.8.8.8', _('Google Public DNS (8.8.8.8)'));
+        o.value('tls://8.8.4.4', _('Google Public DNS (8.8.4.4)'));
+        o.value('tls://9.9.9.9', _('Quad9 Public DNS (9.9.9.9)'));
+        o.value('tls://149.112.112.112', _('Quad9 Public DNS (149.112.112.112)'));
+        o.value('tls://208.67.222.222', _('Cisco Public DNS (208.67.222.222)'));
+        o.value('tls://208.67.220.220', _('Cisco Public DNS (208.67.220.220)'));
+        o.default = 'tls://8.8.8.8';
+        o.depends('custom_stream_media_dns', '1');
 
-		o = s.taboption('basic', form.Value, 'bootstrap_dns', _('Bootstrap DNS servers'),
-			_('Bootstrap DNS servers are used to resolve IP addresses of the DoH/DoT resolvers you specify as upstreams'));
-		o.value('119.29.29.29', _('Tencent Public DNS (119.29.29.29)'));
-		o.value('119.28.28.28', _('Tencent Public DNS (119.28.28.28)'));
-		o.value('223.5.5.5', _('Aliyun Public DNS (223.5.5.5)'));
-		o.value('223.6.6.6', _('Aliyun Public DNS (223.6.6.6)'));
-		o.value('114.114.114.114', _('Xinfeng Public DNS (114.114.114.114)'));
-		o.value('114.114.115.115', _('Xinfeng Public DNS (114.114.115.115)'));
-		o.value('180.76.76.76', _('Baidu Public DNS (180.76.76.76)'));
-		o.value('8.8.8.8', _('Google Public DNS (8.8.8.8)'));
-		o.value('1.1.1.1', _('CloudFlare Public DNS (1.1.1.1)'));
-		o.default = '119.29.29.29';
-		o.depends('configfile', '/var/etc/mosdns.json');
+        o = s.taboption('basic', form.Value, 'bootstrap_dns', _('Bootstrap DNS servers'),
+            _('Bootstrap DNS servers are used to resolve IP addresses of the DoH/DoT resolvers you specify as upstreams'));
+        o.value('119.29.29.29', _('Tencent Public DNS (119.29.29.29)'));
+        o.value('119.28.28.28', _('Tencent Public DNS (119.28.28.28)'));
+        o.value('223.5.5.5', _('Aliyun Public DNS (223.5.5.5)'));
+        o.value('223.6.6.6', _('Aliyun Public DNS (223.6.6.6)'));
+        o.value('114.114.114.114', _('Xinfeng Public DNS (114.114.114.114)'));
+        o.value('114.114.115.115', _('Xinfeng Public DNS (114.114.115.115)'));
+        o.value('180.76.76.76', _('Baidu Public DNS (180.76.76.76)'));
+        o.value('8.8.8.8', _('Google Public DNS (8.8.8.8)'));
+        o.value('1.1.1.1', _('CloudFlare Public DNS (1.1.1.1)'));
+        o.default = '119.29.29.29';
+        o.depends('configfile', '/var/etc/mosdns.json');
 
-		/* advanced */
-		o = s.taboption('advanced', form.Value, 'concurrent', _('Concurrent'),
-			_('DNS query request concurrency, The number of upstream DNS servers that are allowed to initiate requests at the same time'));
-		o.datatype = 'and(uinteger,min(1),max(3))';
-		o.default = '2';
-		o.depends('configfile', '/var/etc/mosdns.json');
+        /* advanced */
+        o = s.taboption('advanced', form.Value, 'concurrent', _('Concurrent'),
+            _('DNS query request concurrency, The number of upstream DNS servers that are allowed to initiate requests at the same time'));
+        o.datatype = 'and(uinteger,min(1),max(3))';
+        o.default = '2';
+        o.depends('configfile', '/var/etc/mosdns.json');
 
-		o = s.taboption('advanced', form.Value, 'idle_timeout', _('Idle Timeout'),
-			_('DoH/TCP/DoT Connection Multiplexing idle timeout (default 30 seconds)'));
-		o.datatype = 'and(uinteger,min(1))';
-		o.default = '30';
-		o.depends('configfile', '/var/etc/mosdns.json');
+        o = s.taboption('advanced', form.Value, 'idle_timeout', _('Idle Timeout'),
+            _('DoH/TCP/DoT Connection Multiplexing idle timeout (default 30 seconds)'));
+        o.datatype = 'and(uinteger,min(1))';
+        o.default = '30';
+        o.depends('configfile', '/var/etc/mosdns.json');
 
-		o = s.taboption('advanced', form.Flag, 'enable_pipeline', _('TCP/DoT Connection Multiplexing'),
-			_('Enable TCP/DoT RFC 7766 new Query Pipelining connection multiplexing mode'));
-		o.rmempty = false;
-		o.default = false;
-		o.depends('configfile', '/var/etc/mosdns.json');
+        o = s.taboption('advanced', form.Flag, 'enable_pipeline', _('TCP/DoT Connection Multiplexing'),
+            _('Enable TCP/DoT RFC 7766 new Query Pipelining connection multiplexing mode'));
+        o.rmempty = false;
+        o.default = false;
+        o.depends('configfile', '/var/etc/mosdns.json');
 
-		o = s.taboption('advanced', form.Flag, 'insecure_skip_verify', _('Disable TLS Certificate'),
-			_('Disable TLS Servers certificate validation, Can be useful if system CA certificate expires or the system time is out of order'));
-		o.rmempty = false;
-		o.default = false;
-		o.depends('configfile', '/var/etc/mosdns.json');
+        o = s.taboption('advanced', form.Flag, 'insecure_skip_verify', _('Disable TLS Certificate'),
+            _('Disable TLS Servers certificate validation, Can be useful if system CA certificate expires or the system time is out of order'));
+        o.rmempty = false;
+        o.default = false;
+        o.depends('configfile', '/var/etc/mosdns.json');
 
-		o = s.taboption('advanced', form.Flag, 'enable_ecs_remote',
-			_('Enable EDNS client subnet'));
-		o.rmempty = false;
-		o.default = false;
-		o.depends('configfile', '/var/etc/mosdns.json');
+        o = s.taboption('advanced', form.Flag, 'enable_ecs_remote',
+            _('Enable EDNS client subnet'));
+        o.rmempty = false;
+        o.default = false;
+        o.depends('configfile', '/var/etc/mosdns.json');
 
-		o = s.taboption('advanced', form.Value, 'remote_ecs_ip', _('IP Address'),
-			_('Please provide the IP address you use when accessing foreign websites. This IP subnet (0/24) will be used as the ECS address for Remote / Streaming Media DNS requests') +
-			_('This feature is typically used when using a self-built DNS server as an Remote / Streaming Media DNS upstream (requires support from the upstream server)'));
-		o.datatype = 'ipaddr';
-		o.depends('enable_ecs_remote', '1');
+        o = s.taboption('advanced', form.Value, 'remote_ecs_ip', _('IP Address'),
+            _('Please provide the IP address you use when accessing foreign websites. This IP subnet (0/24) will be used as the ECS address for Remote / Streaming Media DNS requests') +
+            _('This feature is typically used when using a self-built DNS server as an Remote / Streaming Media DNS upstream (requires support from the upstream server)'));
+        o.datatype = 'ipaddr';
+        o.depends('enable_ecs_remote', '1');
 
-		o = s.taboption('advanced', form.Flag, 'dns_leak', _('Prevent DNS Leaks'),
-			_('Enable this option fallback policy forces forwarding to remote DNS'));
-		o.rmempty = false;
-		o.default = false;
-		o.depends('configfile', '/var/etc/mosdns.json');
+        o = s.taboption('advanced', form.Flag, 'dns_leak', _('Prevent DNS Leaks'),
+            _('Enable this option fallback policy forces forwarding to remote DNS'));
+        o.rmempty = false;
+        o.default = false;
+        o.depends('configfile', '/var/etc/mosdns.json');
 
-		o = s.taboption('advanced', form.Flag, 'cache', _('Enable DNS Cache'));
-		o.rmempty = false;
-		o.default = false;
-		o.depends('configfile', '/var/etc/mosdns.json');
+        o = s.taboption('advanced', form.Flag, 'cache', _('Enable DNS Cache'));
+        o.rmempty = false;
+        o.default = false;
+        o.depends('configfile', '/var/etc/mosdns.json');
 
-		o = s.taboption('advanced', form.Value, 'cache_size', _('DNS Cache Size'));
-		o.datatype = 'and(uinteger,min(0))';
-		o.default = 8000;
-		o.depends('cache', '1');
+        o = s.taboption('advanced', form.Value, 'cache_size', _('DNS Cache Size'));
+        o.datatype = 'and(uinteger,min(0))';
+        o.default = 8000;
+        o.depends('cache', '1');
 
-		o = s.taboption('advanced', form.Value, 'lazy_cache_ttl', _('Lazy Cache TTL'),
-			_('Lazy cache survival time (in second). To disable Lazy Cache, please set to 0.'));
-		o.datatype = 'and(uinteger,min(0))';
-		o.default = 86400;
-		o.depends('cache', '1');
+        o = s.taboption('advanced', form.Value, 'lazy_cache_ttl', _('Lazy Cache TTL'),
+            _('Lazy cache survival time (in second). To disable Lazy Cache, please set to 0.'));
+        o.datatype = 'and(uinteger,min(0))';
+        o.default = 86400;
+        o.depends('cache', '1');
 
-		o = s.taboption('advanced', form.Flag, 'dump_file', _('Cache Dump'),
-			_('Save the cache locally and reload the cache dump on the next startup'));
-		o.rmempty = false;
-		o.default = false;
-		o.depends('cache', '1');
+        o = s.taboption('advanced', form.Flag, 'dump_file', _('Cache Dump'),
+            _('Save the cache locally and reload the cache dump on the next startup'));
+        o.rmempty = false;
+        o.default = false;
+        o.depends('cache', '1');
 
-		o = s.taboption('advanced', form.Value, 'dump_interval',
-			_('Auto Save Cache Interval'));
-		o.datatype = 'and(uinteger,min(0))';
-		o.default = 3600;
-		o.depends('dump_file', '1');
+        o = s.taboption('advanced', form.Value, 'dump_interval',
+            _('Auto Save Cache Interval'));
+        o.datatype = 'and(uinteger,min(0))';
+        o.default = 3600;
+        o.depends('dump_file', '1');
 
-		o = s.taboption('advanced', form.Value, 'minimal_ttl', _('Minimum TTL'),
-			_('Modify the Minimum TTL value (seconds) for DNS answer results, 0 indicating no modification'));
-		o.datatype = 'and(uinteger,min(0),max(604800))';
-		o.default = 0;
-		o.depends('configfile', '/var/etc/mosdns.json');
+        o = s.taboption('advanced', form.Value, 'minimal_ttl', _('Minimum TTL'),
+            _('Modify the Minimum TTL value (seconds) for DNS answer results, 0 indicating no modification'));
+        o.datatype = 'and(uinteger,min(0),max(604800))';
+        o.default = 0;
+        o.depends('configfile', '/var/etc/mosdns.json');
 
-		o = s.taboption('advanced', form.Value, 'maximum_ttl', _('Maximum TTL'),
-			_('Modify the Maximum TTL value (seconds) for DNS answer results, 0 indicating no modification'));
-		o.datatype = 'and(uinteger,min(0),max(604800))';
-		o.default = 0;
-		o.depends('configfile', '/var/etc/mosdns.json');
+        o = s.taboption('advanced', form.Value, 'maximum_ttl', _('Maximum TTL'),
+            _('Modify the Maximum TTL value (seconds) for DNS answer results, 0 indicating no modification'));
+        o.datatype = 'and(uinteger,min(0),max(604800))';
+        o.default = 0;
+        o.depends('configfile', '/var/etc/mosdns.json');
 
-		o = s.taboption('advanced', form.Flag, 'reject_type65', _('Disable RR Type 65 (HTTPS/SVCB)'),
-			_('Block DNS RR Type 65 records (HTTPS/SVCB, used for HTTP/3, ECH, etc.), force using only A/AAAA records.'));
-		o.default = 0;
-		o.depends('configfile', '/var/etc/mosdns.json');
+        o = s.taboption('advanced', form.Flag, 'reject_type65', _('Disable RR Type 65 (HTTPS/SVCB)'),
+            _('Block DNS RR Type 65 records (HTTPS/SVCB, used for HTTP/3, ECH, etc.), force using only A/AAAA records.'));
+        o.default = 0;
+        o.depends('configfile', '/var/etc/mosdns.json');
 
-		o = s.taboption('advanced', form.Flag, 'adblock', _('Enable DNS ADblock'));
-		o.depends('configfile', '/var/etc/mosdns.json');
-		o.default = false;
+        o = s.taboption('advanced', form.Flag, 'adblock', _('Enable DNS ADblock'));
+        o.depends('configfile', '/var/etc/mosdns.json');
+        o.default = false;
 
-		o = s.taboption('advanced', form.DynamicList, 'ad_source', _('ADblock Source'),
-			_('When using custom rule sources, please use rule types supported by MosDNS (domain list or AdGuardHome rules).') +
-			'<br>' +
-			_('Support for local files, such as: file:///var/mosdns/example.txt'));
-		o.depends('adblock', '1');
-		o.default = 'geosite.dat';
-		o.value('geosite.dat', 'v2ray-geosite');
-		o.value('https://raw.githubusercontent.com/privacy-protection-tools/anti-AD/master/anti-ad-domains.txt', 'anti-AD');
-		o.value('https://raw.githubusercontent.com/Cats-Team/AdRules/main/mosdns_adrules.txt', 'Cats-Team/AdRules');
-		o.value('https://raw.githubusercontent.com/neodevpro/neodevhost/master/domain', 'NEO DEV HOST');
+        o = s.taboption('advanced', form.DynamicList, 'ad_source', _('ADblock Source'),
+            _('When using custom rule sources, please use rule types supported by MosDNS (domain list or AdGuardHome rules).') +
+            '<br>' +
+            _('Support for local files, such as: file:///var/mosdns/example.txt'));
+        o.depends('adblock', '1');
+        o.default = 'geosite.dat';
+        o.value('geosite.dat', 'v2ray-geosite');
+        o.value('https://raw.githubusercontent.com/privacy-protection-tools/anti-AD/master/anti-ad-domains.txt', 'anti-AD');
+        o.value('https://raw.githubusercontent.com/Cats-Team/AdRules/main/mosdns_adrules.txt', 'Cats-Team/AdRules');
+        o.value('https://raw.githubusercontent.com/neodevpro/neodevhost/master/domain', 'NEO DEV HOST');
 
-		/* cloudflare */
-		o = s.taboption('cloudflare', form.Flag, 'cloudflare', _('Enabled'),
-			_('Match the parsing result with the Cloudflare IP ranges, and when there is a successful match, \
+        /* cloudflare */
+        o = s.taboption('cloudflare', form.Flag, 'cloudflare', _('Enabled'),
+            _('Match the parsing result with the Cloudflare IP ranges, and when there is a successful match, \
 				use the \'Custom IP\' as the parsing result (experimental feature)'));
-		o.rmempty = false;
-		o.default = false;
-		o.depends('configfile', '/var/etc/mosdns.json');
+        o.rmempty = false;
+        o.default = false;
+        o.depends('configfile', '/var/etc/mosdns.json');
 
-		o = s.taboption('cloudflare', form.DynamicList, 'cloudflare_ip', _('Custom IP'));
-		o.datatype = 'ipaddr';
-		o.depends('configfile', '/var/etc/mosdns.json');
+        o = s.taboption('cloudflare', form.DynamicList, 'cloudflare_ip', _('Custom IP'));
+        o.datatype = 'ipaddr';
+        o.depends('configfile', '/var/etc/mosdns.json');
 
-		o = s.taboption('cloudflare', form.TextValue, '_cloudflare',
-			_('Cloudflare IP Ranges'),
-			_('IPv4 CIDR: <a href="https://www.cloudflare.com/ips-v4" target="_blank">https://www.cloudflare.com/ips-v4</a> <br /> IPv6 CIDR: <a href="https://www.cloudflare.com/ips-v6" target="_blank">https://www.cloudflare.com/ips-v6</a>'));
-		o.rows = 15;
-		o.depends('configfile', '/var/etc/mosdns.json');
-		o.cfgvalue = section_id => fs.trimmed('/etc/mosdns/rule/cloudflare-cidr.txt');
-		o.write = function(section_id, formvalue) {
-			return this.cfgvalue(section_id).then(value => {
-				if (value === formvalue) {
-					return;
-				}
-				return fs.write('/etc/mosdns/rule/cloudflare-cidr.txt', formvalue.trim().replace(/\r\n/g, '\n') + '\n');
-			});
-		};
+        o = s.taboption('cloudflare', form.TextValue, '_cloudflare',
+            _('Cloudflare IP Ranges'),
+            _('IPv4 CIDR: <a href="https://www.cloudflare.com/ips-v4" target="_blank">https://www.cloudflare.com/ips-v4</a> <br /> IPv6 CIDR: <a href="https://www.cloudflare.com/ips-v6" target="_blank">https://www.cloudflare.com/ips-v6</a>'));
+        o.rows = 15;
+        o.depends('configfile', '/var/etc/mosdns.json');
+        o.cfgvalue = section_id => fs.trimmed('/etc/mosdns/rule/cloudflare-cidr.txt');
+        o.write = function (section_id, formvalue) {
+            return this.cfgvalue(section_id).then(value => {
+                if (value === formvalue) {
+                    return;
+                }
+                return fs.write('/etc/mosdns/rule/cloudflare-cidr.txt', formvalue.trim().replace(/\r\n/g, '\n') + '\n');
+            });
+        };
 
-		/* api */
-		o = s.taboption('api', form.Value, 'listen_port_api', _('API Listen port'));
-		o.datatype = 'and(port,min(1))';
-		o.default = 52001;
-		o.depends('configfile', '/var/etc/mosdns.json');
+        /* api */
+        o = s.taboption('api', form.Value, 'listen_port_api', _('API Listen port'));
+        o.datatype = 'and(port,min(1))';
+        o.default = 52001;
+        o.depends('configfile', '/var/etc/mosdns.json');
 
-		o = s.taboption('api', form.Button, '_flush_cache', null,
-			_('Flushing DNS Cache will clear any IP addresses or DNS records from MosDNS cache.'));
-		o.title = '&#160;';
-		o.inputtitle = _('Flush DNS Cache');
-		o.inputstyle = 'apply';
-		o.onclick = L.bind(this.handleFlushCache, this);
-		o.depends('cache', '1');
+        o = s.taboption('api', form.Button, '_flush_cache', null,
+            _('Flushing DNS Cache will clear any IP addresses or DNS records from MosDNS cache.'));
+        o.title = '&#160;';
+        o.inputtitle = _('Flush DNS Cache');
+        o.inputstyle = 'apply';
+        o.onclick = L.bind(this.handleFlushCache, this);
+        o.depends('cache', '1');
 
-		/* configuration */
-		let editor;
-		const configFile = "/etc/mosdns/config_custom.yaml"
-		o = s.taboption('basic', form.DummyValue, '_custom', _('Configuration Editor'));
-		o.rows = 30;
-		o.depends('configfile', configFile);
+        /* configuration */
+        let editor;
+        const configFile = "/etc/mosdns/config_custom.yaml"
+        o = s.taboption('basic', form.DummyValue, '_custom', _('Configuration Editor'));
+        o.rows = 30;
+        o.depends('configfile', configFile);
 
-		o.render = function (sid) {
-			const container = E('div', {'class': 'cm6-container'});
+        o.render = function (sid) {
+            const container = E('div', {'class': 'cm6-container'});
             container.style.minWidth = '0';
             container.style.width = "100%";
             container.style.maxWidth = "40rem";
@@ -397,99 +401,100 @@ return view.extend({
             container.style.overflow = "hidden";
             container.style.height = "28rem";
 
-			return fs.read(configFile).then(content => {
-				const initialValue = content || '';
+            return fs.read(configFile).then(content => {
+                const initialValue = content || '';
 
-				try {
-					jsyaml.load(initialValue);
-				} catch (e) {}
+                try {
+                    jsyaml.load(initialValue);
+                } catch (e) {}
 
-				if (window.CM6) {
-					editor = window.CM6.create(container, initialValue);
+                if (window.CM6) {
+                    editor = window.CM6.create(container, initialValue);
 
-					const scroller = container.querySelector('.cm-scroller');
-					if (scroller) {
+                    const scroller = container.querySelector('.cm-scroller');
+                    if (scroller) {
                         scroller.style.height = "28rem";
-						scroller.style.overflow = "auto";
-					}
-					const contentEl = container.querySelector('.cm-content');
-					if (contentEl) {
-						contentEl.style.minWidth = "0";
-						contentEl.style.overflowWrap = "break-word";
-					}
-				}
+                        scroller.style.overflow = "auto";
+                    }
+                    const contentEl = container.querySelector('.cm-content');
+                    if (contentEl) {
+                        contentEl.style.minWidth = "0";
+                        contentEl.style.overflowWrap = "break-word";
+                    }
+                }
 
-				return E('div', {'class': 'cbi-value'}, [
-					E('label', {'class': 'cbi-value-title'}, [ this.title ]),
-					E('div', {'class': 'cbi-value-field', 'style': 'display:flex; flex-direction:column;min-width:0;'}, [
-						container,
-						E('div', {'class': 'cbi-value-description',
-							'style': 'margin-top: 0.5rem; max-width: 40rem; white-space: normal;'
-						}, [
-							_('This is the content of the file \'/etc/mosdns/config_custom.yaml\' from which your MosDNS configuration will be generated. Only accepts configuration content in yaml format.')
-						])
-					])
-				]);
-			});
-		};
+                return E('div', {'class': 'cbi-value'}, [
+                    E('label', {'class': 'cbi-value-title'}, [this.title]),
+                    E('div', {'class': 'cbi-value-field', 'style': 'display:flex; flex-direction:column;min-width:0;'}, [
+                        container,
+                        E('div', {
+                            'class': 'cbi-value-description',
+                            'style': 'margin-top: 0.5rem; max-width: 40rem; white-space: normal;'
+                        }, [
+                            _('This is the content of the file \'/etc/mosdns/config_custom.yaml\' from which your MosDNS configuration will be generated. Only accepts configuration content in yaml format.')
+                        ])
+                    ])
+                ]);
+            });
+        };
 
-		o = s.taboption('geodata', form.DynamicList, 'geosite_tags', _('GeoSite Tags'),
-			_('Enter the GeoSite.dat category to be exported, Allow add multiple tags'),
-			_('Export directory: /var/mosdns'));
-		o.depends('configfile', '/etc/mosdns/config_custom.yaml');
+        o = s.taboption('geodata', form.DynamicList, 'geosite_tags', _('GeoSite Tags'),
+            _('Enter the GeoSite.dat category to be exported, Allow add multiple tags'),
+            _('Export directory: /var/mosdns'));
+        o.depends('configfile', '/etc/mosdns/config_custom.yaml');
 
-		o = s.taboption('geodata', form.DynamicList, 'geoip_tags', _('GeoIP Tags'),
-			_('Enter the GeoIP.dat category to be exported, Allow add multiple tags'),
-			_('Export directory: /var/mosdns'));
-		o.depends('configfile', '/etc/mosdns/config_custom.yaml');
+        o = s.taboption('geodata', form.DynamicList, 'geoip_tags', _('GeoIP Tags'),
+            _('Enter the GeoIP.dat category to be exported, Allow add multiple tags'),
+            _('Export directory: /var/mosdns'));
+        o.depends('configfile', '/etc/mosdns/config_custom.yaml');
 
-		const originalParse = m.parse;
-		m.parse = function() {
-			if (editor && editor.state) {
-				const content = editor.state.doc.toString().trim() + '\n';
+        const originalParse = m.parse;
+        m.parse = function () {
+            if (editor && editor.state) {
+                const content = editor.state.doc.toString().trim() + '\n';
 
-				try {
-					window.jsyaml.load(content);
-				} catch (e) {
-					return Promise.reject(e);
-				}
+                try {
+                    window.jsyaml.load(content);
+                } catch (e) {
+                    return Promise.reject(e);
+                }
 
-				return fs.write(configFile, content).then(() => {
-					return originalParse.apply(m, arguments);
-				});
-			}
-			return originalParse.apply(m, arguments);
-		};
+                return fs.write(configFile, content).then(() => {
+                    return originalParse.apply(m, arguments);
+                });
+            }
+            return originalParse.apply(m, arguments);
+        };
 
-		return m.render();
-	},
+        return m.render();
+    },
 
-	handleSaveApply(ev, mode) {
-		return this.map.save()
-			.then(() => uci.changes())
-			.then((changes) => {
-				if (changes && Object.keys(changes).length > 0) {
-					return ui.changes.apply(mode === '0');
-				} else {
-					ui.changes.displayStatus(
-						'notice spinning',
-						E('p', _('Starting configuration apply…'))
-					);
-					return fs.exec('/etc/init.d/mosdns', ['restart'])
-						.then(() => {
-							ui.changes.displayStatus(
-								'notice',
-								E('p', _('Configuration changes applied.'))
-							);
+    handleSaveApply(ev, mode) {
+        return this.map.save()
+            .then(() => uci.changes())
+            .then((changes) => {
+                if (changes && Object.keys(changes).length > 0) {
+                    return ui.changes.apply(mode === '0');
+                } else {
+                    ui.changes.displayStatus(
+                        'notice spinning',
+                        E('p', _('Starting configuration apply…'))
+                    );
+                    return fs.exec('/etc/init.d/mosdns', ['restart'])
+                        .then(() => {
+                            ui.changes.displayStatus(
+                                'notice',
+                                E('p', _('Configuration changes applied.'))
+                            );
 
-							setTimeout(() => {
-								ui.changes.displayStatus(false);
-								window.location.reload();
-							}, 1500);
-						}).catch(e => {
-							ui.changes.displayStatus(false);
-						});
-				}
-			})
-	}
+                            setTimeout(() => {
+                                ui.changes.displayStatus(false);
+                                window.location.reload();
+                            }, 1500);
+                        }).catch(e => {
+                            ui.changes.displayStatus(false);
+                        });
+                }
+            })
+    }
 });
