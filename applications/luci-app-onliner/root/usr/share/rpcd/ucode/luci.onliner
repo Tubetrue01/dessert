@@ -43,10 +43,6 @@ function get_online_devices() {
 
             const hostname = hints[mac] || "?";
 
-            if (hostname === "?") {
-                continue;
-            }
-
             push(devices, {
                 "hostname": hostname,
                 "ipaddr": ip,
