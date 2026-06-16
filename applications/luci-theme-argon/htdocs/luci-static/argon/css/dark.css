@@ -34,7 +34,7 @@ body {
 }
 
 .login-page .login-container .login-form .form-login .cbi-button-apply {
-    background-color: #828282 !important;
+    background-color: var(--dark-primary) !important;
     background-color: var(--dark-primary) !important
 }
 
@@ -80,7 +80,7 @@ header::after {
 }
 
 .main .main-left .nav .slide .menu.active {
-    background-color: #828282 !important;
+    background-color: var(--dark-primary) !important;
     background-color: var(--dark-primary) !important;
     color: #F7F8F1 !important
 }
@@ -94,7 +94,7 @@ header::after {
 }
 
 .main .main-left .nav li a:hover {
-    background-color: #828282 !important;
+    background-color: var(--dark-primary) !important;
     background-color: var(--dark-primary) !important;
     color: #F7F8F1 !important
 }
@@ -144,9 +144,9 @@ input:-webkit-autofill {
 
 .cbi-value-field .cbi-input-apply, .cbi-button-apply, .cbi-button-edit {
     color: #F7F8F1 !important;
-    background-color: #828282 !important;
     background-color: var(--dark-primary) !important;
-    border-color: #828282 !important;
+    background-color: var(--dark-primary) !important;
+    border-color: var(--dark-primary) !important;
     border-color: var(--dark-primary) !important
 }
 
@@ -256,7 +256,7 @@ h4 {
 
 .cbi-button {
     color: #F7F8F1 !important;
-    background-color: #828282;
+    background-color: var(--dark-primary);
     background-color: var(--dark-primary)
 }
 
@@ -305,10 +305,10 @@ div > table > tbody > tr:nth-of-type(2n), div > .table > .tbody > .tr:nth-of-typ
 }
 
 .tabs > li[class~="active"], .tabs > li:hover {
-    border-bottom: .18751rem solid #828282;
+    border-bottom: .18751rem solid var(--dark-primary);
     border-bottom: .18751rem solid var(--dark-primary);
     color: var(--dark-primary) !important;
-    background-color: #181819
+    background-color: #4a4a4a
 }
 
 .cbi-tabmenu > li > a, .tabs > li > a {
@@ -334,7 +334,7 @@ div > table > tbody > tr:nth-of-type(2n), div > .table > .tbody > .tr:nth-of-typ
 }
 
 .cbi-tabmenu > li[class~="cbi-tab"] {
-    background-color: #181819;
+    background-color: #4a4a4a;
     border-bottom: .18751rem solid var(--dark-primary) !important
 }
 
@@ -354,7 +354,7 @@ select, input {
 }
 
 select:not([multiple="multiple"]):focus, input:focus {
-    border-color: #828282 !important;
+    border-color: var(--dark-primary) !important;
     border-color: var(--dark-primary) !important;
     outline: 0
 }
@@ -460,7 +460,7 @@ div.cbi-value var, td.cbi-value-field var {
 }
 
 .node-services-vssr .cbi-section-table-row.fast {
-    background: #828282 !important;
+    background: var(--dark-primary) !important;
     background: var(--dark-primary) !important;
     color: #F7F8F1
 }
@@ -479,7 +479,7 @@ div.cbi-value var, td.cbi-value-field var {
 }
 
 .notice {
-    background-color: #828282 !important;
+    background-color: var(--dark-primary) !important;
     background-color: var(--dark-primary) !important
 }
 
@@ -501,7 +501,7 @@ div.cbi-value var, td.cbi-value-field var {
 }
 
 .cbi-page-actions .cbi-button-apply, .cbi-section-actions .cbi-button-edit, .cbi-button-edit.important, .cbi-button-apply.important, .cbi-button-reload.important, .cbi-button-action.important {
-    border: 1px #828282 solid !important;
+    border: 1px var(--dark-primary) solid !important;
     border: 1px var(--dark-primary) solid !important
 }
 
@@ -526,7 +526,7 @@ fieldset[id^="cbi-apply-"] {
 
 header .fill .status span[data-style="active"] {
     color: #F7F8F1 !important;
-    background-color: #828282 !important
+    background-color: var(--dark-primary) !important
 }
 
 #cbi-wireless .td, #cbi-network .tr:first-child > .td, .table[width="100%"] > .tr:first-child > .td, [data-page="admin-network-diagnostics"] .tr > .td, .tr.table-titles > .th, .tr.cbi-section-table-titles > .th {
@@ -542,7 +542,7 @@ header .fill .status span[data-style="active"] {
 
 td > .ifacebadge, .td > .ifacebadge {
     color: #F7F8F1;
-    background-color: #828282;
+    background-color: var(--dark-primary);
     background-color: var(--dark-primary);
     border: 0
 }
@@ -662,7 +662,7 @@ div[style="width:100%;height:300px;border:1px solid #000;background:#F7F8F1"] {
 }
 
 .cbi-value input[type="password"] + .cbi-button-neutral {
-    background-color: #828282 !important;
+    background-color: var(--dark-primary) !important;
     background-color: var(--dark-primary) !important;
     border-color: var(--dark-primary) !important
 }
@@ -701,7 +701,7 @@ div[style="width:100%;height:300px;border:1px solid #000;background:#F7F8F1"] {
 }
 
 .cbi-dropdown[open] {
-    border-color: #828282 !important;
+    border-color: var(--dark-primary) !important;
     border-color: var(--dark-primary) !important
 }
 
@@ -722,19 +722,19 @@ div[style="width:100%;height:300px;border:1px solid #000;background:#F7F8F1"] {
 }
 
 .cbi-dropdown[open] > ul.dropdown > li[selected] {
-    background-color: #828282 !important;
+    background-color: var(--dark-primary) !important;
     background-color: var(--dark-primary) !important;
     border-bottom: 1px solid #3c3c3c !important
 }
 
 .cbi-dropdown[open] > ul.dropdown > li.focus {
-    background: #828282;
+    background: var(--dark-primary);
     background: var(--dark-primary);
     outline: none
 }
 
 .ifacebadge {
-    background-color: #828282
+    background-color: var(--dark-primary)
 }
 
 .cbi-dynlist > .item > span {
@@ -742,13 +742,13 @@ div[style="width:100%;height:300px;border:1px solid #000;background:#F7F8F1"] {
 }
 
 .cbi-page-actions .cbi-button-apply, .cbi-section-actions .cbi-button-edit, .cbi-button-edit, .cbi-button-apply, .cbi-button-reload, .cbi-button-action, .cbi-button[value="Submit"], .cbi-button[value="Upload"], .cbi-button[value$="Apply"], .cbi-button[onclick="addKey(event)"] {
-    background: #828282 !important;
+    background: var(--dark-primary) !important;
     background: var(--dark-primary) !important;
     border-color: var(--dark-primary) !important
 }
 
 .btn.primary, .cbi-page-actions .cbi-button-save, .cbi-page-actions .cbi-button-apply + .cbi-button-save, .cbi-button-add, .cbi-button-save, .cbi-button-positive, .cbi-button-link, .cbi-button[value="Enable"], .cbi-button[value="Scan"], .cbi-button[value^="Back"], .cbi-button-neutral[onclick="handleConfig(event)"] {
-    background: #828282;
+    background: var(--dark-primary);
     background: var(--dark-primary)
 }
 
@@ -977,4 +977,12 @@ div[style="width:100%;height:300px;border:1px solid #000;background:#F7F8F1"] {
 
 .cbi-dropdown[open] > ul.dropdown > li {
     background: transparent;
+}
+
+.label {
+    background-color: var(--dark-primary);
+}
+
+.btn, button, select, input, .cbi-dropdown {
+    color: #F7F8F1;
 }
