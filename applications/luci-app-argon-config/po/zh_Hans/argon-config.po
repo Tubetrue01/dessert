@@ -19,15 +19,15 @@ msgstr "0 最透明 - 1 不透明（建议：黑色半透明 0.5）"
 msgid ""
 "0 transparent - 1 opaque (suggest: transparent: 0 or translucent preset: "
 "0.5)."
-msgstr "0 最透明 - 1 不透明（建议: 透明 0 或 半透明预设 0.5）。"
+msgstr "0 最透明 - 1 不透明（建议: 透明 0 或 半透明预设 0.5）"
 
 #: applications/luci-app-argon-config/htdocs/luci-static/resources/view/argon-config.js:91
 msgid "A HEX Color (default: #828282)."
-msgstr "十六进制颜色值（预设为：#828282）。"
+msgstr "十六进制颜色值（预设为：#828282）"
 
 #: applications/luci-app-argon-config/htdocs/luci-static/resources/view/argon-config.js:67
 msgid "A HEX color (default: #212121)."
-msgstr "十六进制颜色值（预设为：#212121）。"
+msgstr "十六进制颜色值（预设为：#212121）"
 
 #: applications/luci-app-argon-config/htdocs/luci-static/resources/view/argon-config.js:155
 msgid "Action"
@@ -76,7 +76,7 @@ msgstr "文件名"
 
 #: applications/luci-app-argon-config/htdocs/luci-static/resources/view/argon-config.js:129
 msgid "Files will be uploaded to <code>%s</code>."
-msgstr "文件将被上传至<code>%s</code>。"
+msgstr "文件将被上传至<code>%s</code>"
 
 #: applications/luci-app-argon-config/htdocs/luci-static/resources/view/argon-config.js:61
 msgid "Follow system"

@@ -9,6 +9,11 @@ PKG_RELEASE:=3
 LUCI_DEPENDS:=+luci-base
 LUCI_PKGARCH:=all
 
+define Package/$(PKG_NAME)/conffiles
+/etc/config/frpc
+/etc/frpc/frpc.yaml
+endef
+
 include $(TOPDIR)/feeds/luci/luci.mk
 
 # call BuildPackage - OpenWrt buildroot signature
