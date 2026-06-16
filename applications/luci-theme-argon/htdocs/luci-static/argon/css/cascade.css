@@ -3264,14 +3264,14 @@ body.modal-overlay-active #modal_overlay {
     align-items: center;
     gap: 0.2rem;
     padding: 0.25rem 0.8rem;
-    background: #eee;
+    background: #e5e5e5;
     border-radius: 4px;
 }
 
 td > .ifacebadge,
 .td > .ifacebadge {
     font-size: 0.875rem;
-    background-color: #f0f0f0;
+    background-color: #e5e5e5;
 }
 
 .ifacebadge > em,
