@@ -22,8 +22,8 @@ msgid ""
 msgstr "0 最透明 - 1 不透明（建议: 透明 0 或 半透明预设 0.5）。"
 
 #: applications/luci-app-argon-config/htdocs/luci-static/resources/view/argon-config.js:91
-msgid "A HEX Color (default: #483d8b)."
-msgstr "十六进制颜色值（预设为：#483d8b）。"
+msgid "A HEX Color (default: #828282)."
+msgstr "十六进制颜色值（预设为：#828282）。"
 
 #: applications/luci-app-argon-config/htdocs/luci-static/resources/view/argon-config.js:67
 msgid "A HEX color (default: #212121)."

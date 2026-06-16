@@ -22,11 +22,11 @@ msgid ""
 msgstr ""
 
 #: applications/luci-app-argon-config/htdocs/luci-static/resources/view/argon-config.js:91
-msgid "A HEX Color (default: #483d8b)."
+msgid "A HEX Color (default: #828282)."
 msgstr ""
 
 #: applications/luci-app-argon-config/htdocs/luci-static/resources/view/argon-config.js:67
-msgid "A HEX color (default: #5e72e4)."
+msgid "A HEX color (default: #212121)."
 msgstr ""
 
 #: applications/luci-app-argon-config/htdocs/luci-static/resources/view/argon-config.js:155
