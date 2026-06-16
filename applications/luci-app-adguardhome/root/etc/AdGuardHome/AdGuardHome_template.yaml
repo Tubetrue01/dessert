@@ -2,8 +2,15 @@ http:
   pprof:
     port: 6060
     enabled: false
+  doh:
+    routes:
+      - GET /dns-query
+      - POST /dns-query
+      - GET /dns-query/{ClientID}
+      - POST /dns-query/{ClientID}
+    insecure_enabled: false
   address: 0.0.0.0:3000
-  session_ttl: 720h
+  session_ttl: 30d
 users:
   - name: root
     password: $2a$10$A9Eg8HQKo6Var5Bv6EvKkub90HN13jPW6YCSsvJvU9SXlWfTW3.Ry
@@ -91,7 +98,6 @@ tls:
   port_dns_over_quic: 853
   port_dnscrypt: 0
   dnscrypt_config_file: ""
-  allow_unencrypted_doh: false
   certificate_chain: ""
   private_key: ""
   certificate_path: ""
@@ -100,15 +106,17 @@ tls:
 querylog:
   dir_path: ""
   ignored: []
-  interval: 2160h
+  interval: 90d
   size_memory: 1000
   enabled: true
+  ignored_enabled: false
   file_enabled: true
 statistics:
   dir_path: ""
   ignored: []
-  interval: 24h
+  interval: 1d
   enabled: true
+  ignored_enabled: false
 filters:
   - enabled: false
     url: https://adguardteam.github.io/HostlistsRegistry/assets/filter_24.txt
@@ -120,8 +128,8 @@ filters:
     id: 1740852817
 whitelist_filters: []
 user_rules:
-  - "||lan^$dnsrewrite=NXDOMAIN;;"
-  - "||in-addr.arpa^$dnsrewrite=NXDOMAIN;;"
+  - '||lan^$dnsrewrite=NXDOMAIN;;'
+  - '||in-addr.arpa^$dnsrewrite=NXDOMAIN;;'
 dhcp:
   enabled: false
   interface_name: ""
@@ -144,7 +152,7 @@ filtering:
   blocking_ipv6: ""
   blocked_services:
     schedule:
-      time_zone: Local
+      time_zone: UTC
     ids: []
   protection_disabled_until: null
   safe_search:
@@ -194,4 +202,4 @@ os:
   group: ""
   user: ""
   rlimit_nofile: 0
-schema_version: 32
+schema_version: 34
