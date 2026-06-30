@@ -1,0 +1,3 @@
+app=luci-app-rtp2httpd
+target=feeds/luci/applications/${app}
+origin=feeds/dessert/applications/${app}
