@@ -1,3 +1,0 @@
-app=rtp2httpd
-target=feeds/packages/net/${app}
-origin=feeds/dessert/libs/${app}
