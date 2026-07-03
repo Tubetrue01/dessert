@@ -1,4 +1,6 @@
 /*   Copyright (C) 2022-2026 sirpdboy herboy2008@gmail.com*/
+// noinspection JSAnnotator
+
 'use strict';
 'require view';
 'require fs';
@@ -72,29 +74,20 @@ function checkUpdateStatus() {
 function extractPortNumber(portValue) {
     if (!portValue) return '9876';
     if (portValue.includes(':')) {
-        var parts = portValue.split(':');
+        const parts = portValue.split(':');
         return parts[parts.length - 1];
     }
     return portValue;
 }
 
 function renderStatus(isRunning, listen_port, noweb, version) {
-    var statusText = isRunning ? _('RUNNING') : _('NOT RUNNING');
-    var color = isRunning ? 'green' : 'red';
-    var icon = isRunning ? '✓' : '✗';
-    var versionText = version ? `v${version}` : '';
-    
-    var html = String.format(
-        '<em><span style="color:%s">%s <strong>%s %s - %s</strong></span></em>',
-        color, icon, _('DDNS-Go'), versionText, statusText
+    const statusText = isRunning ? _('RUNNING') : _('NOT RUNNING');
+    const color = isRunning ? 'green' : 'red';
+
+    return String.format(
+        '<em><span style="color:%s"><strong>%s %s</strong></span></em>',
+        color, _('DDNS-Go'), statusText
     );
-    
-    if (isRunning) {
-        html += String.format('&#160;<a class="btn cbi-button" href="http://%s:%s" target="_blank">%s</a>', 
-             window.location.hostname, listen_port, _('Open Web Interface'));
-    }
-    
-    return html;
 }
 
 function renderUpdateStatus(updateInfo) {
@@ -102,8 +95,8 @@ function renderUpdateStatus(updateInfo) {
         return '<span style="color:orange"> ⚠ ' + _('Update status unknown') + '</span>';
     }
     
-    var status = updateInfo.status;
-    var message = updateInfo.message || '';
+    const status = updateInfo.status;
+    let message = updateInfo.message || '';
     
     for (let [en, zh] of Object.entries(updateMessageMap)) {
         if (message.includes(en)) {
@@ -142,6 +135,7 @@ return view.extend({
             const result = await fs.exec('/usr/bin/ddns-go', ['-resetPassword', 'admin12345', '-c', '/etc/ddns-go/ddns-go-config.yaml']);
             const configFile = '/etc/ddns-go/ddns-go-config.yaml';
             const readResult = await fs.read(configFile);
+
             if (readResult && readResult.trim() !== '') {
                 let configContent = readResult;
                 configContent = configContent.replace(/(username:\s*).*/g, '$1admin');
@@ -229,7 +223,7 @@ return view.extend({
 
     handleUpdate: async function () {
         try {
-            var updateView = document.getElementById('update_status');
+            const updateView = document.getElementById('update_status');
             if (updateView) {
                 updateView.innerHTML = '<span class="spinning"></span> ' + _('Updating, please wait...');
             }
@@ -244,10 +238,10 @@ return view.extend({
                 }
                 
                 setTimeout(() => {
-                    var updateView = document.getElementById('update_status');
+                    const updateView = document.getElementById('update_status');
                     if (updateView) {
                         getVersionInfo().then(function(versionInfo) {
-                            var version = versionInfo.version || '';
+                            const version = versionInfo.version || '';
                             updateView.innerHTML = String.format('<span style="color:green">✓ %s v%s</span>', 
                                 _('Current Version'), version);
                         });
@@ -257,13 +251,13 @@ return view.extend({
 
         } catch (error) {
             console.error('Update failed:', error);
-            var updateView = document.getElementById('update_status');
+            const updateView = document.getElementById('update_status');
             if (updateView) {
                 updateView.innerHTML = '<span style="color:red">✗ ' + _('Update failed') + '</span>';
 
                 setTimeout(() => {
                     getVersionInfo().then(function(versionInfo) {
-                        var version = versionInfo.version || '';
+                        const version = versionInfo.version || '';
                         updateView.innerHTML = String.format('<span>%s v%s</span>', 
                             _('Current Version'), version);
                     });
@@ -271,13 +265,18 @@ return view.extend({
             }
         }
     },
-    
+
+    openWebInterface: async function (listen_port) {
+        const url = 'http://' + window.location.hostname + ':' + listen_port;
+        window.open(url, '_blank');
+    },
+
     render: function(data) {
-        var m, s, o;
+        let m, s, o;
         
-        var portValue = uci.get('ddns-go', 'config', 'port') || '[::]:9876';
-        var listen_port = extractPortNumber(portValue);
-        var noweb = uci.get('ddns-go', 'config', 'noweb') || '0';
+        const portValue = uci.get('ddns-go', 'config', 'port') || '[::]:9876';
+        const listen_port = extractPortNumber(portValue);
+        const noweb = uci.get('ddns-go', 'config', 'noweb') || '0';
 
         m = new form.Map('ddns-go', _('DDNS-GO'),
             _('DDNS-GO automatically obtains your public IPv4 or IPv6 address and resolves it to the corresponding domain name service.'));
@@ -286,7 +285,7 @@ return view.extend({
         s.anonymous = true;
    
         s.render = function() {
-            var statusView = E('p', { id: 'control_status' }, 
+            const statusView = E('p', { id: 'control_status' },
                 '<span class="spinning"></span> ' + _('Checking status...'));
             
             window.statusPoll = function() {
@@ -294,8 +293,8 @@ return view.extend({
                     checkProcess(),
                     getVersionInfo()
                 ]).then(function(results) {
-                    var [processInfo, versionInfo] = results;
-                    var version = versionInfo.version || '';
+                    const [processInfo, versionInfo] = results;
+                    const version = versionInfo.version || '';
                     statusView.innerHTML = renderStatus(processInfo.running, listen_port, noweb, version);
                 }).catch(function(err) {
                     console.error('Status check failed:', err);
@@ -321,6 +320,11 @@ return view.extend({
         o.rmempty = false;
         o.datatype = 'string'; 
         o.description = _('Port number (1-65535)');
+
+        o = s.option(form.Button, '_web_panel', _('Web Interface'));
+        o.inputtitle = _('Open Web Interface');
+        o.inputstyle = 'apply';
+        o.onclick = L.bind(this.openWebInterface, this, listen_port);
 
         o = s.option(form.Value, 'time', _('Update interval (seconds)'));
         o.default = '300';
@@ -366,11 +370,11 @@ return view.extend({
         o = s.option(form.DummyValue, '_update_status', _('Current Version'));
         o.rawhtml = true;
         
-        var currentVersion = '';
+        let currentVersion = '';
 	
         getVersionInfo().then(function(versionInfo) {
             currentVersion = versionInfo.version || '';
-            var updateView = document.getElementById('update_status');
+            const updateView = document.getElementById('update_status');
             if (updateView) {
                 updateView.innerHTML = String.format('<span>v%s</span>', currentVersion);
             }

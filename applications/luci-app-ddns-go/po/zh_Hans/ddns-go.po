@@ -12,17 +12,23 @@ msgstr "DDNS-GO 自动获取您的公网 IPv4 或 IPv6 地址，并解析到对�
 msgid "Enable"
 msgstr "启用"
 
+msgid "Due to browser security policies, the DDNS-GO interface https cannot be embedded directly."
+msgstr "由于浏览器安全策略，DDNS-GO 接口的 HTTPS 页面无法直接嵌入显示。"
+
 msgid "Listen port"
 msgstr "监听端口"
 
 msgid "DDNS-GO Service Not Running"
-msgstr "DDNS-GO服务未启用"
+msgstr "DDNS-GO 服务未启用"
 
 msgid "DDNS-GO Web Interface Disabled"
-msgstr "DDNS-GO WEB服务禁用"
+msgstr "DDNS-GO WEB 服务禁用"
 
 msgid "DDNS-GO Control panel"
-msgstr "DDNS-GO操作台"
+msgstr "操作台"
+
+msgid "Base Setting"
+msgstr "基本设置"
 
 msgid "Update interval (seconds)"
 msgstr "更新间隔（秒）"
@@ -37,10 +43,10 @@ msgid "Skip verifying certificates"
 msgstr "跳过证书验证"
 
 msgid "Specify DNS resolution server"
-msgstr "指定DNS解析服务器"
+msgstr "指定 DNS 解析服务器"
 
 msgid "Do not start web services"
-msgstr "不启动Web服务"
+msgstr "不启动 Web 服务"
 
 msgid "Delayed Start (seconds)"
 msgstr "延迟启动（秒）"
@@ -52,13 +58,13 @@ msgid "Check Update"
 msgstr "检查更新"
 
 msgid "Port number (1-65535)"
-msgstr "端口范围(1-65535)"
+msgstr "端口范围（1-65535）"
 
 msgid "Check"
 msgstr "检查"
 
 msgid "Update interval in seconds (60-86400)"
-msgstr "更新间隔范围(60-86400)秒"
+msgstr "更新间隔范围（60-86400）秒"
 
 msgid "Current Version"
 msgstr "当前版本"
@@ -72,8 +78,11 @@ msgstr "运行中"
 msgid "NOT RUNNING"
 msgstr "未运行"
 
+msgid "Web Interface"
+msgstr "Web 界面"
+
 msgid "Open Web Interface"
-msgstr "打开Web界面"
+msgstr "打开 Web 界面"
 
 msgid "Checking status..."
 msgstr "检查状态中..."
@@ -139,7 +148,7 @@ msgid "Username and Password Reset Successful"
 msgstr "用户名和密码重置成功"
 
 msgid "Username: admin, Password: admin12345"
-msgstr "用户名: admin, 密码: admin12345"
+msgstr "用户名：admin，密码：admin12345"
 
 msgid "You need to restart DDNS-Go service for the changes to take effect."
 msgstr "您需要重启 DDNS-Go 服务以使更改生效。"
@@ -163,19 +172,19 @@ msgid "Close"
 msgstr "关闭"
 
 msgid "ERROR:"
-msgstr "错误:"
+msgstr "错误："
 
 msgid "Reset username/password failed:"
-msgstr "重置用户名/密码失败:"
+msgstr "重置用户名/密码失败："
 
 msgid "SUCCESS:"
-msgstr "成功:"
+msgstr "成功："
 
 msgid "DDNS-Go service restarted successfully"
 msgstr "DDNS-Go 服务重启成功"
 
 msgid "Failed to restart service:"
-msgstr "重启服务失败:"
+msgstr "重启服务失败："
 
 msgid "Ali DNS 223.5.5.5"
 msgstr "阿里 DNS 223.5.5.5"
@@ -196,4 +205,4 @@ msgid "Google DNS 8.8.4.4"
 msgstr "谷歌 DNS 8.8.4.4"
 
 msgid "Found %d ddns-go entries. Last updated: %s"
-msgstr "找到 %d ddns-go记录，最近时间: %s"
+msgstr "找到 %d ddns-go 记录，最近时间：%s"

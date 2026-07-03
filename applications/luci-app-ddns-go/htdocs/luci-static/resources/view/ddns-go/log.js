@@ -1,4 +1,6 @@
 // SPDX-License-Identifier: Apache-2.0
+// noinspection JSAnnotator
+
 /*
  * Copyright (C) 2022-2026 sirpdboy <herboy2008@gmail.com>
  */
@@ -12,68 +14,56 @@
 
 return view.extend({
 	render: function () {
-		var css = `
+		const css = `
 			.log-container {
-				max-height: 1200px;
-				overflow-y: auto;
-				border-radius: 3px;
-				margin-top: 10px;
-				padding: 5px;
-				background-color: var(--background-color);
-				font-family: monospace;
-				font-size: 12px;
-				border: 1px solid var(--border-color);
-			}
-			.log-line {
-				padding: 3px 5px;
-				font-family: monospace;
-				font-size: 12px;
-				line-height: 1.4;
-				border-bottom: 1px solid var(--border-color-light);
-				white-space: pre-wrap;
-				word-break: break-all;
-			}
-			.log-line:last-child {
-				border-bottom: none;
-			}
-			.log-timestamp {
-				color: #0066cc;
-				margin-right: 10px;
-				font-weight: bold;
-			}
-			.log-error {
-				color: #cc0000;
-			}
-			.log-warning {
-				color: #ff9900;
-			}
-			.control-buttons {
-				margin-bottom: 10px;
-				display: flex;
-				gap: 5px;
-			}
+                max-height: 30rem;
+                overflow-y: auto;
+                padding: 1rem;
+                font-size: 0.875rem;
+                border: 0.0625rem solid #dee2e6;
+                border-radius: 0.25rem;
+                margin: 1rem;
+            }
+            
+            .log-line {
+                padding: 0.1875rem 0.3125rem; 
+                font-size: 0.75rem;           
+                line-height: 1.4;
+                white-space: pre-wrap;
+                word-break: break-all;
+            }
+            
+            .log-line:last-child {
+                border-bottom: none;
+            }
+            
+            .control-buttons {
+                margin-bottom: 0.625rem;
+                display: flex;
+                gap: 0.3125rem;        
+            }
 
 		`;
 
-		var log_container = E('div', { 
+		const log_container = E('div', {
 			'class': 'log-container', 
 			'id': 'log_container',
-			'style': 'min-height: 200px;'
+			'style': 'min-height: 30rem;'
 		}, E('div', { 'class': 'log-line' }, _('Loading logs...')));
 
 
-		var lastLogContent = '';
-		var lastScrollTop = 0;
-		var isScrolledToTop = true;
+		let lastLogContent = '';
+        let lastScrollTop = 0;
+        let isScrolledToTop = true;
 
 		function extractDDNSGoMessage(line) {
 			if (!line || !line.includes('ddns-go')) return null;
-			
-			var regex = /^(.*?ddns-go.*?):\s*(.*)$/;
-			var match = line.match(regex);
+
+            const regex = /^(.*?ddns-go.*?):\s*(.*)$/;
+            const match = line.match(regex);
 			
 			if (match) {
-				var timestampMatch = line.match(/^([A-Z][a-z]{2}\s+[A-Z][a-z]{2}\s+\d{1,2}\s+\d{2}:\d{2}:\d{2}\s+\d{4})/);
+                const timestampMatch = line.match(/^([A-Z][a-z]{2}\s+[A-Z][a-z]{2}\s+\d{1,2}\s+\d{2}:\d{2}:\d{2}\s+\d{4})/);
 				if (timestampMatch) {
 					return {
 						timestamp: timestampMatch[1],
@@ -81,8 +71,8 @@ return view.extend({
 					};
 				}
 			}
-			
-			var selfTimestampMatch = line.match(/(\d{4}\/\d{2}\/\d{2}\s+\d{2}:\d{2}:\d{2})\s+(.*)$/);
+
+            const selfTimestampMatch = line.match(/(\d{4}\/\d{2}\/\d{2}\s+\d{2}:\d{2}:\d{2})\s+(.*)$/);
 			if (selfTimestampMatch) {
 				return {
 					timestamp: selfTimestampMatch[1],
@@ -98,11 +88,11 @@ return view.extend({
 
 		function formatLogLine(line) {
 			if (!line || line.trim() === '') return null;
-			
-			var extracted = extractDDNSGoMessage(line);
+
+            const extracted = extractDDNSGoMessage(line);
 			if (!extracted) return null;
-			
-			var lineClass = ['log-line'];
+
+            const lineClass = ['log-line'];
 			
 			if (line.includes('err') || line.includes('ERROR') || line.includes('failed')) {
 				lineClass.push('log-error');
@@ -124,14 +114,14 @@ return view.extend({
 				return E('div', { 'class': 'log-line' }, _('No ddns-go logs found.'));
 			}
 			
-			var lines = logContent.split('\n');
-			var formattedLines = [];
+			const lines = logContent.split('\n');
+            const formattedLines = [];
 			
-			for (var i = 0; i < lines.length; i++) {
-				var line = lines[i].trim();
+			for (let i = 0; i < lines.length; i++) {
+                const line = lines[i].trim();
 				if (line === '' || line.includes('No ddns-go logs found')) continue;
-				
-				var formattedLine = formatLogLine(line);
+
+                const formattedLine = formatLogLine(line);
 				if (formattedLine) {
 					formattedLines.push(formattedLine);
 				}
@@ -171,7 +161,7 @@ return view.extend({
 			
 			return fs.exec('/usr/libexec/ddns-go-call', ['get_logs'])
 				.then(function(res) {
-					var logContent = '';
+					let logContent = '';
 					if (res === null || res === undefined) {
 						logContent = '';
 					} else if (typeof res === 'string') {
@@ -185,23 +175,23 @@ return view.extend({
 					}
 					
 					logContent = logContent.trim();
-					var lineCount = logContent.split('\n').filter(l => 
+                    const lineCount = logContent.split('\n').filter(l =>
 						l.trim() !== '' && !l.includes('No ddns-go logs found')
 					).length;
 					
 					if (logContent !== lastLogContent) {
 						
-						var formattedLog = formatLogContent(logContent);
-						
-						var prevScrollHeight = log_container.scrollHeight;
-						var prevScrollTop = log_container.scrollTop;
+						const formattedLog = formatLogContent(logContent);
+
+                        const prevScrollHeight = log_container.scrollHeight;
+                        const prevScrollTop = log_container.scrollTop;
 						
 						dom.content(log_container, formattedLog);
 						lastLogContent = logContent;
 						
 						if (!isScrolledToTop) {
-							var newScrollHeight = log_container.scrollHeight;
-							var heightDiff = newScrollHeight - prevScrollHeight;
+                            const newScrollHeight = log_container.scrollHeight;
+                            const heightDiff = newScrollHeight - prevScrollHeight;
 							log_container.scrollTop = prevScrollTop + heightDiff;
 						}
 					}
@@ -210,14 +200,15 @@ return view.extend({
 				})
 				.catch(function(err) {
 					console.error('Log fetch error:', err);
-					var errorMsg = _('Failed to read logs: %s').format(err.message || 'Resource not found');
+					const errorMsg = _('Failed to read logs: %s').format(err.message || 'Resource not found');
 					dom.content(log_container, E('div', { 'class': 'log-line log-error' }, errorMsg));
 					return Promise.reject(err);
 				});
 		}
 
-		var clear_button = E('button', {
+		const clear_button = E('button', {
 			'class': 'cbi-button cbi-button-remove',
+            'style': 'margin-left: 1rem;',
 			'click': function(ev) {
 				ev.preventDefault();
 				clearLogs(ev.target);
@@ -243,11 +234,8 @@ return view.extend({
 		return E('div', { 'class': 'cbi-map' }, [
 			E('style', [css]),
 			E('div', { 'class': 'cbi-section' }, [
-				E('div', { 'class': 'control-buttons' }, [ clear_button]),
 				log_container,
-				E('small', {}, [
-					_('Refresh every 5 seconds.').format(L.env.pollinterval),
-				])
+				E('div', { 'class': 'control-buttons' }, [ clear_button])
 			])
 		]);
 	},
