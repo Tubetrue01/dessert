@@ -341,6 +341,17 @@ return view.extend({
     s.anonymous = true;
     s.addremove = true;
 
+    const originalRender = s.render;
+    s.render = function() {
+        return originalRender.apply(this, arguments).then(function(nodes) {
+            const em = nodes.querySelector('em');
+            if (em) {
+                em.style.marginLeft = '1rem';
+            }
+            return nodes;
+        });
+    };
+
     // Create tabs
     s.tab("basic", _("Basic Settings"));
     s.tab("network", _("Network & Performance"));
