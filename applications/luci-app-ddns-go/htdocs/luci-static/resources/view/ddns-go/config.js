@@ -381,7 +381,7 @@ return view.extend({
         });
         
         o.cfgvalue = function() {
-            return E('div', { style: 'margin: 5px 0;' }, [
+            return E('div', {}, [
                 E('span', { id: 'update_status' }, 
                     currentVersion ? String.format('v%s', currentVersion) : _('Loading...'))
             ]);

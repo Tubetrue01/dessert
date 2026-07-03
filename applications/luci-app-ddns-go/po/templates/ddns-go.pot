@@ -12,6 +12,9 @@ msgstr ""
 msgid "Enable"
 msgstr ""
 
+msgid "Due to browser security policies, the DDNS-GO interface https cannot be embedded directly."
+msgstr ""
+
 msgid "Listen port"
 msgstr ""
 
