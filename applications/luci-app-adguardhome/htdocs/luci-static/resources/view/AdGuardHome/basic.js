@@ -42,7 +42,7 @@ const getServiceStatus = () => {
 
 const runningStatus = (isRunning) => {
     const runColor = isRunning ? 'green' : 'red';
-    const runText = isRunning ? _('Running') : _('Stopped');
+    const runText = isRunning ? _('RUNNING') : _('NOT RUNNING');
 
     return `
         <em>

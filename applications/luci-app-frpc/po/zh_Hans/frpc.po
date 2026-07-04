@@ -1,11 +1,11 @@
 msgid "Frpc is a high-performance reverse proxy client."
 msgstr "Frpc 是一个可用于内网穿透的高性能的反向代理客户端。"
 
-msgid "Running"
+msgid "RUNNING"
 msgstr "运行中"
 
-msgid "Stopped"
-msgstr "已停止"
+msgid "NOT RUNNING"
+msgstr "未运行"
 
 msgid "Loading..."
 msgstr "载入中..."

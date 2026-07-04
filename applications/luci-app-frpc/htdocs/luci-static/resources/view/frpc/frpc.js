@@ -99,7 +99,7 @@ const getServiceStatus = () => {
 
 const renderStatus = (running) => {
     const color = running ? 'green' : 'red';
-    const text = running ? _('Running') : _('Stopped');
+    const text = running ? _('RUNNING') : _('NOT RUNNING');
 
     return `
         <em>
