@@ -3,122 +3,129 @@
 START=99
 USE_PROCD=1
 
-CONF="rtp2httpd"
-PROG="/usr/bin/$CONF"
+append_arg() {
+  local cfg="$1"
+  local var="$2"
+  local opt="$3"
+  local def="$4"
+  local val
 
-append_param_arg() {
-	eval "local val=\"\${$1}\""
-	[ -n "$val" ] && procd_append_param command "--${1//_/-}" "$val"
+  config_get val "$cfg" "$var"
+  [ -n "$val" -o -n "$def" ] && procd_append_param command $opt "${val:-$def}"
 }
 
-append_param_bool() {
-	eval "local val=\"\${$1}\""
-	[ "$val" -eq "1" ] && procd_append_param command "--${1//_/-}"
+append_listen_arg() {
+  local val="$1"
+
+  [ -n "$val" ] || return
+  procd_append_param command "--listen" "$val"
+  rtp2httpd_listen_count=$((rtp2httpd_listen_count + 1))
 }
 
-validate_rtp2httpd_section() {
-	uci_load_validate "$CONF" "instance" "$1" "$2" \
-		'enabled:bool:0' \
-		'listen:string' \
-		\
-		'verbose:uinteger' \
-		'noudpxy:uinteger' \
-		\
-		'upstream_interface:string' \
-		'upstream_interface_fcc:string' \
-		'upstream_interface_http:string' \
-		'upstream_interface_multicast:string' \
-		'upstream_interface_rtsp:string' \
-		\
-		'fcc_listen_port_range:or(port,portrange)' \
-		'http_proxy_user_agent:string' \
-		'mcast_rejoin_interval:and(uinteger, range(0,86400))' \
-		'rtsp_stun_server:string' \
-		'rtsp_user_agent:string' \
-		\
-		'maxclients:and(uinteger, range(1,5000))' \
-		'workers:and(uinteger, range(1,64))' \
-		'buffer_pool_max_size:and(uinteger, range(1024,1048576))' \
-		'udp_rcvbuf_size:and(uinteger, range(65536,16777216))' \
-		'zerocopy_on_send:bool' \
-		\
-		'hostname:host' \
-		'r2h_token:string' \
-		'cors_allow_origin:string' \
-		'xff:bool' \
-		'player_page_path:string' \
-		'status_page_path:string' \
-		'external_m3u:string' \
-		'external_m3u_update_interval:uinteger' \
-		\
-		'ffmpeg_path:string' \
-		'ffmpeg_args:string' \
-		'video_snapshot:bool'
+append_listen_args() {
+  local cfg="$1"
+
+  rtp2httpd_listen_count=0
+  config_list_foreach "$cfg" listen append_listen_arg
+
+  # Backward compatibility for existing installations using option port.
+  if [ "$rtp2httpd_listen_count" -eq 0 ]; then
+    append_arg "$cfg" port "--listen" || true
+  fi
+  return 0
 }
 
 start_instance() {
-	local section="$1"
+  local cfg="$1"
+  local aux
+  local use_config_file
 
-	[ "$2" -eq "0" ] || { logger -p daemon.err -t "$CONF" "$section Validation failed."; return 1; }
-	[ "$enabled" -eq "1" ] || return 1
+  config_get_bool aux "$cfg" 'disabled' '0'
+  [ "$aux" = 1 ] && return 1
 
-	procd_open_instance "$section"
-	procd_set_param command "$PROG"
-	procd_append_param command -C
+  config_get_bool use_config_file "$cfg" 'use_config_file' '0'
 
-	for addr in $listen; do
-		procd_append_param command --listen "$addr"
-	done
+  procd_open_instance
 
-	append_param_arg verbose
-	append_param_bool noudpxy
+  procd_set_param command /usr/bin/rtp2httpd
+  procd_set_param pidfile /var/run/rtp2httpd_${cfg}.pid
 
-	append_param_arg upstream_interface
-	append_param_arg upstream_interface_fcc
-	append_param_arg upstream_interface_http
-	append_param_arg upstream_interface_multicast
-	append_param_arg upstream_interface_rtsp
+  # If use_config_file is enabled, don't use --noconfig and let it read /etc/rtp2httpd.conf
+  if [ "$use_config_file" = "0" ]; then
+    procd_append_param command "--noconfig"
 
-	append_param_arg fcc_listen_port_range
-	append_param_arg http_proxy_user_agent
-	append_param_arg mcast_rejoin_interval
-	append_param_arg rtsp_stun_server
-	append_param_arg rtsp_user_agent
+        append_arg "$cfg" verbose "--verbose"
+        append_listen_args "$cfg"
 
-	append_param_arg maxclients
-	append_param_arg workers
-	append_param_arg buffer_pool_max_size
-	append_param_arg udp_rcvbuf_size
-	append_param_bool zerocopy_on_send
+        # Interface configuration - check advanced settings mode
+        config_get_bool advanced_interface_settings "$cfg" 'advanced_interface_settings' '0'
+        if [ "$advanced_interface_settings" = "1" ]; then
+            # Advanced mode - use specific interfaces
+            append_arg "$cfg" upstream_interface_multicast "--upstream-interface-multicast"
+            append_arg "$cfg" upstream_interface_fcc "--upstream-interface-fcc"
+            append_arg "$cfg" upstream_interface_rtsp "--upstream-interface-rtsp"
+            append_arg "$cfg" upstream_interface_http "--upstream-interface-http"
+        else
+            # Simple mode - use default interface for all
+            append_arg "$cfg" upstream_interface "--upstream-interface"
+        fi
 
-	append_param_arg hostname
-	append_param_arg r2h_token
-	append_param_arg cors_allow_origin
-	append_param_bool xff
-	append_param_arg player_page_path
-	append_param_arg status_page_path
-	append_param_arg external_m3u
-	[ -n "$external_m3u" ] && append_param_arg external_m3u_update_interval
+        append_arg "$cfg" maxclients "--maxclients"
+        append_arg "$cfg" workers "--workers"
+        append_arg "$cfg" buffer_pool_max_size "--buffer-pool-max-size"
+        append_arg "$cfg" udp_rcvbuf_size "--udp-rcvbuf-size"
+        append_arg "$cfg" hostname "--hostname"
+        append_arg "$cfg" app_path_prefix "--app-path-prefix"
+        append_arg "$cfg" status_page_path "--status-page-path"
+        append_arg "$cfg" player_page_path "--player-page-path"
+        append_arg "$cfg" r2h_token "--r2h-token"
+        append_arg "$cfg" access_log "--access-log"
+        append_arg "$cfg" log_format "--log-format"
+        append_arg "$cfg" external_m3u "--external-m3u"
+        append_arg "$cfg" external_m3u_update_interval "--external-m3u-update-interval"
+        append_arg "$cfg" mcast_rejoin_interval "--mcast-rejoin-interval"
+        append_arg "$cfg" fcc_listen_port_range "--fcc-listen-port-range"
+        append_arg "$cfg" http_proxy_user_agent "--http-proxy-user-agent"
+        append_arg "$cfg" rtsp_user_agent "--rtsp-user-agent"
+        append_arg "$cfg" rtsp_stun_server "--rtsp-stun-server"
+        append_arg "$cfg" cors_allow_origin "--cors-allow-origin"
+        append_arg "$cfg" ffmpeg_path "--ffmpeg-path"
+        append_arg "$cfg" ffmpeg_args "--ffmpeg-args"
 
-	append_param_arg ffmpeg_path
-	append_param_arg ffmpeg_args
-	append_param_bool video_snapshot
+        # Handle video_snapshot flag
+        config_get_bool aux "$cfg" 'video_snapshot' '0'
+        [ "$aux" = 1 ] && procd_append_param command "--video-snapshot"
 
-	procd_set_param limits core="unlimited"
-	procd_set_param limits nofile="1000000 1000000"
-	procd_set_param respawn
-	procd_set_param stdout 1
-	procd_set_param stderr 1
+        # Handle zerocopy_on_send flag
+        config_get_bool aux "$cfg" 'zerocopy_on_send' '0'
+        [ "$aux" = 1 ] && procd_append_param command "--zerocopy-on-send"
 
-	procd_close_instance
-}
+        # Handle use_relative_path_in_m3u flag
+        config_get_bool aux "$cfg" 'use_relative_path_in_m3u' '0'
+        [ "$aux" = 1 ] && procd_append_param command "--use-relative-path-in-m3u"
 
-start_service() {
-	config_load "$CONF"
+        # Handle xff flag
+        config_get_bool aux "$cfg" 'xff' '0'
+        [ "$aux" = 1 ] && procd_append_param command "--xff"
+  fi
 
-	config_foreach validate_rtp2httpd_section "instance" start_instance
+  config_get_bool aux "$cfg" 'respawn' '1'
+  [ "$aux" = 1 ] && procd_set_param respawn
+
+  config_get config_update_time "$cfg" 'config_update_time' '0'
+  [ "$config_update_time" != 0 ] && procd_set_param env CONFIG_UPDATE_TIME=$config_update_time
+
+  procd_set_param stdout 1
+  procd_set_param stderr 1
+
+  procd_close_instance
 }
 
 service_triggers() {
-	procd_add_reload_trigger "$CONF"
+  procd_add_reload_trigger "rtp2httpd"
+}
+
+start_service() {
+  config_load rtp2httpd
+  config_foreach start_instance rtp2httpd
 }

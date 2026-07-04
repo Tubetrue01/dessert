@@ -28,6 +28,7 @@ endef
 
 define Package/rtp2httpd/conffiles
 /etc/config/rtp2httpd
+/etc/rtp2httpd.conf
 endef
 
 CMAKE_OPTIONS += -DENABLE_AGGRESSIVE_OPT=ON
@@ -35,12 +36,11 @@ CMAKE_OPTIONS += -DENABLE_AGGRESSIVE_OPT=ON
 export RELEASE_VERSION=$(PKG_VERSION)
 
 define Package/rtp2httpd/install
-	$(INSTALL_DIR) $(1)/usr/bin
-	$(INSTALL_BIN) $(PKG_INSTALL_DIR)/usr/bin/rtp2httpd $(1)/usr/bin/
-	$(INSTALL_DIR) $(1)/etc/config
-	$(INSTALL_CONF) $(CURDIR)/files/rtp2httpd.config $(1)/etc/config/rtp2httpd
-	$(INSTALL_DIR) $(1)/etc/init.d
-	$(INSTALL_BIN) $(CURDIR)/files/rtp2httpd.init $(1)/etc/init.d/rtp2httpd
+	$(INSTALL_DIR) $(1)/etc/init.d $(1)/etc/config $(1)/usr/bin
+	$(INSTALL_CONF) ./files/rtp2httpd.conf $(1)/etc/config/rtp2httpd
+	$(INSTALL_CONF) $(PKG_BUILD_DIR)/rtp2httpd.conf $(1)/etc
+	$(INSTALL_BIN) ./files/rtp2httpd.init $(1)/etc/init.d/rtp2httpd
+	$(INSTALL_BIN) $(PKG_INSTALL_DIR)/usr/bin/rtp2httpd $(1)/usr/bin
 endef
 
 $(eval $(call BuildPackage,rtp2httpd))
