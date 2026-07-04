@@ -66,7 +66,7 @@ dns:
   cache_optimistic_answer_ttl: 30s
   cache_optimistic_max_age: 12h
   bogus_nxdomain: []
-  aaaa_disabled: true
+  aaaa_disabled: false
   enable_dnssec: false
   edns_client_subnet:
     custom_ip: ""
