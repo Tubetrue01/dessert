@@ -8,7 +8,7 @@ msgid "NOT RUNNING"
 msgstr "未运行"
 
 msgid "Loading..."
-msgstr "载入中..."
+msgstr "加载中..."
 
 msgid "Enable"
 msgstr "开启"
