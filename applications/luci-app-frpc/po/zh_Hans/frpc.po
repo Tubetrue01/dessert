@@ -14,7 +14,7 @@ msgid "Common"
 msgstr "通用配置"
 
 msgid "Enable"
-msgstr "开启"
+msgstr "启用"
 
 msgid "Update"
 msgstr "更新"
@@ -34,8 +34,8 @@ msgstr "配置编辑器"
 msgid "Local time"
 msgstr "本地时间"
 
-msgid "Delete"
-msgstr "删除"
+msgid "Clear Logs"
+msgstr "清除日志"
 
 msgid "Download"
 msgstr "下载"

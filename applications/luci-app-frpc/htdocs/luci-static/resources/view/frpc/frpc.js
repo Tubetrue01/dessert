@@ -335,7 +335,7 @@ return view.extend({
                 }, text);
             }
 
-            const btnClear = createButton(_('Delete'), 'cbi-button-remove', () => {
+            const btnClear = createButton(_('Clear Logs'), 'cbi-button-remove', () => {
                 L.resolveDefault(callClearLog(logPath), {}).then(() => {
                     logBox.innerHTML = "";
                     this.lastLogContent = "";

@@ -104,7 +104,7 @@ return L.view.extend({
                         updateLogDisplay();
                     });
                 }
-            }, _('Delete'));
+            }, _('Clear Logs'));
 
             const btnDown = E('button', {
                 class: 'cbi-button cbi-button-apply',
