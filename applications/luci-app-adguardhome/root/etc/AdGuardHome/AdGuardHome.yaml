@@ -130,6 +130,7 @@ whitelist_filters: []
 user_rules:
   - '||lan^$dnsrewrite=NXDOMAIN;;'
   - '||in-addr.arpa^$dnsrewrite=NXDOMAIN;;'
+  - '||ip6.arpa^$dnsrewrite=NXDOMAIN;;'
 dhcp:
   enabled: false
   interface_name: ""
