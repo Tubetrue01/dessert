@@ -79,7 +79,7 @@ return L.view.extend({
         let fileInput = null;
 
         const uploadSection = E('div', {'class': 'cbi-section'}, [
-            E('div', {'class': 'cbi-section-descr'}, [_('Support uploading and installation of files in the /tmp directory')]),
+            E('div', {'class': 'cbi-section-descr'}, [_('Support uploading and installation of files in the /tmp/upload directory')]),
 
             E('div',
                 {

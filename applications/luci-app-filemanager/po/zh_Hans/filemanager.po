@@ -4,8 +4,8 @@ msgstr "文件助手"
 msgid "Upload"
 msgstr "上传"
 
-msgid "Support uploading and installation of files in the /tmp directory"
-msgstr "支持 /tmp 目录文件的上传与安装"
+msgid "Support uploading and installation of files in the /tmp/upload directory"
+msgstr "支持 /tmp/upload 目录文件的上传与安装"
 
 msgid "Select a file:"
 msgstr "请选择文件："
