@@ -883,7 +883,7 @@ select[multiple="multiple"] {
 }
 
 .login-page .login-container .login-form .brand .brand-text {
-    font-size: 2.2rem;
+    font-size: 2.6rem;
     font-weight: 700;
     font-family: "TypoGraphica";
     word-break: break-word;
@@ -1051,7 +1051,7 @@ select[multiple="multiple"] {
 .main-left .sidenav-header .brand {
     display: block;
     margin: 0 2rem;
-    font-size: 1.8rem;
+    font-size: 2rem;
     font-family: "TypoGraphica";
     color: var(--primary);
     text-decoration: none;
