@@ -10,7 +10,7 @@ const callLuciDHCPLeases = rpc.declare({
 	method: 'getDHCPLeases',
 	expect: { '': {} }
 });
- 
+
 const callUfpList = rpc.declare({
 	object: 'fingerprint',
 	method: 'fingerprint',
@@ -84,7 +84,6 @@ return baseclass.extend({
 	renderLeases(dhcp_leases, host_hints, macaddr) {
 		const leases = Array.isArray(dhcp_leases.dhcp_leases) ? dhcp_leases.dhcp_leases : [];
 		const leases6 = Array.isArray(dhcp_leases.dhcp6_leases) ? dhcp_leases.dhcp6_leases : [];
-
 		const machints = host_hints.getMACHints(false);
 		const isReadonlyView = !L.hasViewPermission();
 

@@ -35,6 +35,11 @@ var callCPUUsage = rpc.declare({
     method: 'getCPUUsage'
 });
 
+var callTempInfo = rpc.declare({
+    object: 'luci',
+    method: 'getTempInfo'
+});
+
 return baseclass.extend({
 	title: _('System'),
 
@@ -46,6 +51,7 @@ return baseclass.extend({
 			L.resolveDefault(callGetUnixtime(), 0),
             L.resolveDefault(callCPUInfo(), {}),
             L.resolveDefault(callCPUUsage(), {}),
+            L.resolveDefault(callTempInfo(), {}),
 			uci.load('system')
 		]);
 	},
@@ -56,7 +62,8 @@ return baseclass.extend({
 		    luciversion = data[2],
 		    unixtime    = data[3],
             cpuinfo     = data[4],
-            cpuusage    = data[5];
+            cpuusage    = data[5],
+            tempinfo    = data[6];
 
 		luciversion = luciversion.branch + ' ' + luciversion.revision;
 
@@ -93,7 +100,11 @@ return baseclass.extend({
             _('CPU usage (%)'),    cpuusage.cpuusage
 		];
 
-		var table = E('table', { 'class': 'table' });
+        if (tempinfo.tempinfo) {
+            fields.splice(6, 0, _('Temperature'), tempinfo.tempinfo);
+        }
+
+        var table = E('table', { 'class': 'table' });
 
 		for (var i = 0; i < fields.length; i += 2) {
 			table.appendChild(E('tr', { 'class': 'tr' }, [
