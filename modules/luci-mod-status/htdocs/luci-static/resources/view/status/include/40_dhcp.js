@@ -84,8 +84,7 @@ return baseclass.extend({
 	renderLeases(dhcp_leases, host_hints, macaddr) {
 		const leases = Array.isArray(dhcp_leases.dhcp_leases) ? dhcp_leases.dhcp_leases : [];
 		const leases6 = Array.isArray(dhcp_leases.dhcp6_leases) ? dhcp_leases.dhcp6_leases : [];
-		if (leases.length == 0 && leases6.length == 0)
-			return E('em', _('No active leases found'));
+
 		const machints = host_hints.getMACHints(false);
 		const isReadonlyView = !L.hasViewPermission();
 
