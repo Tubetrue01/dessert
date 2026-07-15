@@ -1,12 +1,12 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=rtp2httpd
-PKG_VERSION:=3.15.1
+PKG_VERSION:=3.15.2
 PKG_RELEASE:=1
 
 PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.gz
 PKG_SOURCE_URL:=https://codeload.github.com/stackia/rtp2httpd/tar.gz/v$(PKG_VERSION)?
-PKG_HASH:=06cbdbfb651fbe0535ab379b610a8aee43c6856fdc6b0027dad7c3e4c38ef02d
+PKG_HASH:=bfed69c2492063ac6e9eb5c85094c2d156d75acffc367cf3f0d7bd228db0ddd9
 
 include $(INCLUDE_DIR)/package.mk
 include $(INCLUDE_DIR)/cmake.mk
