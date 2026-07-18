@@ -91,6 +91,14 @@
     box-sizing: border-box;
 }
 
+* {
+    scrollbar-width: none !important;
+}
+
+*::-webkit-scrollbar {
+    display: none !important;
+}
+
 html {
     -webkit-text-size-adjust: 100%;
     -ms-text-size-adjust: 100%;
