@@ -882,12 +882,14 @@ select[multiple="multiple"] {
     color: var(--primary);
     text-decoration: none;
     margin-bottom: 65px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
 }
 
 .login-page .login-container .login-form .brand .icon {
     width: 150px;
     height: auto;
-    display: block;
 }
 
 .login-page .login-container .login-form .brand .brand-text {

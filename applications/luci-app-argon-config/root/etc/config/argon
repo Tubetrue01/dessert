@@ -3,7 +3,7 @@ config global
 	option dark_primary '#828282'
 	option blur '10'
 	option blur_dark '10'
-	option transparency '0.5'
+	option transparency '0.3'
 	option transparency_dark '0.5'
 	option mode 'light'
 	option online_wallpaper 'builtin'
