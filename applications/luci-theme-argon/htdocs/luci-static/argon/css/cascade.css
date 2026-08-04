@@ -3906,6 +3906,10 @@ pre.command-output {
 }
 
 /* page fix */
+[data-page="admin-status-routesj"] #view > div:first-child div[data-initialized="true"] {
+    margin-top: -0.4375rem;
+}
+
 [data-page="admin-system-autoreboot"] #cbi-autoreboot {
     margin-top: 0;
 }

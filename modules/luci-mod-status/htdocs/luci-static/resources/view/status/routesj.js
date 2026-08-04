@@ -296,7 +296,7 @@ return view.extend({
 			E('em', _('No entries available'))
 		);
 
-		const view = E([], [
+		const view = E('div', {}, [
 			E('h2', {}, [ _('Routing') ]),
 			E('p', {}, [ _('The following rules are currently active on this system.') ]),
 			E('div', {}, [
