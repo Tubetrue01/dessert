@@ -1061,7 +1061,7 @@ select[multiple="multiple"] {
 .main-left .sidenav-header .brand {
     display: block;
     margin: 0 2rem;
-    font-size: 1.9rem;
+    font-size: 2.0rem;
     font-family: "TypoGraphica";
     color: var(--primary);
     text-decoration: none;
