@@ -271,7 +271,7 @@ var CBILogreadBox = function(logtag, name) {
 						E('label', { 'for': 'logMaxRows', 'style': 'margin: 0 5px' }, _('Max rows:')),
 						filterMaxRows,
 					]),
-					E('div', {'style': 'padding-bottom: 20px'}, [scrollDownButton]),
+					E('div', {'style': 'padding: 10px 0'}, [scrollDownButton]),
 					E('textarea', {
 						'id': 'syslog',
 						'style': 'font-size:12px',
@@ -279,7 +279,7 @@ var CBILogreadBox = function(logtag, name) {
 						'wrap': 'off',
 						'rows': loglines?.rows,
 					}, [ loglines?.value ]),
-					E('div', {'style': 'padding-bottom: 20px'}, [scrollUpButton])
+					E('div', {'style': 'padding: 10px 0'}, [scrollUpButton])
 				])
 			]);
 		},
