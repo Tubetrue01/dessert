@@ -77,7 +77,7 @@ function lookupZone(name) {
  */
 function getColorForName(forName) {
 	if (forName == null)
-		return '#eeeeee';
+		return '#dbdbdb';
 	else if (forName == 'lan')
 		return '#90f090';
 	else if (forName == 'wan')

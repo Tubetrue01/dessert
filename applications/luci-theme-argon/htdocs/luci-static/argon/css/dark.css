@@ -896,7 +896,7 @@ div[style="width:100%;height:300px;border:1px solid #000;background:#F7F8F1"] {
     color: #F7F8F1 !important
 }
 
-[data-page="admin-network-network"] .ifacebox-head[style*="--zone-color-rgb: 238, 238, 238;"] {
+[data-page="admin-network-network"] .ifacebox-head[style*="--zone-color-rgb: 219, 219, 219;"] {
     background-color: #666 !important
 }
 
@@ -922,11 +922,11 @@ div[style="width:100%;height:300px;border:1px solid #000;background:#F7F8F1"] {
     color: #F7F8F1 !important
 }
 
-[data-page="admin-network-firewall-rules"] #cbi-firewall-rule .zonebadge[style*="--zone-color-rgb:238, 238, 238;"] {
+[data-page="admin-network-firewall-rules"] #cbi-firewall-rule .zonebadge[style*="--zone-color-rgb:219, 219, 219;"] {
     --zone-color-rgb: 112, 112, 112 !important
 }
 
-[data-page="admin-network-firewall-rules"] #cbi-firewall-rule .zonebadge[style*="--zone-color-rgb:238, 238, 238;"] em {
+[data-page="admin-network-firewall-rules"] #cbi-firewall-rule .zonebadge[style*="--zone-color-rgb:219, 219, 219;"] em {
     color: #F7F8F1 !important
 }
 
@@ -952,15 +952,15 @@ div[style="width:100%;height:300px;border:1px solid #000;background:#F7F8F1"] {
     color: #F7F8F1 !important
 }
 
-[data-page="admin-network-network"] .cbi-dropdown .zonebadge[style*="--zone-color-rgb:238, 238, 238;"], [data-page="admin-network-firewall-rules"] .cbi-dropdown .zonebadge[style*="--zone-color-rgb:238, 238, 238;"] {
+[data-page="admin-network-network"] .cbi-dropdown .zonebadge[style*="--zone-color-rgb:219, 219, 219;"], [data-page="admin-network-firewall-rules"] .cbi-dropdown .zonebadge[style*="--zone-color-rgb:219, 219, 219;"] {
     --zone-color-rgb: 112, 112, 112 !important
 }
 
-[data-page="admin-network-network"] .cbi-dropdown .zonebadge[style*="--zone-color-rgb:238, 238, 238;"] strong, [data-page="admin-network-firewall-rules"] .cbi-dropdown .zonebadge[style*="--zone-color-rgb:238, 238, 238;"] strong {
+[data-page="admin-network-network"] .cbi-dropdown .zonebadge[style*="--zone-color-rgb:219, 219, 219;"] strong, [data-page="admin-network-firewall-rules"] .cbi-dropdown .zonebadge[style*="--zone-color-rgb:219, 219, 219;"] strong {
     color: #F7F8F1 !important
 }
 
-[data-page="admin-network-network"] .cbi-dropdown .zonebadge[style*="--zone-color-rgb:238, 238, 238;"] strong + span, [data-page="admin-network-firewall-rules"] .cbi-dropdown .zonebadge[style*="--zone-color-rgb:238, 238, 238;"] strong + span {
+[data-page="admin-network-network"] .cbi-dropdown .zonebadge[style*="--zone-color-rgb:219, 219, 219;"] strong + span, [data-page="admin-network-firewall-rules"] .cbi-dropdown .zonebadge[style*="--zone-color-rgb:219, 219, 219;"] strong + span {
     color: #F7F8F1 !important
 }
 
