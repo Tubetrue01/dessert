@@ -929,7 +929,10 @@ window.onload = function(){
     if(titles.length != divs.length) return;
 
     var tc = document.getElementById('tab-content');
-    if (tc) tc.style.position = 'relative';
+    if (tc) {
+        tc.style.position = 'relative';
+        tc.style.marginTop = '12px';
+    }
 
     divs[0].classList.add('active');
 

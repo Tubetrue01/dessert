@@ -617,7 +617,7 @@ html[data-darkmode="true"] .oc svg {
     background: var(--bg-white);
     display: flex;
     align-items: stretch;
-    margin: 0;
+    margin-bottom: 10px;
     padding: var(--card-outer-padding);
 }
 
@@ -4673,7 +4673,7 @@ html[data-darkmode="true"] .oc .diag-legend {
     margin-top: 10px;
 }
 
-.oc .diag-style select, .oc .diag-style input {
+.oc .diag-style select, .oc .diag-style input:not([type="button"]) {
     color: var(--text-primary);
     background-color: var(--editor-bg);
 }
