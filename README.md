@@ -64,5 +64,9 @@ We believe that managing your router shouldn't be a chore—it should be a treat
 ![Image Alt Text](applications/luci-app-adguardhome/img/preview-2.png)
 ![Image Alt Text](applications/luci-app-adguardhome/img/preview-3.png)
 
-### luci-app-fprc
+### luci-app-frpc
 ![Image Alt Text](applications/luci-app-frpc/img/preview.png)
+
+---
+
+### 👀 More content is waiting for you to explore!
