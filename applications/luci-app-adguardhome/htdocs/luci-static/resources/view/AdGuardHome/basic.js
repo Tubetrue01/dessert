@@ -178,7 +178,7 @@ return view.extend({
                     L.Poll.add(pollLogFn, 1);
                 });
                 }
-            }, [ _('Update Core')]);
+            }, [ _('Update core')]);
 
             reverseCheck.onclick = () => renderLog(logBox, reverseCheck);
 
