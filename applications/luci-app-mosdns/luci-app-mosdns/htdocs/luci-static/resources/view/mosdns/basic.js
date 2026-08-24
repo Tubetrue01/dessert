@@ -299,29 +299,29 @@ return view.extend({
         o.default = 86400;
         o.depends('cache', '1');
 
-		o = s.taboption('advanced', form.Flag, 'prefetch', _('Cache Prefetching'),
-			_('Proactively refresh hot cache entries in the background before they expire.'));
-		o.rmempty = false;
-		o.default = false;
-		o.depends('cache', '1');
+        o = s.taboption('advanced', form.Flag, 'prefetch', _('Cache Prefetching'),
+            _('Proactively refresh hot cache entries in the background before they expire.'));
+        o.rmempty = false;
+        o.default = false;
+        o.depends('cache', '1');
 
-		o = s.taboption('advanced', form.Value, 'prefetch_before_expire', _('Prefetch Before Expire'),
-			_('Prefetch when the remaining TTL is less than this value (in seconds).'));
-		o.datatype = 'and(uinteger,min(1))';
-		o.default = 10;
-		o.depends('prefetch', '1');
+        o = s.taboption('advanced', form.Value, 'prefetch_before_expire', _('Prefetch Before Expire'),
+            _('Prefetch when the remaining TTL is less than this value (in seconds).'));
+        o.datatype = 'and(uinteger,min(1))';
+        o.default = 10;
+        o.depends('prefetch', '1');
 
-		o = s.taboption('advanced', form.Value, 'prefetch_min_hits', _('Prefetch Min Hits'),
-			_('Minimum cache hits required since the last refresh to trigger a prefetch.'));
-		o.datatype = 'and(uinteger,min(1))';
-		o.default = 3;
-		o.depends('prefetch', '1');
+        o = s.taboption('advanced', form.Value, 'prefetch_min_hits', _('Prefetch Min Hits'),
+            _('Minimum cache hits required since the last refresh to trigger a prefetch.'));
+        o.datatype = 'and(uinteger,min(1))';
+        o.default = 3;
+        o.depends('prefetch', '1');
 
-		o = s.taboption('advanced', form.Value, 'prefetch_scan_interval', _('Prefetch Scan Interval'),
-			_('Interval for the background thread to scan the cache for prefetching (in seconds).'));
-		o.datatype = 'and(uinteger,min(1))';
-		o.default = 5;
-		o.depends('prefetch', '1');
+        o = s.taboption('advanced', form.Value, 'prefetch_scan_interval', _('Prefetch Scan Interval'),
+            _('Interval for the background thread to scan the cache for prefetching (in seconds).'));
+        o.datatype = 'and(uinteger,min(1))';
+        o.default = 5;
+        o.depends('prefetch', '1');
 
         o = s.taboption('advanced', form.Flag, 'dump_file', _('Cache Dump'),
             _('Save the cache locally and reload the cache dump on the next startup'));
@@ -414,14 +414,12 @@ return view.extend({
         o = s.taboption('basic', form.DummyValue, '_custom', _('Configuration Editor'));
         o.rows = 30;
         o.depends('configfile', configFile);
-
-        o.render = function (sid) {
+        o.renderWidget = function (sid) {
             const container = E('div', {'class': 'cm6-container'});
             container.style.minWidth = '0';
             container.style.width = "100%";
             container.style.maxWidth = "40rem";
             container.style.boxSizing = "border-box";
-
             container.style.overflow = "hidden";
             container.style.height = "28rem";
 
@@ -447,16 +445,13 @@ return view.extend({
                     }
                 }
 
-                return E('div', {'class': 'cbi-value'}, [
-                    E('label', {'class': 'cbi-value-title'}, [this.title]),
-                    E('div', {'class': 'cbi-value-field', 'style': 'display:flex; flex-direction:column;min-width:0;'}, [
-                        container,
-                        E('div', {
-                            'class': 'cbi-value-description',
-                            'style': 'margin-top: 0.5rem; max-width: 40rem; white-space: normal;'
-                        }, [
-                            _('This is the content of the file \'/etc/mosdns/config_custom.yaml\' from which your MosDNS configuration will be generated. Only accepts configuration content in yaml format.')
-                        ])
+                return E('div', {'style': 'display:flex; flex-direction:column; min-width:0; width:100%;'}, [
+                    container,
+                    E('div', {
+                        'class': 'cbi-value-description',
+                        'style': 'margin-top: 0.5rem; max-width: 40rem; white-space: normal;'
+                    }, [
+                        _('This is the content of the file \'/etc/mosdns/config_custom.yaml\' from which your MosDNS configuration will be generated. Only accepts configuration content in yaml format.')
                     ])
                 ]);
             });
