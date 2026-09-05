@@ -1,5 +1,6 @@
 'use strict';
 'require dom';
+'require fs';
 'require poll';
 'require rpc';
 'require ui';
@@ -38,10 +39,18 @@ const callClearQueryLogs = rpc.declare({
 	expect: { '': {} }
 });
 
+const callGetLeases = rpc.declare({
+	object: 'luci.mosdns',
+	method: 'get_leases',
+	expect: { '': {} }
+});
+
 let filterVal = 'all';
 let searchVal = '';
 let pageIdx = 0;
 const PAGE_SIZE = 20;
+const WHITELIST_FILE = '/etc/mosdns/rule/whitelist.txt';
+const BLOCKLIST_FILE = '/etc/mosdns/rule/blocklist.txt';
 let isUserPaused = false;
 
 let nodeStats;
@@ -52,74 +61,99 @@ let statsElements = null;
 let currentBadgeState = null;
 let lastTopJson = '';
 let lastLogsJson = '';
+let clientLeases = {};
 
 const cleanIP = ip => {
 	if (!ip) return '-';
 	return ip.replace(/^::ffff:/i, '');
 };
 
+const getClientDisplay = ip => {
+	const cleaned = cleanIP(ip);
+	if (!cleaned || cleaned === '-') return { display: '-', title: '-', host: null, ip: '-' };
+
+	const host = clientLeases[cleaned] || clientLeases[cleaned.toLowerCase()] || clientLeases[ip] || clientLeases[ip?.toLowerCase?.()];
+	if (host && host !== '*' && host !== 'unknown' && host !== '') {
+		return {
+			display: `${host} (${cleaned})`,
+			title: `${host} (${cleaned})`,
+			host: host,
+			ip: cleaned
+		};
+	}
+
+	return {
+		display: cleaned,
+		title: cleaned,
+		host: null,
+		ip: cleaned
+	};
+};
+
 const injectStyles = () => {
-	if (document.getElementById('mosdns-statistics-styles'))
-		return;
+    if (document.getElementById('mosdns-statistics-styles'))
+        return;
 
-	/* HTML Styles provided by DeepSeek Chat */
-	const css = [
-		'.mosdns-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1rem; margin-bottom: 1.25rem; }',
-		'.mosdns-rankings-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1rem; margin-bottom: 1.5rem; }',
-		'.mosdns-stat-card { background: var(--cbi-section-bg, #fff); border: 1px solid rgba(0,0,0,0.08); border-radius: 8px; padding: 1rem 1.2rem; box-shadow: 0 2px 6px rgba(0,0,0,0.03); display: flex; flex-direction: column; justify-content: space-between; position: relative; overflow: hidden; }',
-		'.mosdns-stat-card .title-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem; font-size: 0.85rem; opacity: 0.75; font-weight: 500; }',
-		'.mosdns-stat-card .metric-val { font-size: 1.85rem; font-weight: 700; line-height: 1.1; letter-spacing: -0.02em; }',
-		'.mosdns-stat-card .subtext { font-size: 0.8rem; opacity: 0.6; margin-top: 0.4rem; }',
-		'.mosdns-sparkline-wrap { margin-top: 0.5rem; height: 44px; position: relative; overflow: visible; display: flex; align-items: flex-end; touch-action: none; -webkit-user-select: none; user-select: none; }',
-		'.mosdns-sparkline { width: 100%; height: 100%; display: block; overflow: visible; }',
-		'.mosdns-sparkline-tooltip { position: absolute; pointer-events: none; z-index: 20; padding: 0.25rem 0.5rem; border-radius: 5px; background: var(--cbi-section-bg, #fff); border: 1px solid rgba(0,0,0,0.12); box-shadow: 0 3px 10px rgba(0,0,0,0.12); line-height: 1.25; text-align: center; white-space: nowrap; transition: opacity 0.15s ease; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; }',
-		'.spark-hover-hitbox { touch-action: none; -webkit-user-select: none; user-select: none; cursor: crosshair; }',
-		'.mosdns-rank-panel { background: var(--cbi-section-bg, #fff); border: 1px solid rgba(0,0,0,0.08); border-radius: 8px; padding: 1rem 1.1rem; box-shadow: 0 2px 6px rgba(0,0,0,0.03); }',
-		'.mosdns-rank-panel h4 { margin: 0 0 0.85rem 0; font-size: 0.95rem; font-weight: 600; display: flex; align-items: center; justify-content: space-between; }',
-		'.mosdns-rank-item { position: relative; overflow: hidden; border-radius: 6px; padding: 0.35rem 0.65rem; display: flex; justify-content: space-between; align-items: center; background: rgba(125,125,125,0.03); border: 1px solid rgba(125,125,125,0.08); margin-bottom: 0.35rem; }',
-		'.mosdns-rank-bar { position: absolute; left: 0; top: 0; bottom: 0; opacity: 0.15; pointer-events: none; transition: width .3s ease; }',
-		'.mosdns-badge { display: inline-block; padding: 0.15em 0.55em; font-size: 0.75rem; font-weight: 600; border-radius: 4px; line-height: 1.25; text-align: center; white-space: nowrap; box-sizing: border-box; }',
-		'.mosdns-status-badge { min-width: 68px; }',
-		'.badge-danger { background: rgba(239, 68, 68, 0.12); color: #dc2626; border: 1px solid rgba(239, 68, 68, 0.25); }',
-		'.badge-teal { background: rgba(16, 185, 129, 0.12); color: #059669; border: 1px solid rgba(16, 185, 129, 0.25); }',
-		'.badge-primary { background: rgba(59, 130, 246, 0.12); color: #2563eb; border: 1px solid rgba(59, 130, 246, 0.25); }',
-		'.badge-neutral { background: rgba(107, 114, 128, 0.12); color: #4b5563; border: 1px solid rgba(107, 114, 128, 0.25); }',
-		'.badge-qtype { font-family: monospace; font-size: 0.72rem; padding: 0.1em 0.4em; background: rgba(125,125,125,0.1); border-radius: 3px; opacity: 0.8; margin-left: 0.4rem; }',
-		'.badge-pulse { animation: pulse 2s infinite; }',
-		'.dns-latency-fastest { color: #10b981; font-weight: 600; }',
-		'.dns-latency-fast { color: #059669; font-weight: 600; }',
-		'.dns-latency-normal { color: #3b82f6; font-weight: 600; }',
-		'.dns-latency-slow { color: #d97706; font-weight: 600; }',
-		'.dns-latency-slower { color: #ea580c; font-weight: 600; }',
-		'.dns-latency-timeout { color: #dc2626; font-weight: 600; }',
-		'.mosdns-table td { vertical-align: middle !important; padding: 0.45rem 0.6rem !important; }',
-		'.mosdns-mono { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; }',
-		'.mosdns-modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.85rem; padding-bottom: 0.75rem; border-bottom: 1px solid rgba(125,125,125,0.15); flex-wrap: wrap; gap: 0.5rem; }',
-		'.mosdns-modal-domain { font-size: 1.05rem; font-weight: 700; word-break: break-all; display: flex; align-items: center; flex-wrap: wrap; gap: 0.4rem; }',
-		'.mosdns-modal-meta-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 0.6rem; margin-bottom: 1rem; }',
-		'.mosdns-modal-meta-item { background: rgba(125,125,125,0.04); border: 1px solid rgba(125,125,125,0.08); border-radius: 6px; padding: 0.5rem 0.75rem; }',
-		'.mosdns-modal-meta-item .meta-label { font-size: 0.75rem; opacity: 0.6; margin-bottom: 0.2rem; font-weight: 600; }',
-		'.mosdns-modal-meta-item .meta-val { font-size: 0.85rem; font-weight: 600; }',
-		'.mosdns-modal-section-title { font-size: 0.9rem; font-weight: 700; margin: 0.85rem 0 0.45rem 0; display: flex; align-items: center; justify-content: space-between; }',
-		'.mosdns-answers-list { display: flex; flex-direction: column; gap: 0.35rem; max-height: 240px; overflow-y: auto; }',
-		'.mosdns-answer-row { display: flex; justify-content: space-between; align-items: center; background: rgba(125,125,125,0.04); border: 1px solid rgba(125,125,125,0.08); border-radius: 6px; padding: 0.4rem 0.65rem; gap: 0.5rem; font-size: 0.82rem; }',
-		'.mosdns-answer-data { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1; }',
-		'.mosdns-answer-ttl { font-size: 0.75rem; opacity: 0.65; white-space: nowrap; }',
-		'@keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.4; } 100% { opacity: 1; } }',
-		'@media (prefers-color-scheme: dark) {',
-		'	.mosdns-stat-card, .mosdns-rank-panel, .mosdns-modal-meta-item, .mosdns-answer-row { background: rgba(255,255,255,0.03); border-color: rgba(255,255,255,0.08); box-shadow: none; }',
-		'	.mosdns-sparkline-tooltip { background: #1e242b; border-color: rgba(255,255,255,0.15); box-shadow: 0 4px 12px rgba(0,0,0,0.5); }',
-		'	.badge-danger { background: rgba(239, 68, 68, 0.2); color: #f87171; border-color: rgba(239, 68, 68, 0.35); }',
-		'	.badge-teal { background: rgba(16, 185, 129, 0.2); color: #34d399; border-color: rgba(16, 185, 129, 0.35); }',
-		'	.badge-primary { background: rgba(59, 130, 246, 0.2); color: #60a5fa; border-color: rgba(59, 130, 246, 0.35); }',
-		'	.badge-neutral { background: rgba(156, 163, 175, 0.2); color: #9ca3af; border-color: rgba(156, 163, 175, 0.3); }',
-		'	.dns-latency-fastest { color: #34d399; }',
-		'	.dns-latency-normal { color: #60a5fa; }',
-		'	.dns-latency-timeout { color: #f87171; }',
-		'}'
-	].join('\n');
+    const css = [
+        '.mosdns-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1rem; margin-bottom: 1.25rem; }',
+        '.mosdns-rankings-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1rem; margin-bottom: 1.5rem; }',
+        '.mosdns-stat-card { background: var(--cbi-section-bg, #fff); border: 1px solid rgba(0,0,0,0.08); border-radius: 8px; padding: 1rem 1.2rem; box-shadow: 0 2px 6px rgba(0,0,0,0.03); display: flex; flex-direction: column; justify-content: space-between; position: relative; overflow: hidden; }',
+        '.mosdns-stat-card .title-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem; font-size: 0.85rem; opacity: 0.75; font-weight: 500; }',
+        '.mosdns-stat-card .metric-val { font-size: 1.85rem; font-weight: 700; line-height: 1.1; letter-spacing: -0.02em; }',
+        '.mosdns-stat-card .subtext { font-size: 0.8rem; opacity: 0.6; margin-top: 0.4rem; }',
+        '.mosdns-sparkline-wrap { margin-top: 0.5rem; height: 44px; position: relative; overflow: visible; display: flex; align-items: flex-end; touch-action: none; -webkit-user-select: none; user-select: none; }',
+        '.mosdns-sparkline { width: 100%; height: 100%; display: block; overflow: visible; }',
+        '.mosdns-sparkline-tooltip { position: absolute; pointer-events: none; z-index: 20; padding: 0.25rem 0.5rem; border-radius: 5px; background: var(--cbi-section-bg, #fff); border: 1px solid rgba(0,0,0,0.12); box-shadow: 0 3px 10px rgba(0,0,0,0.12); line-height: 1.25; text-align: center; white-space: nowrap; transition: opacity 0.15s ease; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; }',
+        '.spark-hover-hitbox { touch-action: none; -webkit-user-select: none; user-select: none; cursor: crosshair; }',
+        '.mosdns-rank-panel { background: var(--cbi-section-bg, #fff); border: 1px solid rgba(0,0,0,0.08); border-radius: 8px; padding: 1rem 1.1rem; box-shadow: 0 2px 6px rgba(0,0,0,0.03); }',
+        '.mosdns-rank-panel h4 { margin: 0 0 0.85rem 0; font-size: 0.95rem; font-weight: 600; display: flex; align-items: center; justify-content: space-between; }',
+        '.mosdns-rank-item { position: relative; overflow: hidden; border-radius: 6px; padding: 0.35rem 0.65rem; display: flex; justify-content: space-between; align-items: center; background: rgba(125,125,125,0.03); border: 1px solid rgba(125,125,125,0.08); margin-bottom: 0.35rem; }',
+        '.mosdns-rank-bar { position: absolute; left: 0; top: 0; bottom: 0; opacity: 0.15; pointer-events: none; transition: width .3s ease; }',
+        '.mosdns-badge { display: inline-block; padding: 0.15em 0.55em; font-size: 0.75rem; font-weight: 600; border-radius: 4px; line-height: 1.25; text-align: center; white-space: nowrap; box-sizing: border-box; }',
+        '.mosdns-status-badge { min-width: 68px; }',
+        '.badge-danger { background: rgba(239, 68, 68, 0.12); color: #dc2626; border: 1px solid rgba(239, 68, 68, 0.25); }',
+        '.badge-teal { background: rgba(16, 185, 129, 0.12); color: #059669; border: 1px solid rgba(16, 185, 129, 0.25); }',
+        '.badge-primary { background: rgba(59, 130, 246, 0.12); color: #2563eb; border: 1px solid rgba(59, 130, 246, 0.25); }',
+        '.badge-neutral { background: rgba(107, 114, 128, 0.12); color: #4b5563; border: 1px solid rgba(107, 114, 128, 0.25); }',
+        '.badge-qtype { font-family: monospace; font-size: 0.72rem; padding: 0.1em 0.4em; background: rgba(125,125,125,0.1); border-radius: 3px; opacity: 0.8; margin-left: 0.4rem; flex-shrink: 0; }',
+        '.badge-pulse { animation: pulse 2s infinite; }',
+        '.dns-latency-fastest { color: #10b981; font-weight: 600; }',
+        '.dns-latency-fast { color: #059669; font-weight: 600; }',
+        '.dns-latency-normal { color: #3b82f6; font-weight: 600; }',
+        '.dns-latency-slow { color: #d97706; font-weight: 600; }',
+        '.dns-latency-slower { color: #ea580c; font-weight: 600; }',
+        '.dns-latency-timeout { color: #dc2626; font-weight: 600; }',
 
-	document.head.appendChild(E('style', { id: 'mosdns-statistics-styles' }, css));
+        '.mosdns-table { width: 100% !important; table-layout: fixed !important; border-collapse: collapse; }',
+        '.mosdns-table td { vertical-align: middle !important; padding: 0.45rem 0.6rem !important; overflow: hidden !important; text-overflow: ellipsis !important; white-space: nowrap !important; }',
+        '.mosdns-mono { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; }',
+
+        '.mosdns-modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.85rem; padding-bottom: 0.75rem; border-bottom: 1px solid rgba(125,125,125,0.15); flex-wrap: wrap; gap: 0.5rem; }',
+        '.mosdns-modal-domain { font-size: 1.05rem; font-weight: 700; word-break: break-all; display: flex; align-items: center; flex-wrap: wrap; gap: 0.4rem; }',
+        '.mosdns-modal-meta-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 0.6rem; margin-bottom: 1rem; }',
+        '.mosdns-modal-meta-item { background: rgba(125,125,125,0.04); border: 1px solid rgba(125,125,125,0.08); border-radius: 6px; padding: 0.5rem 0.75rem; }',
+        '.mosdns-modal-meta-item .meta-label { font-size: 0.75rem; opacity: 0.6; margin-bottom: 0.2rem; font-weight: 600; }',
+        '.mosdns-modal-meta-item .meta-val { font-size: 0.85rem; font-weight: 600; }',
+        '.mosdns-modal-section-title { font-size: 0.9rem; font-weight: 700; margin: 0.85rem 0 0.45rem 0; display: flex; align-items: center; justify-content: space-between; }',
+        '.mosdns-answers-list { display: flex; flex-direction: column; gap: 0.35rem; max-height: 240px; overflow-y: auto; }',
+        '.mosdns-answer-row { display: flex; justify-content: space-between; align-items: center; background: rgba(125,125,125,0.04); border: 1px solid rgba(125,125,125,0.08); border-radius: 6px; padding: 0.4rem 0.65rem; gap: 0.5rem; font-size: 0.82rem; }',
+        '.mosdns-answer-data { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1; }',
+        '.mosdns-answer-ttl { font-size: 0.75rem; opacity: 0.65; white-space: nowrap; }',
+        '@keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.4; } 100% { opacity: 1; } }',
+        '@media (prefers-color-scheme: dark) {',
+        '	.mosdns-stat-card, .mosdns-rank-panel, .mosdns-modal-meta-item, .mosdns-answer-row { background: rgba(255,255,255,0.03); border-color: rgba(255,255,255,0.08); box-shadow: none; }',
+        '	.mosdns-sparkline-tooltip { background: #1e242b; border-color: rgba(255,255,255,0.15); box-shadow: 0 4px 12px rgba(0,0,0,0.5); }',
+        '	.badge-danger { background: rgba(239, 68, 68, 0.2); color: #f87171; border-color: rgba(239, 68, 68, 0.35); }',
+        '	.badge-teal { background: rgba(16, 185, 129, 0.2); color: #34d399; border-color: rgba(16, 185, 129, 0.35); }',
+        '	.badge-primary { background: rgba(59, 130, 246, 0.2); color: #60a5fa; border-color: rgba(59, 130, 246, 0.35); }',
+        '	.badge-neutral { background: rgba(156, 163, 175, 0.2); color: #9ca3af; border-color: rgba(156, 163, 175, 0.3); }',
+        '	.dns-latency-fastest { color: #34d399; }',
+        '	.dns-latency-normal { color: #60a5fa; }',
+        '	.dns-latency-timeout { color: #f87171; }',
+        '}'
+    ].join('\n');
+
+    document.head.appendChild(E('style', { id: 'mosdns-statistics-styles' }, css));
 };
 
 const debounce = (fn, delay = 300) => {
@@ -221,10 +255,16 @@ const createSparklineSVG = (strokeColor, fillGradId) => {
 		if (coord.time) {
 			const d = new Date(coord.time);
 			if (!isNaN(d)) {
+				const yyyy = d.getFullYear();
+				const mm = String(d.getMonth() + 1).padStart(2, '0');
+				const dd = String(d.getDate()).padStart(2, '0');
 				const hh = String(d.getHours()).padStart(2, '0');
-				timeStr = hh + ':00';
+				const min = String(d.getMinutes()).padStart(2, '0');
+				timeStr = `${yyyy}-${mm}-${dd} ${hh}:${min}`;
+			} else if (coord.time.length >= 16 && coord.time.includes('T')) {
+				timeStr = coord.time.slice(0, 10) + ' ' + coord.time.slice(11, 16);
 			} else {
-				timeStr = coord.time.slice(11, 16) || coord.time;
+				timeStr = coord.time;
 			}
 		}
 
@@ -238,7 +278,7 @@ const createSparklineSVG = (strokeColor, fillGradId) => {
 		const tooltipX = (coord.x / width) * containerWidth;
 		const ratio = coord.x / width;
 
-		if (ratio > 0.65) {
+		if (ratio > 0.5) {
 			tooltip.style.left = 'auto';
 			tooltip.style.right = (containerWidth - tooltipX + 8) + 'px';
 		} else {
@@ -356,6 +396,7 @@ const createOverviewStatsDOM = () => {
 	const metricTotal = E('div', { class: 'metric-val' }, '-');
 	const subtextTotal = E('div', { class: 'subtext' }, '-');
 	const sparklineTotal = createSparklineSVG('#3b82f6', 'spark-grad-total');
+	const badgeQps = E('span', { class: 'mosdns-badge badge-teal badge-pulse' }, _('● Live') + ' - QPS');
 
 	const badgeBlocked = E('span', { class: 'mosdns-badge badge-danger' }, '-');
 	const metricBlocked = E('div', { class: 'metric-val', style: 'color: #dc2626;' }, '-');
@@ -373,7 +414,7 @@ const createOverviewStatsDOM = () => {
 			E('div', {}, [
 				E('div', { class: 'title-row' }, [
 					E('span', {}, _('DNS Queries Total')),
-					E('span', { class: 'mosdns-badge badge-teal badge-pulse' }, _('● Live'))
+					badgeQps
 				]),
 				metricTotal,
 				subtextTotal
@@ -420,6 +461,7 @@ const createOverviewStatsDOM = () => {
 		metricTotal,
 		subtextTotal,
 		sparklineTotal,
+		badgeQps,
 		badgeBlocked,
 		metricBlocked,
 		sparklineBlocked,
@@ -453,7 +495,8 @@ const updateOverviewStats = (stats, historyData) => {
 		cached_queries: cached = 0,
 		blocked_percentage: blocked_pct = 0,
 		cached_percentage: cached_pct = 0,
-		avg_latency_ms: avg_ms = 0
+		avg_latency_ms: avg_ms = 0,
+		qps = 0
 	} = stats;
 
 	const points = historyData?.points || [];
@@ -466,6 +509,7 @@ const updateOverviewStats = (stats, historyData) => {
 	statsElements.metricTotal.textContent = total.toLocaleString();
 	statsElements.subtextTotal.textContent = _('Avg Processing') + ': ' + avg_ms + ' ms';
 	statsElements.sparklineTotal.update(totalItems, baseMax);
+	statsElements.badgeQps.textContent = _('● Live') + ' ' + (qps || 0) + ' QPS';
 
 	statsElements.badgeBlocked.textContent = blocked_pct + '%';
 	statsElements.metricBlocked.textContent = blocked.toLocaleString();
@@ -490,8 +534,14 @@ const renderTopRankings = topData => {
 		const maxCount = Math.max(...items.map(i => i.count || 1));
 		return E('div', { style: 'display: flex; flex-direction: column;' },
 			items.map(item => {
-				let val = item[key] || '-';
-				if (isClient) val = cleanIP(val);
+				let rawVal = item[key] || '-';
+				let valText = rawVal;
+				let valTitle = rawVal;
+				if (isClient) {
+					const clientInfo = getClientDisplay(rawVal);
+					valText = clientInfo.display;
+					valTitle = clientInfo.title;
+				}
 				const cnt = item.count || 0;
 				const pct = Math.round((cnt / maxCount) * 100);
 
@@ -500,8 +550,8 @@ const renderTopRankings = topData => {
 					E('span', {
 						class: 'mosdns-mono',
 						style: 'font-size: 0.82rem; z-index: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; margin-right: 0.5rem;',
-						title: val
-					}, val),
+						title: valTitle
+					}, valText),
 					E('span', { class: 'mosdns-badge badge-neutral mosdns-mono', style: 'z-index: 1;' }, cnt.toLocaleString())
 				]);
 			})
@@ -534,10 +584,130 @@ const renderTopRankings = topData => {
 };
 
 const updateTopRankings = topData => {
+	if (topData?.leases && typeof topData.leases === 'object') {
+		clientLeases = Object.assign(clientLeases, topData.leases);
+	}
 	const json = JSON.stringify(topData || {});
 	if (json === lastTopJson) return;
 	lastTopJson = json;
 	dom.content(nodeTop, renderTopRankings(topData));
+};
+
+const promptAddRule = (rawDomain, actionType) => {
+	const cleanDomain = (rawDomain || '').replace(/\.+$/, '').trim().toLowerCase();
+	if (!cleanDomain) {
+		ui.addNotification(null, E('p', _('Domain name cannot be empty.')), 'warning');
+		return;
+	}
+
+	const isPermit = (actionType === 'permit' || actionType === 'allow' || actionType === 'whitelist');
+	const targetFile = isPermit ? WHITELIST_FILE : BLOCKLIST_FILE;
+	const targetName = isPermit ? _('White Lists') : _('Block Lists');
+	const opposingFile = isPermit ? BLOCKLIST_FILE : WHITELIST_FILE;
+	const opposingName = isPermit ? _('Block Lists') : _('White Lists');
+
+	const cleanRuleLine = l => {
+		let s = (l || '').trim().toLowerCase();
+		if (!s || s.startsWith('#')) return null;
+		s = s.replace(/^\|\|/, '').replace(/\^.*$/, '');
+		s = s.replace(/^(domain|full|keyword):/, '');
+		return s.replace(/\.+$/, '').trim();
+	};
+
+	const inputDomain = E('input', {
+		class: 'cbi-input-text',
+		type: 'text',
+		value: cleanDomain,
+		style: 'width: 100%; font-family: monospace; font-size: 0.95rem; margin-top: 0.5rem;'
+	});
+
+	const executeAddRule = () => {
+		const domainToAdd = inputDomain.value.replace(/\.+$/, '').trim().toLowerCase();
+		if (!domainToAdd) {
+			ui.addNotification(null, E('p', _('Domain name cannot be empty.')), 'warning');
+			return;
+		}
+
+		ui.hideModal();
+
+		fs.read(targetFile).then(content => {
+			const rawLines = (content || '').split(/\r?\n/);
+			const existingRules = rawLines.map(cleanRuleLine).filter(Boolean);
+			const alreadyInTarget = existingRules.includes(domainToAdd);
+
+			let appendPromise = Promise.resolve();
+			if (!alreadyInTarget) {
+				let newContent = (content || '').trimEnd();
+				if (newContent.length > 0) {
+					newContent += '\n' + domainToAdd + '\n';
+				} else {
+					newContent = '# MosDNS Rules\n' + domainToAdd + '\n';
+				}
+				appendPromise = fs.write(targetFile, newContent);
+			}
+
+			return appendPromise.then(() => {
+				return fs.read(opposingFile).then(oppContent => {
+					if (!oppContent) return;
+					const oppLines = oppContent.split(/\r?\n/);
+					let changed = false;
+					const filtered = oppLines.filter(l => {
+						const trimmed = l.trim().toLowerCase();
+						const cleaned = cleanRuleLine(l);
+						if (trimmed === domainToAdd || cleaned === domainToAdd) {
+							changed = true;
+							return false;
+						}
+						return true;
+					});
+					if (changed) {
+						let oppNew = filtered.join('\n').trimEnd();
+						if (oppNew.length > 0) oppNew += '\n';
+						return fs.write(opposingFile, oppNew);
+					}
+				});
+			});
+		}).catch(err => {
+			ui.addNotification(null, E('p', _('Failed to update rule file: %s').format(err.message)), 'error');
+		});
+	};
+
+	inputDomain.addEventListener('keydown', e => {
+		if (e.key === 'Enter') {
+			e.preventDefault();
+			executeAddRule();
+		}
+	});
+
+	const title = isPermit ? _('Add to Whitelist') : _('Add to Blocklist');
+	const btnClass = isPermit ? 'cbi-button-save' : 'cbi-button-reset';
+
+	ui.showModal(title, [
+		E('div', { style: 'padding: 0.5rem 0;' }, [
+			E('p', { style: 'margin-bottom: 0.5rem;' },
+				isPermit
+					? _('Add domain to the whitelist to permit DNS resolution:')
+					: _('Add domain to the blocklist to block DNS resolution:')
+			),
+			E('label', { style: 'font-weight: 600; font-size: 0.85rem;' }, _('Domain:')),
+			inputDomain,
+			E('p', { class: 'cbi-value-description', style: 'margin-top: 0.4rem; font-size: 0.8rem; opacity: 0.7;' },
+				_('Target file: %s (supports domain matching rules)').format(targetFile)
+			)
+		]),
+		E('div', { class: 'right', style: 'margin-top: 1.25rem; display: flex; justify-content: flex-end; gap: 0.5rem;' }, [
+			E('button', {
+				class: 'btn cbi-button cbi-button-neutral',
+				click: ui.hideModal
+			}, _('Cancel')),
+			E('button', {
+				class: 'btn cbi-button ' + btnClass,
+				click: executeAddRule
+			}, _('Confirm'))
+		])
+	]);
+
+	setTimeout(() => inputDomain.focus(), 100);
 };
 
 const showLogDetailsModal = item => {
@@ -570,6 +740,8 @@ const showLogDetailsModal = item => {
 		}, _('No DNS answer records returned.'));
 	}
 
+	const clientInfo = getClientDisplay(item.client_ip);
+
 	const body = E('div', { style: 'padding: 0.25rem 0;' }, [
 		E('div', { class: 'mosdns-modal-header' }, [
 			E('div', { class: 'mosdns-modal-domain' }, [
@@ -585,7 +757,7 @@ const showLogDetailsModal = item => {
 		E('div', { class: 'mosdns-modal-meta-grid' }, [
 			E('div', { class: 'mosdns-modal-meta-item' }, [
 				E('div', { class: 'meta-label' }, _('Client IP')),
-				E('div', { class: 'meta-val mosdns-mono' }, cleanIP(item.client_ip))
+				E('div', { class: 'meta-val mosdns-mono' }, clientInfo.display)
 			]),
 			E('div', { class: 'mosdns-modal-meta-item' }, [
 				E('div', { class: 'meta-label' }, _('Time')),
@@ -610,7 +782,22 @@ const showLogDetailsModal = item => {
 
 	ui.showModal(_('Query Log Details'), [
 		body,
-		E('div', { class: 'right', style: 'margin-top: 1.25rem;' }, [
+		E('div', { class: 'right', style: 'margin-top: 1.25rem; display: flex; justify-content: space-between; align-items: center;' }, [
+			item.is_blocked ? E('button', {
+				class: 'btn cbi-button mosdns-action-btn btn-allow',
+				style: 'padding: 0.35rem 0.75rem !important; font-size: 0.82rem !important;',
+				click: () => {
+					ui.hideModal();
+					promptAddRule(item.domain, 'permit');
+				}
+			}, _('Permit')) : E('button', {
+				class: 'btn cbi-button mosdns-action-btn btn-block',
+				style: 'padding: 0.35rem 0.75rem !important; font-size: 0.82rem !important;',
+				click: () => {
+					ui.hideModal();
+					promptAddRule(item.domain, 'intercept');
+				}
+			}, _('Intercept')),
 			E('button', {
 				class: 'btn cbi-button cbi-button-action',
 				click: ui.hideModal
@@ -639,26 +826,35 @@ const renderLogsTable = logsData => {
 			? item.answers.map(a => a.data + ' (' + a.type + ')').join(', ')
 			: '-';
 
-		return E('tr', { class: 'tr' }, [
-			E('td', { class: 'td', style: 'font-size: 0.82rem; opacity: 0.7; white-space: nowrap;' }, formatTimestamp(item.timestamp)),
-			E('td', { class: 'td mosdns-mono', style: 'font-size: 0.82rem; white-space: nowrap;' }, cleanIP(item.client_ip)),
-			E('td', { class: 'td', style: 'max-width: 320px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;', title: item.domain || '-' }, [
-				E('span', { class: 'mosdns-mono', style: 'font-weight: 600;' }, item.domain || '-'),
-				E('span', { class: 'badge-qtype' }, item.qtype || 'A')
-			]),
-			E('td', { class: 'td' }, statusBadge),
+		const clientInfo = getClientDisplay(item.client_ip);
+
+		return E('tr', {
+			class: 'tr mosdns-log-row',
+			title: _('Click to view full details'),
+			click: () => showLogDetailsModal(item)
+		}, [
+			E('td', { class: 'td col-time', style: 'font-size: 0.82rem; opacity: 0.7; white-space: nowrap;' }, formatTimestamp(item.timestamp)),
 			E('td', {
-				class: 'td mosdns-mono',
-				style: 'font-size: 0.82rem; max-width: 260px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; cursor: pointer;',
-				title: _('Click to view full details'),
-				click: () => showLogDetailsModal(item)
+				class: 'td col-client mosdns-mono',
+				style: 'font-size: 0.82rem; max-width: 150px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;',
+				title: clientInfo.title
+			}, clientInfo.display),
+            E('td', { class: 'td', style: 'display: flex; align-items: center; min-width: 0;', title: item.domain || '-' }, [
+                E('span', { class: 'mosdns-mono', style: 'font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1; min-width: 0;' }, item.domain || '-'),
+                E('span', { class: 'badge-qtype' }, item.qtype || 'A')
+            ]),
+			E('td', { class: 'td col-status' }, statusBadge),
+			E('td', {
+				class: 'td col-answers mosdns-mono',
+				style: 'font-size: 0.82rem; max-width: 260px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;',
+				title: _('Click to view full details')
 			}, answersText),
-			E('td', { class: 'td mosdns-mono ' + getLatencyClass(item.elapsed_ms), style: 'text-align: right; font-size: 0.82rem;' }, item.elapsed_ms + ' ms')
+			E('td', { class: 'td col-latency mosdns-mono ' + getLatencyClass(item.elapsed_ms), style: 'text-align: right; font-size: 0.82rem;' }, item.elapsed_ms + ' ms')
 		]);
 	});
 
 	if (!rows.length) {
-		rows.push(E('tr', { class: 'tr' }, [
+		rows.push(E('tr', { class: 'tr mosdns-empty-row' }, [
 			E('td', { class: 'td', colspan: 6, style: 'text-align: center; opacity: 0.5; padding: 2rem;' }, _('No query log entries found.'))
 		]));
 	}
@@ -666,12 +862,12 @@ const renderLogsTable = logsData => {
 	return E('div', {}, [
 		E('table', { class: 'table cbi-section-table mosdns-table', style: 'margin-top: 0.25rem;' }, [
 			E('tr', { class: 'tr table-titles' }, [
-				E('th', { class: 'th', style: 'width: 85px;' }, _('Time')),
-				E('th', { class: 'th', style: 'width: 125px;' }, _('Client IP')),
-				E('th', { class: 'th' }, _('Domain & Record')),
-				E('th', { class: 'th', style: 'width: 90px;' }, _('Status')),
-				E('th', { class: 'th' }, _('Answers')),
-				E('th', { class: 'th', style: 'width: 90px; text-align: right;' }, _('Elapsed'))
+				E('th', { class: 'th col-time', style: 'width: 85px;' }, _('Time')),
+				E('th', { class: 'th col-client', style: 'width: 125px;' }, _('Client IP')),
+				E('th', { class: 'th col-domain' }, _('Domain & Record')),
+				E('th', { class: 'th col-status', style: 'width: 90px;' }, _('Status')),
+				E('th', { class: 'th col-answers' }, _('Answers')),
+				E('th', { class: 'th col-latency', style: 'width: 80px; text-align: right;' }, _('Elapsed'))
 			]),
 			...rows
 		]),
@@ -753,7 +949,8 @@ return view.extend({
 			L.resolveDefault(callGetStats(), {}),
 			L.resolveDefault(callGetTop(10), {}),
 			L.resolveDefault(callGetLogs(PAGE_SIZE, 0, searchVal, filterVal), {}),
-			L.resolveDefault(callGetHistory(24), {})
+			L.resolveDefault(callGetHistory(24), {}),
+			L.resolveDefault(callGetLeases(), {})
 		]);
 	},
 
@@ -764,6 +961,14 @@ return view.extend({
 		currentBadgeState = null;
 		lastTopJson = '';
 		lastLogsJson = '';
+		clientLeases = {};
+
+		if (data[4]?.leases) {
+			clientLeases = Object.assign(clientLeases, data[4].leases);
+		}
+		if (data[1]?.leases) {
+			clientLeases = Object.assign(clientLeases, data[1].leases);
+		}
 
 		nodeStats = E('div', { id: 'overview-stats' });
 		nodeTop = E('div', { id: 'top-rankings' });
