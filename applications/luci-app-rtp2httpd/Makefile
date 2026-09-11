@@ -1,7 +1,7 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=luci-app-rtp2httpd
-PKG_VERSION:=3.17.0
+PKG_VERSION:=3.17.1
 PKG_RELEASE:=1
 
 LUCI_TITLE:=LuCI support for rtp2httpd
