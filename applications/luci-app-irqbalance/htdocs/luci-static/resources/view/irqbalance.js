@@ -5,6 +5,8 @@
 'require ui';
 'require rpc';
 
+const serviceName = 'irqbalance'
+
 const callServiceList = rpc.declare({
     object: 'service',
     method: 'list',
@@ -13,13 +15,17 @@ const callServiceList = rpc.declare({
 });
 
 function getServiceStatus() {
-    return L.resolveDefault(callServiceList('irqbalance'), {}).then(function (res) {
+    return L.resolveDefault(callServiceList(serviceName), {}).then(function (res) {
         try {
-            return res['irqbalance']['instances']['irqbalance']['running'];
+            return res[serviceName]['instances'][serviceName]['running'];
         } catch (e) {
             return false;
         }
     });
+}
+
+function interrupts() {
+    return fs.read_direct('/proc/interrupts');
 }
 
 function renderStatus(isRunning) {
@@ -32,7 +38,7 @@ function renderStatus(isRunning) {
 
 return view.extend({
     load() {
-        return L.resolveDefault(fs.read_direct('/proc/interrupts'));
+        return L.resolveDefault(interrupts());
     },
 
     render(data) {
@@ -57,19 +63,35 @@ return view.extend({
             ]);
         }
 
-        s = m.section(form.TypedSection, 'irqbalance', _('Snapshot of current IRQs'));
-        s.anonymous = true;
-
         s = m.section(form.NamedSection);
         s.anonymous = true;
         s.render = function () {
-            const snapshot = new ui.Textarea(data.slice(0, -1), {
+            const snapshot = new ui.Textarea(data.replace(/\n$/, ''), {
                 readonly: true,
-                placeholder: _('Loading...'),
                 monospace: true,
-                rows: data.split('\n').length - 1,
+                rows: data.split('\n').length
             });
-            return snapshot.render();
+
+            const node = snapshot.render();
+
+            L.Poll.add(() => {
+                return interrupts().then(newData => {
+                    if (!newData) return;
+                    const formattedData = newData.replace(/\s+$/, '');
+
+                    snapshot.setValue(formattedData);
+
+                    const el = node.querySelector('textarea');
+                    if (el) {
+                        el.rows = formattedData.split('\n').length;
+                        el.style.whiteSpace = 'pre';
+                        el.style.wordBreak = 'normal';
+                        el.style.width = '100%';
+                    }
+                });
+            });
+
+            return node;
         }
 
         s = m.section(form.TypedSection, 'irqbalance', _('General settings'));

@@ -80,10 +80,6 @@ msgstr "显示调试输出"
 msgid "Show debug output in system log."
 msgstr "在系统日志中显示调试输出。"
 
-#: applications/luci-app-irqbalance/htdocs/luci-static/resources/view/irqbalance.js:60
-msgid "Snapshot of current IRQs"
-msgstr "当前中断请求的快照"
-
 #: applications/luci-app-irqbalance/htdocs/luci-static/resources/view/irqbalance.js:43
 msgid ""
 "The purpose of irqbalance is to distribute hardware interrupts across "
