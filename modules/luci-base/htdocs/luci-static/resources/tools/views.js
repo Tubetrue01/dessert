@@ -251,9 +251,9 @@ var CBILogreadBox = function(logtag, name) {
 
 			return E([], [
 				E('h2', {}, [ this.logName ]),
-				E('div', { 'id': 'content_syslog' }, [
+				E('div', { 'id': 'content_syslog', 'class': 'cbi-section' }, [
 					E('div', { class: 'cbi-section-descr' }, this.logTagFilter ? _('The syslog output, pre-filtered for messages related to: ' + this.logTagFilter) : '') ,
-					E('div', { 'style': 'margin-bottom:10px' }, [
+					E('div', { 'style': 'margin: 12px 0 12px 0.3rem;' }, [
 						E('label', { 'for': 'invertLogFacilitySearch', 'style': 'margin-right:5px' }, _('Not')),
 						facilityInvert,
 						E('label', { 'for': 'logFacilitySelect', 'style': 'margin: 0 5px' }, _('facility:')),
@@ -263,7 +263,7 @@ var CBILogreadBox = function(logtag, name) {
 						E('label', { 'for': 'logSeveritySelect', 'style': 'margin: 0 5px' }, _('severity:')),
 						severitySelect,
 					]),
-					E('div', { 'style': 'margin-bottom:10px' }, [
+					E('div', { 'style': 'margin: 12px 0 12px 0.3rem;' }, [
 						E('label', { 'for': 'invertLogTextSearch', 'style': 'margin-right:5px' }, _('Not')),
 						filterTextInvert,
 						E('label', { 'for': 'logTextFilter', 'style': 'margin: 0 5px' }, _('including:')),

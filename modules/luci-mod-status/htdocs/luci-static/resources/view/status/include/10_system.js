@@ -104,7 +104,7 @@ return baseclass.extend({
             fields.splice(6, 0, _('Temperature'), tempinfo.tempinfo);
         }
 
-        var table = E('table', { 'class': 'table' });
+		var table = E('table', { 'class': 'table' });
 
 		for (var i = 0; i < fields.length; i += 2) {
 			table.appendChild(E('tr', { 'class': 'tr' }, [

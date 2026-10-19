@@ -251,8 +251,8 @@ return view.extend({
 
 		return E([], [
 			E('h2', {}, [ _('Kernel Log') ]),
-			E('div', { 'id': 'content_syslog' }, [
-				E('div', { 'style': 'margin-bottom:10px' }, [
+			E('div', { 'id': 'content_syslog', 'class': 'cbi-section' }, [
+				E('div', { 'style': 'margin: 12px 0 12px 0.3rem;' }, [
 					E('label', { 'for': 'invertLogFacilitySearch', 'style': 'margin-right:5px' }, _('Not')),
 					rangeTimeInvert,
 					E('label', { 'for': 'logFacilitySelect', 'style': 'margin: 0 5px' }, _('between:')),
@@ -260,18 +260,18 @@ return view.extend({
 					E('label', { 'for': 'logSeveritySelect', 'style': 'margin: 0 5px' }, _('and:')),
 					toTimeFilter,
 				]),
-				E('div', { 'style': 'margin-bottom:10px' }, [
+				E('div', { 'style': 'margin: 12px 0 12px 0.3rem;' }, [
 					E('label', { 'for': 'invertLogSeveritySearch', 'style': 'margin-right:5px' }, _('Not')),
 					severityInvert,
 					'\xa0',
 					severitySelect,
 					E('label', { 'for': 'logSeveritySelect', 'style': 'margin: 0 5px' }, _('and above')),
 				]),
-				E('div', { 'style': 'margin-bottom:10px' }, [
+				E('div', { 'style': 'margin: 12px 0 12px 0.3rem;' }, [
 					E('label', { 'for': 'invertAscendingSort', 'style': 'margin-right:5px' }, _('Reverse sort')),
 					descendingSort,
 				]),
-				E('div', { 'style': 'margin-bottom:10px' }, [
+				E('div', { 'style': 'margin: 12px 0 12px 0.3rem;' }, [
 					E('label', { 'for': 'invertLogTextSearch', 'style': 'margin-right:5px' }, _('Not')),
 					filterTextInvert,
 					E('label', { 'for': 'logTextFilter', 'style': 'margin: 0 5px' }, _('including:')),

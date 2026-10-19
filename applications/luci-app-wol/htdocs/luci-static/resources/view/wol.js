@@ -210,11 +210,11 @@ return view.extend({
 		// Output section, for wake results
 		s = m.section(form.NamedSection, 'output', 'wol', _('Output'));
 		s.anonymous = true;
-		s.render = L.bind(function() {
-			return E('div', {
-				'class': 'cbi-section'
-			}, [
-				E('h3', {}, _('Output')),
+        s.render = L.bind(function() {
+            return E('div', {
+                'class': 'cbi-section'
+            }, [
+                E('h3', {}, _('Output')),
                 E('div',{'style': "padding: 1rem"},[
                     E('textarea', {
                         'readonly': true,
@@ -224,11 +224,11 @@ return view.extend({
                     }, this.outputText)
                 ]),
 
-			]);
-		}, this);
+            ]);
+        }, this);
 
-		return m.render();
-	},
+        return m.render();
+    },
 
 	handleWakeup(section_id, has_ewk, has_wol) {
 		const self = this;

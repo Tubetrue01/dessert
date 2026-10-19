@@ -6,16 +6,13 @@
 
 include $(TOPDIR)/rules.mk
 
-PKG_NAME:=luci-app-wol
 PKG_LICENSE:=Apache-2.0
-PKG_MAINTAINER:=Jo-Philipp Wich <jo@mein.io>
 
 LUCI_TITLE:=LuCI Support for Wake-on-LAN
 LUCI_DEPENDS:=+luci-base +etherwake
 
-define Package/$(PKG_NAME)/conffiles
-/etc/config/luci-wol
-endef
+PKG_LICENSE:=Apache-2.0
+PKG_MAINTAINER:=Jo-Philipp Wich <jo@mein.io>
 
 include $(TOPDIR)/feeds/luci/luci.mk
 

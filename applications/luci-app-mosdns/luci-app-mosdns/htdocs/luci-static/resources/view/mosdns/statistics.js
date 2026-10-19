@@ -309,7 +309,7 @@ const createSparklineSVG = (strokeColor, fillGradId) => {
 
 		tooltip.innerHTML =
 			'<div style="font-weight: 700; color: ' + strokeColor + '; font-size: 0.82rem; line-height: 1.1;">' + coord.val.toLocaleString() + '</div>' +
-			'<div style="font-size: 0.72rem; opacity: 0.75; margin-top: 0.15rem;">' + timeStr + '</div>';
+			'<div style="font-size: 0.72rem; color:white; opacity: 0.75; margin-top: 0.15rem;">' + timeStr + '</div>';
 		tooltip.style.display = 'block';
 
 		const rect = svgContainer.getBoundingClientRect();

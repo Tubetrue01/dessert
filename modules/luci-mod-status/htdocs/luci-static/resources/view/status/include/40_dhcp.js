@@ -10,7 +10,7 @@ const callLuciDHCPLeases = rpc.declare({
 	method: 'getDHCPLeases',
 	expect: { '': {} }
 });
-
+ 
 const callUfpList = rpc.declare({
 	object: 'fingerprint',
 	method: 'fingerprint',

@@ -1,13 +1,9 @@
-// noinspection JSAnnotator
-
 'use strict';
 'require view';
 'require fs';
 'require form';
 'require ui';
 'require rpc';
-
-const serviceName = 'irqbalance'
 
 const callServiceList = rpc.declare({
     object: 'service',
@@ -17,17 +13,13 @@ const callServiceList = rpc.declare({
 });
 
 function getServiceStatus() {
-    return L.resolveDefault(callServiceList(serviceName), {}).then(function (res) {
+    return L.resolveDefault(callServiceList('irqbalance'), {}).then(function (res) {
         try {
-            return res[serviceName]['instances'][serviceName]['running'];
+            return res['irqbalance']['instances']['irqbalance']['running'];
         } catch (e) {
             return false;
         }
     });
-}
-
-function interrupts() {
-    return fs.read_direct('/proc/interrupts');
 }
 
 function renderStatus(isRunning) {
@@ -40,7 +32,7 @@ function renderStatus(isRunning) {
 
 return view.extend({
     load() {
-        return L.resolveDefault(interrupts());
+        return L.resolveDefault(fs.read_direct('/proc/interrupts'));
     },
 
     render(data) {
@@ -48,7 +40,7 @@ return view.extend({
             irqNum = data.match(/\b\d+(?=: )/g);
         let m, s, o;
 
-        m = new form.Map(serviceName, _('irqbalance'), _('The purpose of irqbalance is to distribute hardware interrupts across processors/cores on a multiprocessor/multicore system in order to increase performance.'));
+        m = new form.Map('irqbalance', _('irqbalance'), _('The purpose of irqbalance is to distribute hardware interrupts across processors/cores on a multiprocessor/multicore system in order to increase performance.'));
 
         s = m.section(form.NamedSection);
         s.anonymous = true;
@@ -65,39 +57,22 @@ return view.extend({
             ]);
         }
 
-        s = m.section(form.NamedSection);
+        s = m.section(form.TypedSection, 'irqbalance', _('Snapshot of current IRQs'));
         s.anonymous = true;
 
+        s = m.section(form.NamedSection);
+        s.anonymous = true;
         s.render = function () {
-            const snapshot = new ui.Textarea(data.replace(/\n$/, ''), {
+            const snapshot = new ui.Textarea(data.slice(0, -1), {
                 readonly: true,
+                placeholder: _('Loading...'),
                 monospace: true,
-                rows: data.split('\n').length
+                rows: data.split('\n').length - 1,
             });
-
-            const node = snapshot.render();
-
-            L.Poll.add(() => {
-                return interrupts().then(newData => {
-                    if (!newData) return;
-                    const formattedData = newData.replace(/\s+$/, '');
-
-                    snapshot.setValue(formattedData);
-
-                    const el = node.querySelector('textarea');
-                    if (el) {
-                        el.rows = formattedData.split('\n').length;
-                        el.style.whiteSpace = 'pre';
-                        el.style.wordBreak = 'normal';
-                        el.style.width = '100%';
-                    }
-                });
-            });
-
-            return node;
+            return snapshot.render();
         }
 
-        s = m.section(form.TypedSection, serviceName, _('General settings'));
+        s = m.section(form.TypedSection, 'irqbalance', _('General settings'));
         s.anonymous = true;
 
         o = s.option(form.Flag, 'enabled', _('Enable'));
@@ -119,19 +94,19 @@ return view.extend({
         o.optional = true;
         o.validate = function (section_id, value) {
             for (const i of value.split(',')) {
-                if (!cpuNum.includes(i) && i !== '') {
+                if (!cpuNum.includes(i) && i != '') {
                     return _('Invalid');
                 }
             }
             return true;
         }
 
-        o = s.option(form.DynamicList, 'banirq', _('Exclude IRQs'), _('List of IRQs to ignore.') + '<br>' + _('Valid values: %s.').format(irqNum.join(', ')));
+        o = s.option(form.DynamicList, 'banirq', _('Exclude IRQs'), _('List of IRQs to ignore.') + '<br />' + _('Valid values: %s.').format(irqNum.join(', ')));
         o.placeholder = '36';
         o.datatype = 'uinteger';
         o.optional = true;
         o.validate = function (section_id, value) {
-            return !irqNum.includes(value) && value !== ''
+            return !irqNum.includes(value) && value != ''
                 ? _('Invalid')
                 : true;
         }
