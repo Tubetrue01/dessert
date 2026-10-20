@@ -17,6 +17,14 @@ return view.extend({
 		]);
 	},
 
+    handleSave(ev) {
+        if (uci.get('cpufreq', 'global') == null)
+            uci.add('cpufreq', 'settings', 'global');
+        uci.set('cpufreq', 'global', 'set', '1');
+
+        return this.super('handleSave', [ev]);
+    },
+
 	render(data) {
 		let m, s, o;
 
@@ -37,13 +45,6 @@ return view.extend({
 				]);
 			}
 		} else {
-			/* Mark user edited */
-			let ss = m.section(form.NamedSection, 'global', 'settings');
-			let so = ss.option(form.HiddenValue, 'set');
-			so.load = (/* ... */) => { return 1 };
-			so.readonly = true;
-			so.rmempty = false;
-
 			for (let i in data[1]) {
 				let index = data[1][i].index;
 				s.tab(index, i, _('<h4>Apply for CPU %s.</h4>').format(data[1][i].cpus));
